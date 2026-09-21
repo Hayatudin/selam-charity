@@ -1,0 +1,266 @@
+import { 
+  mysqlTable, 
+  varchar, 
+  boolean, 
+  timestamp, 
+  index, 
+  uniqueIndex, 
+  text, 
+  int, 
+  json, 
+  datetime, 
+  longtext 
+} from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+import { createId } from '@paralleldrive/cuid2';
+
+// ==========================================
+// 1. LEADER TABLE
+// ==========================================
+export const leader = mysqlTable('Leader', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  name: varchar('name', { length: 191 }).notNull().unique(),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+}, (table) => ({
+  nameIdx: uniqueIndex('Leader_name_key').on(table.name),
+}));
+
+// ==========================================
+// 2. BROKER TABLE
+// ==========================================
+export const broker = mysqlTable('Broker', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  name: varchar('name', { length: 191 }).notNull(),
+  isLocked: boolean('isLocked').notNull().default(false),
+  majorAgency: varchar('major_agency', { length: 191 }).default('Sky'),
+  isVip: boolean('isVip').notNull().default(false),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  leaderId: varchar('leaderId', { length: 191 }),
+}, (table) => ({
+  nameAgencyUniqueIdx: uniqueIndex('Broker_name_major_agency_key').on(table.name, table.majorAgency),
+  leaderIdIdx: index('Broker_leaderId_idx').on(table.leaderId),
+}));
+
+// ==========================================
+// 3. CANDIDATE TABLE
+// ==========================================
+export const candidate = mysqlTable('Candidate', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  shelfId: varchar('shelfId', { length: 191 }),
+  passportNumber: varchar('passportNumber', { length: 191 }).notNull().unique(),
+  surname: varchar('surname', { length: 191 }).notNull(),
+  givenNames: varchar('givenNames', { length: 191 }).notNull(),
+  dateOfBirth: datetime('dateOfBirth', { fsp: 3 }).notNull(),
+  gender: varchar('gender', { length: 191 }).notNull(),
+  nationality: varchar('nationality', { length: 191 }).notNull(),
+  issuingCountry: varchar('issuingCountry', { length: 191 }).notNull(),
+  dateOfIssue: datetime('dateOfIssue', { fsp: 3 }).notNull(),
+  dateOfExpiry: datetime('dateOfExpiry', { fsp: 3 }).notNull(),
+  placeOfBirth: varchar('placeOfBirth', { length: 191 }).notNull(),
+  maritalStatus: varchar('maritalStatus', { length: 191 }).notNull(),
+  numberOfChildren: int('numberOfChildren').notNull().default(0),
+  religion: varchar('religion', { length: 191 }).notNull(),
+  bloodType: varchar('bloodType', { length: 191 }).notNull(),
+  height: varchar('height', { length: 191 }),
+  weight: varchar('weight', { length: 191 }),
+  phone: varchar('phone', { length: 191 }),
+  additionalPhones: json('additionalPhones'),
+  email: varchar('email', { length: 191 }),
+  address: varchar('address', { length: 191 }),
+  city: varchar('city', { length: 191 }),
+  state: varchar('state', { length: 191 }),
+  country: varchar('country', { length: 191 }),
+  idNumber: varchar('idNumber', { length: 191 }),
+  job: varchar('job', { length: 191 }),
+  educationLevel: varchar('educationLevel', { length: 191 }),
+  languages: json('languages'),
+  workExperience: json('workExperience'),
+  skills: json('skills'),
+  medicalStatus: varchar('medicalStatus', { length: 191 }).notNull().default('Pending'),
+  biometricStatus: varchar('biometricStatus', { length: 191 }).notNull().default('Pending'),
+  medicalDate: datetime('medicalDate', { fsp: 3 }),
+  biometricDate: datetime('biometricDate', { fsp: 3 }),
+  knownConditions: varchar('knownConditions', { length: 191 }),
+  cvDeadline: datetime('cvDeadline', { fsp: 3 }),
+  emergencyContactName: varchar('emergencyContactName', { length: 191 }),
+  emergencyContactRelation: varchar('emergencyContactRelation', { length: 191 }),
+  emergencyContactPhone: varchar('emergencyContactPhone', { length: 191 }),
+  emergencyContactAddress: varchar('emergencyContactAddress', { length: 191 }),
+  passportImageUrl: varchar('passportImageUrl', { length: 191 }),
+  facePhotoUrl: varchar('facePhotoUrl', { length: 191 }),
+  fullBodyPhotoUrl: varchar('fullBodyPhotoUrl', { length: 191 }),
+  cocDocumentUrl: text('cocDocumentUrl'),
+  medicalDocumentUrl: varchar('medicalDocumentUrl', { length: 191 }),
+  candidateIdImageUrl: text('candidateIdImageUrl'),
+  relativeIdImageUrl: text('relativeIdImageUrl'),
+  labourId: varchar('labourId', { length: 191 }),
+  isRequested: boolean('isRequested').notNull().default(false),
+  visaOrContractNumber: varchar('visaOrContractNumber', { length: 191 }),
+  isFlagged: boolean('isFlagged').notNull().default(false),
+  flaggedAt: datetime('flaggedAt', { fsp: 3 }),
+  videoUrl: varchar('Youtube_URL', { length: 191 }),
+  quickVideoUrl: longtext('quickVideoUrl'),
+  registeredAt: timestamp('registeredAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  status: varchar('status', { length: 191 }).notNull().default('pending'),
+  visaSelected: boolean('visaSelected').notNull().default(false),
+  visaDate: datetime('visaDate', { fsp: 3 }),
+  salary: varchar('salary', { length: 191 }).default('1000SR'),
+  agency: varchar('agency', { length: 191 }),
+  majorAgency: varchar('major_agency', { length: 191 }).default('Sky'),
+  deployedDate: datetime('deployedDate', { fsp: 3 }),
+  isLocked: boolean('isLocked').notNull().default(false),
+  cvDownloaded: boolean('cvDownloaded').notNull().default(false),
+  allowVideo: boolean('allowVideo').notNull().default(false),
+  embassyIssue: varchar('embassyIssue', { length: 191 }).notNull().default('No'),
+  cocStatus: varchar('cocStatus', { length: 191 }).notNull().default('No'),
+  tasheerStatus: varchar('tasheerStatus', { length: 191 }).notNull().default('No'),
+  wakalaStatus: varchar('wakalaStatus', { length: 191 }).notNull().default('Unpaid'),
+  qrCodeStatus: varchar('qrCodeStatus', { length: 191 }).notNull().default('No'),
+  selectedType: varchar('selectedType', { length: 191 }).notNull().default('Private'),
+  price: varchar('price', { length: 191 }),
+  travelDate: datetime('travelDate', { fsp: 3 }),
+  agencyStatus: varchar('agencyStatus', { length: 191 }).notNull().default('Under Process'),
+  agencySelected: boolean('agencySelected').notNull().default(false),
+  flightStatus: varchar('flightStatus', { length: 191 }).notNull().default('PENDING'),
+  lmisStatus: varchar('lmisStatus', { length: 191 }).notNull().default('Pending'),
+  embassyStatus: varchar('embassyStatus', { length: 191 }).notNull().default('ready to embassy'),
+  sponsorName: varchar('sponsorName', { length: 191 }),
+  destination: varchar('destination', { length: 191 }),
+  applicationNumber: varchar('applicationNumber', { length: 191 }),
+  processStatus: varchar('processStatus', { length: 191 }).notNull().default('Pending'),
+  brokerId: varchar('brokerId', { length: 191 }),
+  registeredById: varchar('registeredById', { length: 191 }),
+}, (table) => ({
+  passportNumberIdx: uniqueIndex('Candidate_passportNumber_key').on(table.passportNumber),
+  passportNumberNormalIdx: index('Candidate_passportNumber_idx').on(table.passportNumber),
+  nationalityIdx: index('Candidate_nationality_idx').on(table.nationality),
+  brokerIdIdx: index('Candidate_brokerId_idx').on(table.brokerId),
+  registeredByIdIdx: index('Candidate_registeredById_idx').on(table.registeredById),
+}));
+
+// ==========================================
+// 4. GENERATEDCV TABLE
+// ==========================================
+export const generatedCV = mysqlTable('GeneratedCV', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  candidateId: varchar('candidateId', { length: 191 }).notNull(),
+  templateId: varchar('templateId', { length: 191 }).notNull(),
+  facePhotoUrl: text('facePhotoUrl'),
+  fullBodyPhotoUrl: text('fullBodyPhotoUrl'),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  updatedAt: timestamp('updatedAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
+}, (table) => ({
+  candidateIdIdx: index('GeneratedCV_candidateId_idx').on(table.candidateId),
+  templateIdIdx: index('GeneratedCV_templateId_idx').on(table.templateId),
+}));
+
+// ==========================================
+// 5. QUICKREGISTRATION TABLE
+// ==========================================
+export const quickRegistration = mysqlTable('QuickRegistration', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  passportNumber: varchar('passportNumber', { length: 191 }).notNull(),
+  passportType: varchar('passportType', { length: 191 }).default('original'),
+  surname: varchar('surname', { length: 191 }).notNull(),
+  givenNames: varchar('givenNames', { length: 191 }).notNull(),
+  dateOfBirth: varchar('dateOfBirth', { length: 191 }),
+  gender: varchar('gender', { length: 191 }),
+  nationality: varchar('nationality', { length: 191 }),
+  dateOfExpiry: varchar('dateOfExpiry', { length: 191 }),
+  issuingCountry: varchar('issuingCountry', { length: 191 }),
+  placeOfBirth: varchar('placeOfBirth', { length: 191 }),
+  educationLevel: varchar('educationLevel', { length: 191 }),
+  jobExperience: longtext('jobExperience'),
+  maritalStatus: varchar('maritalStatus', { length: 191 }),
+  numberOfChildren: int('numberOfChildren').notNull().default(0),
+  passportImageUrl: longtext('passportImageUrl'),
+  religion: varchar('religion', { length: 191 }),
+  relativePhones: json('relativePhones'),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  verificationStatus: varchar('verificationStatus', { length: 191 }).notNull().default('pending'),
+  musanedCvUrl: longtext('musanedCvUrl'),
+  musanedHoldImageUrl: longtext('musanedHoldImageUrl'),
+  verificationNotes: varchar('verificationNotes', { length: 191 }),
+  verifiedAt: datetime('verifiedAt', { fsp: 3 }),
+  promotedAt: datetime('promotedAt', { fsp: 3 }),
+  promotedCandidateId: varchar('promotedCandidateId', { length: 191 }),
+  cocDocumentUrl: longtext('cocDocumentUrl'),
+  labourId: varchar('labourId', { length: 191 }),
+  candidateIdImageUrl: longtext('candidateIdImageUrl'),
+  relativeIdImageUrl: longtext('relativeIdImageUrl'),
+  agency: varchar('agency', { length: 191 }).default('Sky'),
+  majorAgency: varchar('major_agency', { length: 191 }).default('Sky'),
+  videoUrl: varchar('videoUrl', { length: 500 }),
+  languages: json('languages'),
+  allowVideo: boolean('allowVideo').notNull().default(false),
+  brokerId: varchar('brokerId', { length: 191 }),
+  registeredById: varchar('registeredById', { length: 191 }),
+}, (table) => ({
+  createdAtIdx: index('QuickRegistration_createdAt_idx').on(table.createdAt),
+  brokerIdIdx: index('QuickRegistration_brokerId_idx').on(table.brokerId),
+  registeredByIdIdx: index('QuickRegistration_registeredById_idx').on(table.registeredById),
+}));
+
+// ==========================================
+// 6. INVOICE TABLE
+// ==========================================
+export const invoice = mysqlTable('Invoice', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  candidateId: varchar('candidateId', { length: 191 }).notNull(),
+  lmisQrCodeUrl: text('lmisQrCodeUrl').notNull(),
+  insuranceUrl: text('insuranceUrl').notNull(),
+  ticketUrl: text('ticketUrl').notNull(),
+  price: varchar('price', { length: 191 }).notNull(),
+  isDelivered: boolean('isDelivered').notNull().default(false),
+  isDownloaded: boolean('isDownloaded').notNull().default(false),
+  deployedDate: datetime('deployedDate', { fsp: 3 }),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  updatedAt: timestamp('updatedAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
+}, (table) => ({
+  candidateIdIdx: index('Invoice_candidateId_idx').on(table.candidateId),
+}));
+
+// ==========================================
+// 7. PREREGISTEREDVIDEO TABLE
+// ==========================================
+export const preRegisteredVideo = mysqlTable('PreRegisteredVideo', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  passportNumber: varchar('passportNumber', { length: 191 }).notNull().unique(),
+  videoUrl: text('videoUrl').notNull(),
+  facePhotoUrl: text('facePhotoUrl'),
+  fullBodyPhotoUrl: text('fullBodyPhotoUrl'),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+}, (table) => ({
+  passportNumberUniqueIdx: uniqueIndex('PreRegisteredVideo_passportNumber_key').on(table.passportNumber),
+}));
+
+// ==========================================
+// 8. PASSPORT TABLE
+// ==========================================
+export const passport = mysqlTable('Passport', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  shelfNo: varchar('shelfNo', { length: 191 }).notNull(),
+  fullName: varchar('fullName', { length: 191 }).notNull(),
+  passportNumber: varchar('passportNumber', { length: 191 }).notNull().unique(),
+  passportImageUrl: longtext('passportImageUrl'),
+  status: varchar('status', { length: 191 }).notNull().default('Available'),
+  majorAgency: varchar('major_agency', { length: 191 }).default('Sky'),
+  takenReason: varchar('takenReason', { length: 191 }),
+  takenByName: varchar('takenByName', { length: 191 }),
+  takenByPhone: varchar('takenByPhone', { length: 191 }),
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  updatedAt: timestamp('updatedAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
+}, (table) => ({
+  passportNumberUniqueIdx: uniqueIndex('Passport_passportNumber_key').on(table.passportNumber),
+  passportNumberIdx: index('Passport_passportNumber_idx').on(table.passportNumber),
+  statusIdx: index('Passport_status_idx').on(table.status),
+}));
+
+// ==========================================
+// 9. TEMPLATEPRICE TABLE
+// ==========================================
+export const templatePrice = mysqlTable('TemplatePrice', {
+  templateId: varchar('templateId', { length: 191 }).primaryKey(),
+  price: varchar('price', { length: 191 }).notNull(),
+  updatedAt: timestamp('updatedAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
+});

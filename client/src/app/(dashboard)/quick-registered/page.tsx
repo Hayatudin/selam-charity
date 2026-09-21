@@ -1,0 +1,1850 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { useSession } from '@/lib/auth-client';
+import { useQuickRegistrations } from '@/hooks/useQuickRegistrations';
+import { useBrokers } from '@/hooks/useBrokers';
+import { cn, getFileUrl, cleanLabourId } from '@/lib/utils';
+import { Loader2, ClipboardList, Search, Eye, Calendar, User, ShieldCheck, X, Upload, CheckCircle2, XCircle, ArrowRight, FileText, Trash2, MoreVertical, Edit2, Plus, Phone, Briefcase, GraduationCap, Heart, Baby, Globe, ChevronLeft, ChevronRight, AlertCircle, ChevronDown, FolderOpen } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+
+const getVisiblePages = (current: number, total: number) => {
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 3) return [1, 2, 3, 4, '...', total];
+  if (current >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
+  return [1, '...', current - 1, current, current + 1, '...', total];
+};
+
+function isPromoted(r: { verificationStatus: string; promotedCandidateId?: string | null }) {
+  return r.verificationStatus === 'promoted' || !!r.promotedCandidateId;
+}
+
+function getDateCutoffMs(filter: string): number | null {
+  const day = 24 * 60 * 60 * 1000;
+  if (filter === '1d') return Date.now() - day;
+  if (filter === '1w') return Date.now() - 7 * day;
+  if (filter === '1m') return Date.now() - 30 * day;
+  return null;
+}
+
+interface QuickReg {
+  id: string;
+  passportNumber: string;
+  surname: string;
+  givenNames: string;
+  nationality: string | null;
+  religion: string | null;
+  registeredBy?: string | null;
+  gender: string | null;
+  jobExperience: string | null;
+  verificationStatus: string;
+  promotedCandidateId: string | null;
+  createdAt: string;
+  cocDocumentUrl?: string | null;
+  labourId?: string | null;
+  candidateIdImageUrl?: string | null;
+  relativeIdImageUrl?: string | null;
+  videoUrl?: string | null;
+  relativePhones?: string[] | null;
+  educationLevel?: string | null;
+  maritalStatus?: string | null;
+  numberOfChildren?: number | null;
+  passportImageUrl?: string | null;
+  dateOfBirth?: string | null;
+  dateOfExpiry?: string | null;
+  issuingCountry?: string | null;
+  placeOfBirth?: string | null;
+  brokerId?: string | null;
+  broker?: { id: string; name: string } | null;
+  agency?: string | null;
+  passportType?: string | null;
+  languages?: string[] | null;
+}
+
+function parseExperience(raw: string | null): string {
+  if (!raw) return '—';
+  try {
+    const entries = JSON.parse(raw);
+    if (!Array.isArray(entries) || entries.length === 0) return '—';
+    const first = entries[0];
+    if (first.experienceStatus === 'New') return 'New';
+    if (first.experienceStatus === 'Have experience') return 'Experienced';
+    return '—';
+  } catch {
+    return '—';
+  }
+}
+
+export default function QuickRegisteredPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { registrations, isLoading: loadingRegistrations, mutate: mutateRegistrations } = useQuickRegistrations();
+  const { brokers, isLoading: loadingBrokers } = useBrokers();
+  const loading = loadingRegistrations || loadingBrokers;
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'promoted' | 'musaned_hold'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | '1d' | '1w' | '1m'>('all');
+  const [missingFileFilter, setMissingFileFilter] = useState<string>('');
+  const [expandedRegId, setExpandedRegId] = useState<string | null>(null);
+  const [dragOverField, setDragOverField] = useState<string | null>(null); // 'regId-field'
+  const [uploadingState, setUploadingState] = useState<Record<string, boolean>>({});
+  const [editingLabourId, setEditingLabourId] = useState<string | null>(null);
+  const [labourIdInput, setLabourIdInput] = useState<string>('');
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role ?? 'user';
+  const canVerify = ['super_admin', 'processor', 'genaral'].includes(userRole);
+
+  // Verify modal state
+  const [verifyTarget, setVerifyTarget] = useState<QuickReg | null>(null);
+  const [verifyStep, setVerifyStep] = useState<'upload' | 'result'>('upload');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedPassport, setExtractedPassport] = useState<string | null>(null);
+  const [extractedData, setExtractedData] = useState<any | null>(null);
+  const [passportMatch, setPassportMatch] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [promoteSuccess, setPromoteSuccess] = useState<string | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  // Musaned Hold Modal State
+  const [musanedHoldTarget, setMusanedHoldTarget] = useState<QuickReg | null>(null);
+  const [musanedHoldFile, setMusanedHoldFile] = useState<File | null>(null);
+  const [musanedHoldPreview, setMusanedHoldPreview] = useState<string | null>(null);
+  const [isMusanedHoldDrag, setIsMusanedHoldDrag] = useState(false);
+  const [isSavingMusanedHold, setIsSavingMusanedHold] = useState(false);
+  const musanedFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleMusanedHoldFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, WEBP)');
+      return;
+    }
+    setMusanedHoldFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMusanedHoldPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const submitMusanedHold = async () => {
+    if (!musanedHoldTarget || !musanedHoldPreview) return;
+    setIsSavingMusanedHold(true);
+    try {
+      const res = await api(`/api/quick-registrations/${musanedHoldTarget.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          verificationStatus: 'Musaned Hold',
+          musanedHoldImageUrl: musanedHoldPreview,
+        }),
+      });
+
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.error || 'Failed to update status');
+
+      mutateRegistrations(prev => prev.map(r => r.id === musanedHoldTarget.id ? updated : r));
+      queryClient.invalidateQueries({ queryKey: ['quick-registrations'] });
+
+      setMusanedHoldTarget(null);
+      setMusanedHoldFile(null);
+      setMusanedHoldPreview(null);
+    } catch (err: any) {
+      alert(err.message || 'Error updating status to Musaned Hold');
+    } finally {
+      setIsSavingMusanedHold(false);
+    }
+  };
+
+  // Edit and dropdown state
+  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<QuickReg | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [customLanguage, setCustomLanguage] = useState('');
+  const [selectedLang, setSelectedLang] = useState('');
+
+  const addLanguage = (lang: string) => {
+    const trimmed = lang.trim();
+    if (!trimmed) return;
+    if (editForm.languages && !editForm.languages.includes(trimmed)) {
+      setEditForm(prev => ({
+        ...prev,
+        languages: [...(prev.languages || []), trimmed]
+      }));
+    } else if (!editForm.languages) {
+      setEditForm(prev => ({
+        ...prev,
+        languages: [trimmed]
+      }));
+    }
+  };
+
+  const [editForm, setEditForm] = useState({
+    passportNumber: '',
+    givenNames: '',
+    surname: '',
+    nationality: '',
+    religion: '',
+    gender: '',
+    dateOfBirth: '',
+    dateOfExpiry: '',
+    brokerId: '',
+    issuingCountry: '',
+    placeOfBirth: '',
+    educationLevel: '',
+    maritalStatus: '',
+    numberOfChildren: 0,
+    relativePhones: [] as string[],
+    jobExperience: [] as { experienceStatus: string; country: string; yearsOfExperience: string }[],
+    passportImageUrl: undefined as string | undefined,
+    cocDocumentUrl: undefined as string | undefined,
+    labourId: '',
+    candidateIdImageUrl: undefined as string | undefined,
+    relativeIdImageUrl: undefined as string | undefined,
+    videoUrl: undefined as string | undefined,
+    agency: '',
+    passportType: 'scan',
+    languages: [] as string[],
+  });
+
+  const [modalDragTarget, setModalDragTarget] = useState<string | null>(null);
+
+  const handleModalDragOver = (e: React.DragEvent, field: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setModalDragTarget(field);
+  };
+
+  const handleModalDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setModalDragTarget(null);
+  };
+
+  const handleModalDrop = (e: React.DragEvent, field: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setModalDragTarget(null);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileChange(field, file);
+    }
+  };
+
+  const handleFileChange = (field: string, file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setEditForm(prev => ({
+        ...prev,
+        [field]: base64String,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+
+
+  const filtered = (Array.isArray(registrations) ? registrations : []).filter(r => {
+    if (search) {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        r.givenNames?.toLowerCase().includes(q) ||
+        r.surname?.toLowerCase().includes(q) ||
+        r.passportNumber?.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+    }
+
+    if (statusFilter === 'pending' && (isPromoted(r) || r.verificationStatus === 'Musaned Hold')) return false;
+    if (statusFilter === 'promoted' && !isPromoted(r)) return false;
+    if (statusFilter === 'musaned_hold' && r.verificationStatus !== 'Musaned Hold') return false;
+
+    const cutoff = getDateCutoffMs(dateFilter);
+    if (cutoff !== null && new Date(r.createdAt).getTime() > cutoff) return false;
+
+    if (missingFileFilter) {
+      if (missingFileFilter === 'passportImageUrl' && r.passportImageUrl) return false;
+      if (missingFileFilter === 'cocDocumentUrl' && r.cocDocumentUrl) return false;
+      if (missingFileFilter === 'candidateIdImageUrl' && r.candidateIdImageUrl) return false;
+      if (missingFileFilter === 'relativeIdImageUrl' && r.relativeIdImageUrl) return false;
+      if (missingFileFilter === 'videoUrl' && r.videoUrl) return false;
+      if (missingFileFilter === 'labourId' && r.labourId) return false;
+    }
+
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    const aPending = a.verificationStatus === 'pending' ? 1 : 0;
+    const bPending = b.verificationStatus === 'pending' ? 1 : 0;
+    if (aPending !== bPending) return bPending - aPending;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE) || 1;
+  const paginated = sorted.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, dateFilter, missingFileFilter]);
+
+  // Handle Musaned PDF upload for verification
+  const handleMusanedUpload = async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      setVerifyError('Please upload a valid PDF document.');
+      return;
+    }
+    setIsExtracting(true);
+    setVerifyError(null);
+    setExtractedPassport(null);
+    setExtractedData(null);
+    setPassportMatch(false);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api('/api/extract/musaned', { method: 'POST', body: formData });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Failed to process PDF');
+
+      const extractedNum = result.data?.passportNumber?.trim()?.toUpperCase() || '';
+      setExtractedPassport(extractedNum);
+      setExtractedData(result.data);
+
+      const targetNum = verifyTarget?.passportNumber?.trim()?.toUpperCase() || '';
+
+      if (extractedNum && targetNum && extractedNum === targetNum) {
+        setPassportMatch(true);
+      } else {
+        setPassportMatch(false);
+        setVerifyError(`Passport number does not match. Extracted: "${extractedNum}", Expected: "${targetNum}"`);
+      }
+      setVerifyStep('result');
+    } catch (err: any) {
+      setVerifyError(err.message || 'An error occurred while extracting data.');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, fieldKey: string) => {
+    e.preventDefault();
+    setDragOverField(fieldKey);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverField(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, regId: string, field: string) => {
+    e.preventDefault();
+    setDragOverField(null);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await handleUploadSingle(regId, field, file);
+    }
+  };
+
+  const handleUploadSingle = async (regId: string, field: string, file: File) => {
+    const limit = 50 * 1024 * 1024;
+    if (file.size > limit) {
+      alert(`Max file size is ${limit / (1024 * 1024)}MB`);
+      return;
+    }
+    const key = `${regId}-${field}`;
+    setUploadingState(prev => ({ ...prev, [key]: true }));
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      if (ev.target?.result) {
+        const base64 = ev.target.result as string;
+        try {
+          const res = await api(`/api/quick-registrations/${regId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              [field]: base64,
+            }),
+          });
+          const updated = await res.json();
+          if (!res.ok) throw new Error(updated.error || 'Failed to save document');
+          
+          mutateRegistrations(prev => prev.map(r => r.id === regId ? updated : r));
+          queryClient.invalidateQueries({ queryKey: ['passports'] });
+        } catch (err: any) {
+          alert(err.message || 'Something went wrong while saving document');
+        } finally {
+          setUploadingState(prev => ({ ...prev, [key]: false }));
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveLabourIdText = async (regId: string, textValue: string) => {
+    const key = `${regId}-labourId`;
+    setUploadingState(prev => ({ ...prev, [key]: true }));
+    try {
+      const res = await api(`/api/quick-registrations/${regId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          labourId: textValue.trim(),
+        }),
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.error || 'Failed to save Labour ID');
+      
+      mutateRegistrations(prev => prev.map(r => r.id === regId ? updated : r));
+      setEditingLabourId(null);
+    } catch (err: any) {
+      alert(err.message || 'Something went wrong while saving Labour ID');
+    } finally {
+      setUploadingState(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const renderDocCard = (r: QuickReg, fieldKey: string, label: string, acceptTypes: string) => {
+    const value = (r as any)[fieldKey];
+    const isUploading = uploadingState[`${r.id}-${fieldKey}`];
+    const isOver = dragOverField === `${r.id}-${fieldKey}`;
+
+    return (
+      <div 
+        className={cn(
+          "border rounded-xl p-3 bg-white flex flex-col justify-between h-40 transition-all text-left",
+          isOver ? "border-primary bg-primary/5 scale-95" : "border-border hover:border-primary/20"
+        )}
+        onDragOver={(e) => handleDragOver(e, `${r.id}-${fieldKey}`)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, r.id, fieldKey)}
+      >
+        <div className="space-y-1.5 min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-text-tertiary truncate">{label}</p>
+          
+          <div className="h-20 bg-slate-50 rounded-lg overflow-hidden border border-dashed border-border/80 flex items-center justify-center relative">
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-1">
+                <Loader2 size={16} className="text-primary animate-spin" />
+                <span className="text-[10px] text-text-tertiary">Saving...</span>
+              </div>
+            ) : value ? (
+              fieldKey === 'videoUrl' ? (
+                <video src={getFileUrl(value)} className="w-full h-full object-cover" />
+              ) : value.startsWith('data:image') || value.startsWith('http') || value.startsWith('/uploads') ? (
+                <img src={getFileUrl(value)} alt={label} className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-1 text-[10px] text-text-secondary text-center p-1">
+                  <FileText className="text-primary/40" size={20} />
+                  <span className="truncate max-w-[100px]">Doc File</span>
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1 text-center p-2">
+                <AlertCircle className="text-amber-500/80" size={16} />
+                <span className="text-[10px] font-medium text-text-tertiary">Not uploaded</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-2.5">
+          <label className="flex items-center justify-center gap-1 w-full px-2 py-1 text-[10px] font-bold rounded-lg bg-gray-50 border border-border text-text-secondary hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer shadow-sm">
+            <Upload size={10} />
+            {value ? 'Change' : 'Upload'}
+            <input
+              type="file"
+              accept={acceptTypes}
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleUploadSingle(r.id, fieldKey, file);
+              }}
+            />
+          </label>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLabourIdCard = (r: QuickReg) => {
+    const value = r.labourId;
+    const isUploading = uploadingState[`${r.id}-labourId`];
+    const isOver = dragOverField === `${r.id}-labourId`;
+    const isEditing = editingLabourId === r.id;
+
+    const isFile = value && (
+      value.startsWith('data:image/') ||
+      value.startsWith('http://') ||
+      value.startsWith('https://') ||
+      value.startsWith('ENC-') ||
+      value.startsWith('/uploads') ||
+      value.includes('/uploads/') ||
+      value.toLowerCase().endsWith('.jpg') ||
+      value.toLowerCase().endsWith('.jpeg') ||
+      value.toLowerCase().endsWith('.png') ||
+      value.toLowerCase().endsWith('.pdf')
+    );
+
+    return (
+      <div 
+        className={cn(
+          "border rounded-xl p-3 bg-white flex flex-col justify-between h-40 transition-all text-left",
+          isOver ? "border-primary bg-primary/5 scale-95" : "border-border hover:border-primary/20"
+        )}
+        onDragOver={(e) => handleDragOver(e, `${r.id}-labourId`)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, r.id, 'labourId')}
+      >
+        <div className="space-y-1.5 min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-text-tertiary truncate">Labour ID</p>
+          
+          <div className="h-20 bg-slate-55 rounded-lg overflow-hidden border border-dashed border-border/80 flex items-center justify-center relative">
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-1">
+                <Loader2 size={16} className="text-primary animate-spin" />
+                <span className="text-[10px] text-text-tertiary">Saving...</span>
+              </div>
+            ) : isEditing ? (
+              <div className="p-1.5 w-full h-full flex flex-col gap-1 items-center justify-center bg-white">
+                <input
+                  type="text"
+                  value={labourIdInput}
+                  onChange={(e) => setLabourIdInput(e.target.value)}
+                  placeholder="Enter ID..."
+                  className="w-full text-[10px] px-1.5 py-1 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                  autoFocus
+                />
+                <div className="flex gap-1 w-full">
+                  <button
+                    onClick={() => handleSaveLabourIdText(r.id, labourIdInput)}
+                    className="flex-1 px-1.5 py-0.5 text-[8px] font-bold bg-primary text-white rounded hover:bg-primary-dark"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingLabourId(null)}
+                    className="flex-1 px-1.5 py-0.5 text-[8px] font-bold bg-gray-100 border text-text-secondary rounded hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : value ? (
+              isFile ? (
+                value.startsWith('data:image') || value.startsWith('http') || value.startsWith('/uploads') ? (
+                  <img src={getFileUrl(value)} alt="Labour ID" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-1 text-[10px] text-text-secondary text-center p-1">
+                    <FileText className="text-primary/40" size={20} />
+                    <span>Doc File</span>
+                  </div>
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-1 text-center p-2 w-full">
+                  <span className="text-[10px] font-bold text-text-primary break-all max-h-12 overflow-hidden px-1.5 py-1 bg-gray-105 rounded border border-gray-200 w-full text-center">
+                    {value}
+                  </span>
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1 text-center p-2">
+                <AlertCircle className="text-amber-500/80" size={16} />
+                <span className="text-[10px] font-medium text-text-tertiary">Not inserted</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-1.5 mt-2.5">
+          {!isEditing && (
+            <>
+              <button
+                onClick={() => {
+                  setEditingLabourId(r.id);
+                  setLabourIdInput(isFile ? '' : value || '');
+                }}
+                className="flex-1 py-1 text-[9px] font-bold rounded-lg bg-gray-50 border border-border text-text-secondary hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all shadow-sm"
+              >
+                Text ID
+              </button>
+              <label className="flex-1 flex items-center justify-center gap-1 py-1 text-[9px] font-bold rounded-lg bg-gray-50 border border-border text-text-secondary hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer shadow-sm">
+                <Upload size={8} />
+                File
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadSingle(r.id, 'labourId', file);
+                  }}
+                />
+              </label>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Navigate to /registration and promote candidate via sessionStorage
+  const handleValidateAndContinue = () => {
+    if (!verifyTarget || !extractedData) return;
+    const promoData = {
+      extractedData,
+      quickRegistration: verifyTarget,
+    };
+    sessionStorage.setItem('pending_registration_promotion', JSON.stringify(promoData));
+    closeVerifyModal();
+    router.push('/registration');
+  };
+
+  // Promote: push documents from QR to Candidate
+  const handlePromote = async () => {
+    if (!verifyTarget) return;
+    setIsPromoting(true);
+    setVerifyError(null);
+    try {
+      const res = await api('/api/candidates/promote-from-quick', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quickRegistrationId: verifyTarget.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to promote');
+
+      setPromoteSuccess(data.candidateId);
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      // Update local list to reflect promoted status
+      mutateRegistrations(prev => prev.map(r =>
+        r.id === verifyTarget.id
+          ? { ...r, verificationStatus: 'promoted', promotedCandidateId: data.candidateId }
+          : r
+      ));
+    } catch (err: any) {
+      setVerifyError(err.message || 'Failed to push documents to candidate.');
+    } finally {
+      setIsPromoting(false);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete the quick registration for ${name}? This action cannot be undone.`)) return;
+    try {
+      const res = await api(`/api/quick-registrations/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to delete');
+      }
+      queryClient.invalidateQueries({ queryKey: ['passports'] });
+      mutateRegistrations(prev => prev.filter(r => r.id !== id));
+    } catch (err: any) {
+      alert(err.message || 'Something went wrong while deleting');
+    }
+  };
+
+  const openVerifyModal = (reg: QuickReg) => {
+    setVerifyTarget(reg);
+    setVerifyStep('upload');
+    setExtractedPassport(null);
+    setExtractedData(null);
+    setPassportMatch(false);
+    setVerifyError(null);
+    setPromoteSuccess(null);
+  };
+
+  const closeVerifyModal = () => {
+    setVerifyTarget(null);
+    setExtractedData(null);
+    setPromoteSuccess(null);
+    setIsDragActive(false);
+  };
+
+  const openEditModal = (reg: QuickReg) => {
+    setEditTarget(reg);
+    
+    const formatDate = (dateStr: string | null | undefined): string => {
+      if (!dateStr) return '';
+      return dateStr.split('T')[0];
+    };
+
+    const mapReligionForForm = (r?: string | null): string => {
+      if (!r) return '';
+      const upper = r.toUpperCase();
+      if (upper.includes('MUSLIM') || upper.includes('ISLAM')) return 'Muslim';
+      return 'Non muslim';
+    };
+
+    let parsedPhones: string[] = [''];
+    if (reg.relativePhones) {
+      try {
+        parsedPhones = Array.isArray(reg.relativePhones) ? reg.relativePhones : JSON.parse(reg.relativePhones as any);
+        if (parsedPhones.length === 0) parsedPhones = [''];
+      } catch {
+        parsedPhones = [''];
+      }
+    }
+
+    let parsedExperience = [{ experienceStatus: 'New', country: '', yearsOfExperience: '' }];
+    if (reg.jobExperience) {
+      try {
+        parsedExperience = Array.isArray(reg.jobExperience) ? reg.jobExperience : JSON.parse(reg.jobExperience as any);
+        if (parsedExperience.length === 0) parsedExperience = [{ experienceStatus: 'New', country: '', yearsOfExperience: '' }];
+      } catch {
+        try {
+          parsedExperience = JSON.parse(reg.jobExperience);
+        } catch {
+          parsedExperience = [{ experienceStatus: 'New', country: '', yearsOfExperience: '' }];
+        }
+      }
+    }
+
+    setEditForm({
+      passportNumber: reg.passportNumber || '',
+      givenNames: reg.givenNames || '',
+      surname: reg.surname || '',
+      nationality: reg.nationality || '',
+      religion: mapReligionForForm(reg.religion),
+      gender: reg.gender || '',
+      dateOfBirth: formatDate(reg.dateOfBirth),
+      dateOfExpiry: formatDate(reg.dateOfExpiry),
+      brokerId: reg.brokerId || reg.broker?.id || '',
+      issuingCountry: reg.issuingCountry || '',
+      placeOfBirth: reg.placeOfBirth || '',
+      educationLevel: reg.educationLevel || '',
+      maritalStatus: reg.maritalStatus || '',
+      numberOfChildren: reg.numberOfChildren || 0,
+      relativePhones: parsedPhones,
+      jobExperience: parsedExperience,
+      passportImageUrl: undefined,
+      cocDocumentUrl: undefined,
+      labourId: reg.labourId || '',
+      candidateIdImageUrl: undefined,
+      relativeIdImageUrl: undefined,
+      videoUrl: undefined,
+      agency: reg.agency || 'Sky',
+      passportType: reg.passportType || 'scan',
+      languages: (() => {
+        if (!reg.languages) return [];
+        const val = reg.languages as any;
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') {
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return parsed;
+          } catch {}
+          return val.split(/[,&\/;]|\band\b/gi).map((s: string) => s.trim().toUpperCase()).filter(Boolean);
+        }
+        return [];
+      })(),
+    });
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+
+    setIsSaving(true);
+    try {
+      const payload: any = {
+        passportNumber: editForm.passportNumber,
+        givenNames: editForm.givenNames,
+        surname: editForm.surname,
+        nationality: editForm.nationality || null,
+        religion: editForm.religion || null,
+        gender: editForm.gender || null,
+        dateOfBirth: editForm.dateOfBirth ? new Date(editForm.dateOfBirth).toISOString() : null,
+        dateOfExpiry: editForm.dateOfExpiry ? new Date(editForm.dateOfExpiry).toISOString() : null,
+        brokerId: editForm.brokerId || null,
+        issuingCountry: editForm.issuingCountry || null,
+        placeOfBirth: editForm.placeOfBirth || null,
+        educationLevel: editForm.educationLevel || null,
+        maritalStatus: editForm.maritalStatus || null,
+        numberOfChildren: editForm.numberOfChildren,
+        relativePhones: editForm.relativePhones.filter(p => p.trim() !== ''),
+        jobExperience: JSON.stringify(editForm.jobExperience),
+        agency: editForm.agency || 'Sky',
+        passportType: editForm.passportType || 'scan',
+        languages: editForm.languages,
+      };
+
+      if (editForm.passportImageUrl !== undefined) payload.passportImageUrl = editForm.passportImageUrl;
+      if (editForm.cocDocumentUrl !== undefined) payload.cocDocumentUrl = editForm.cocDocumentUrl;
+      if (editForm.labourId !== undefined) {
+        payload.labourId = editForm.labourId;
+      }
+      if (editForm.candidateIdImageUrl !== undefined) payload.candidateIdImageUrl = editForm.candidateIdImageUrl;
+      if (editForm.relativeIdImageUrl !== undefined) payload.relativeIdImageUrl = editForm.relativeIdImageUrl;
+      if (editForm.videoUrl !== undefined) payload.videoUrl = editForm.videoUrl;
+
+      const res = await api(`/api/quick-registrations/${editTarget.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.error || 'Failed to update quick registration');
+
+      // Invalidate passport queries so Available Passport updates immediately
+      queryClient.invalidateQueries({ queryKey: ['passports'] });
+
+      // Update local state to reflect edited changes
+      mutateRegistrations(prev => prev.map(r => r.id === editTarget.id ? updated : r));
+      setEditTarget(null);
+    } catch (err: any) {
+      alert(err.message || 'An error occurred while saving.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === 'promoted') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Promoted
+        </span>
+      );
+    }
+    if (status === 'Musaned Hold') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          Musaned Hold
+        </span>
+      );
+    }
+    if (status === 'verified') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+          Verified
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-50 text-slate-700 border border-slate-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+        Pending
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-text-primary flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary-50"><ClipboardList size={22} className="text-primary" /></div>
+            Quick Registered
+          </h1>
+          <p className="text-text-secondary text-sm mt-1 sm:ml-12">Walk-in candidates registered for Musaned entry</p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
+          <span className="text-2xl font-black text-primary leading-none">{filtered.length}</span>
+          <span className="text-xs font-semibold text-primary">Registered</span>
+        </div>
+      </div>
+
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[220px] max-w-md">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or passport..."
+            className="w-full pl-11 pr-4 py-2.5 text-sm rounded-xl border border-border bg-white text-text-primary placeholder:text-text-tertiary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value as 'all' | 'pending' | 'promoted' | 'musaned_hold')}
+          className="h-[42px] px-4 text-sm rounded-xl border border-border bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[150px]"
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="promoted">Promoted</option>
+          <option value="musaned_hold">Musaned Hold</option>
+        </select>
+        <select
+          value={dateFilter}
+          onChange={e => setDateFilter(e.target.value as 'all' | '1d' | '1w' | '1m')}
+          className="h-[42px] px-4 text-sm rounded-xl border border-border bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[170px]"
+        >
+          <option value="all">All Dates</option>
+          <option value="1d">Registered 1+ Day Ago</option>
+          <option value="1w">Registered 1+ Week Ago</option>
+          <option value="1m">Registered 1+ Month Ago</option>
+        </select>
+        <select
+          value={missingFileFilter}
+          onChange={e => setMissingFileFilter(e.target.value)}
+          className="h-[42px] px-4 text-sm rounded-xl border border-border bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[180px]"
+        >
+          <option value="">All Documents</option>
+          <option value="passportImageUrl">Missing Passport</option>
+          <option value="cocDocumentUrl">Missing COC</option>
+          <option value="candidateIdImageUrl">Missing Candidate ID</option>
+          <option value="relativeIdImageUrl">Missing Relative ID</option>
+          <option value="videoUrl">Missing Video</option>
+          <option value="labourId">Missing Labour ID</option>
+        </select>
+        {(search || statusFilter !== 'all' || dateFilter !== 'all' || missingFileFilter) && (
+          <button
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setDateFilter('all');
+              setMissingFileFilter('');
+            }}
+            className="text-sm text-text-tertiary hover:text-red-500 font-semibold px-3 transition-colors h-[42px] flex items-center"
+          >
+            Clear Filters
+          </button>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className="bg-surface rounded-[2rem] border border-border/30 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-border/30 text-[10px] uppercase tracking-wider font-bold text-text-tertiary/90">
+                <th className="px-6 py-4 font-semibold">Candidate</th>
+                <th className="px-6 py-4 font-semibold hidden sm:table-cell">Passport No.</th>
+                <th className="px-6 py-4 font-semibold hidden md:table-cell">Registrar ID</th>
+                <th className="px-6 py-4 font-semibold hidden lg:table-cell">Broker</th>
+                <th className="px-6 py-4 font-semibold hidden sm:table-cell">Status</th>
+                <th className="px-6 py-4 font-semibold hidden sm:table-cell">Date</th>
+                <th className="px-6 py-4 font-semibold">Open</th>
+                <th className="px-6 py-4 font-semibold text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/20">
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 size={32} className="text-primary animate-spin" />
+                      <p className="text-sm font-medium text-text-tertiary">Loading registrations...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginated.length > 0 ? (
+                paginated.map(r => {
+                  const experienceLabel = parseExperience(r.jobExperience);
+                  const isExpanded = expandedRegId === r.id;
+                  return (
+                    <React.Fragment key={r.id}>
+                      <tr
+                        className="hover:bg-gray-50/30 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setExpandedRegId(expandedRegId === r.id ? null : r.id)}
+                              className="p-1 rounded-lg hover:bg-gray-100 text-text-tertiary transition-colors"
+                            >
+                              <ChevronDown 
+                                size={16} 
+                                className={cn(
+                                  "transition-transform duration-200", 
+                                  isExpanded && "transform rotate-180 text-primary"
+                                )} 
+                              />
+                            </button>
+                            <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center shrink-0 border border-primary-100">
+                              <span className="text-primary font-bold text-sm">
+                                {r.givenNames?.charAt(0)}{r.surname?.charAt(0)}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-text-primary text-sm truncate">{r.givenNames} {r.surname}</p>
+                              <p className="text-[10px] text-text-tertiary sm:hidden">{r.passportNumber}</p>
+                              {r.languages && Array.isArray(r.languages) && r.languages.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {r.languages.map(l => (
+                                    <span key={l} className="text-[8px] font-bold text-primary bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
+                                      {l}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">
+                          <span className="text-xs font-mono font-bold text-text-secondary bg-gray-100 px-2.5 py-1 rounded border border-gray-200 shadow-sm">{r.passportNumber}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-text-secondary hidden md:table-cell whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                              {r.registeredBy ? r.registeredBy.charAt(0).toUpperCase() : 'W'}
+                            </div>
+                            <span className="text-sm font-medium text-text-primary">{r.registeredBy || 'Walk-in'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 hidden lg:table-cell whitespace-nowrap text-xs text-text-secondary font-semibold">
+                          {r.broker?.name || '—'}
+                        </td>
+                        <td className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">
+                          {getStatusBadge(r.verificationStatus || 'pending')}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-text-primary font-semibold hidden sm:table-cell whitespace-nowrap">
+                          {new Date(r.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => router.push(`/quick-registration/preview/${r.id}`)}
+                            className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-sm hover:shadow-primary/20"
+                          >
+                            Open
+                            <ArrowRight size={10} />
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-right relative whitespace-nowrap">
+                          <div className="flex items-center justify-end">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDropdownId(activeDropdownId === r.id ? null : r.id);
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 text-text-tertiary hover:text-text-primary transition-all duration-200"
+                              title="Actions"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+  
+                            {activeDropdownId === r.id && (
+                              <>
+                                {/* Overlay for closing click */}
+                                <div
+                                  className="fixed inset-0 z-10"
+                                  onClick={() => setActiveDropdownId(null)}
+                                />
+                                
+                                {/* Dropdown Menu */}
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-xl shadow-lg py-1.5 z-20 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+                                  <button
+                                    onClick={() => {
+                                      setActiveDropdownId(null);
+                                      router.push(`/quick-registration/preview/${r.id}`);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-50 transition-colors flex items-center gap-2 font-semibold"
+                                  >
+                                    <Eye size={14} className="text-text-tertiary" /> Preview Details
+                                  </button>
+  
+                                  {r.verificationStatus !== 'promoted' && canVerify && (
+                                    <>
+                                      <button
+                                        onClick={() => {
+                                          setActiveDropdownId(null);
+                                          openVerifyModal(r);
+                                        }}
+                                        className="w-full px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-50 transition-colors flex items-center gap-2 font-semibold"
+                                      >
+                                        <ShieldCheck size={14} className="text-emerald-600" /> Verify with CV
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveDropdownId(null);
+                                          setMusanedHoldTarget(r);
+                                          setMusanedHoldFile(null);
+                                          setMusanedHoldPreview(r.musanedHoldImageUrl || null);
+                                        }}
+                                        className="w-full px-4 py-2.5 text-sm text-amber-700 hover:text-amber-900 hover:bg-amber-50 transition-colors flex items-center gap-2 font-semibold"
+                                      >
+                                        <FolderOpen size={14} className="text-amber-600" /> Mark as Musaned Hold
+                                      </button>
+                                      
+                                      <button
+                                        onClick={() => {
+                                          setActiveDropdownId(null);
+                                          openEditModal(r);
+                                        }}
+                                        className="w-full px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-50 transition-colors flex items-center gap-2 font-semibold"
+                                      >
+                                        <Edit2 size={14} className="text-blue-600" /> Edit Registration
+                                      </button>
+                                    </>
+                                  )}
+  
+                                  {r.promotedCandidateId && userRole !== 'registrar' && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveDropdownId(null);
+                                        router.push(`/candidates/${r.promotedCandidateId}`);
+                                      }}
+                                      className="w-full px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-gray-50 transition-colors flex items-center gap-2 font-semibold"
+                                    >
+                                      <ArrowRight size={14} className="text-blue-600" /> View Candidate
+                                    </button>
+                                  )}
+  
+                                  <div className="border-t border-border/50 my-1" />
+  
+                                  <button
+                                    onClick={() => {
+                                      setActiveDropdownId(null);
+                                      handleDelete(r.id, `${r.givenNames} ${r.surname}`);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 font-semibold"
+                                  >
+                                    <Trash2 size={14} /> Delete
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-slate-50/50 border-b border-border/10">
+                          <td colSpan={8} className="px-8 py-6">
+                            <div className="space-y-4">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+                                <FolderOpen size={14} className="text-primary" /> Candidate Documents & Uploads
+                              </h4>
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                {renderDocCard(r, 'passportImageUrl', 'Passport Image', 'image/*')}
+                                {renderDocCard(r, 'cocDocumentUrl', 'COC Document', 'image/*,application/pdf')}
+                                {renderDocCard(r, 'candidateIdImageUrl', 'Candidate ID Image', 'image/*,application/pdf')}
+                                {renderDocCard(r, 'relativeIdImageUrl', 'Relative ID Image', 'image/*,application/pdf')}
+                                {renderDocCard(r, 'videoUrl', 'Candidate Video', 'video/*')}
+                                {renderLabourIdCard(r)}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-text-tertiary text-sm">
+                    No registrations found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 py-4 border-t border-border/10 bg-gray-50/30">
+            {/* Prev arrow */}
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-text-secondary hover:bg-primary hover:text-white hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold"
+            >
+              ‹
+            </button>
+
+            {/* Page numbers */}
+            {getVisiblePages(currentPage, totalPages).map((page, i) => (
+              <button
+                key={i}
+                onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                disabled={page === '...'}
+                className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-bold transition-all border ${
+                  page === '...'
+                    ? 'bg-transparent text-text-tertiary border-transparent cursor-default'
+                    : page === currentPage
+                    ? 'bg-primary text-white border-primary shadow-md'
+                    : 'border-border text-text-secondary hover:bg-primary/10 hover:border-primary/30'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* Next arrow */}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-text-secondary hover:bg-primary hover:text-white hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold"
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ══ VERIFY MODAL ══ */}
+      {verifyTarget && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeVerifyModal}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-pop" onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-gray-50/50">
+              <div>
+                <h3 className="font-bold text-text-primary flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-emerald-600" />
+                  Verify Candidate
+                </h3>
+                <p className="text-xs text-text-tertiary mt-0.5">
+                  {verifyTarget.givenNames} {verifyTarget.surname} — <span className="font-mono font-bold">{verifyTarget.passportNumber}</span>
+                </p>
+              </div>
+              <button onClick={closeVerifyModal} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-text-tertiary">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              {/* SUCCESS STATE */}
+              {promoteSuccess ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 size={32} className="text-green-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-text-primary mb-2">Documents Pushed Successfully!</h4>
+                  <p className="text-sm text-text-secondary mb-6">
+                    All documents (COC, Labour ID, Candidate ID, Relative ID, and Video) have been transferred to the candidate record.
+                  </p>
+                  <button
+                    onClick={() => {
+                      closeVerifyModal();
+                      router.push(`/candidates/${promoteSuccess}`);
+                    }}
+                    className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors shadow-sm flex items-center gap-2 mx-auto"
+                  >
+                    <Eye size={16} /> View Candidate
+                  </button>
+                </div>
+              ) : verifyStep === 'upload' ? (
+                /* UPLOAD STEP */
+                <div>
+                  <p className="text-sm text-text-secondary mb-4">
+                    Upload the <strong>Musaned CV (PDF)</strong> to verify this candidate. The system will extract the passport number and compare it.
+                  </p>
+
+                  {/* Upload zone */}
+                  <label
+                    className={`flex flex-col items-center justify-center gap-4 p-10 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+                      isExtracting
+                        ? 'pointer-events-none border-primary/30 bg-primary/5'
+                        : isDragActive
+                        ? 'border-primary bg-primary/5 shadow-inner scale-[0.99]'
+                        : 'border-gray-200 hover:border-primary/40 hover:bg-gray-50/50'
+                    }`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (!isExtracting) setIsDragActive(true);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      setIsDragActive(false);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragActive(false);
+                      if (isExtracting) return;
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleMusanedUpload(file);
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleMusanedUpload(file);
+                      }}
+                    />
+                    {isExtracting ? (
+                      <>
+                        <Loader2 size={32} className="text-primary animate-spin" />
+                        <p className="text-sm font-bold text-text-primary">Extracting passport data...</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
+                          <FileText size={28} className="text-gray-400" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-text-primary mb-1">Drop Musaned CV PDF here</p>
+                          <p className="text-xs text-primary font-semibold">or click to browse</p>
+                        </div>
+                      </>
+                    )}
+                  </label>
+
+                  {verifyError && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700 font-medium flex items-start gap-2">
+                      <XCircle size={16} className="shrink-0 mt-0.5" />
+                      <span>{verifyError}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* RESULT STEP */
+                <div>
+                  {/* Comparison display */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-border text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary mb-1">Quick Registration</p>
+                      <p className="text-base font-mono font-black text-text-primary">{verifyTarget.passportNumber}</p>
+                    </div>
+                    <div className={`p-4 rounded-xl border text-center ${
+                      passportMatch ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                    }`}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary mb-1">Musaned CV</p>
+                      <p className={`text-base font-mono font-black ${passportMatch ? 'text-green-700' : 'text-red-700'}`}>
+                        {extractedPassport || '—'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Match indicator */}
+                  <div className={`flex items-center justify-center gap-2 p-3 rounded-xl mb-6 ${
+                    passportMatch ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                  }`}>
+                    {passportMatch ? (
+                      <>
+                        <CheckCircle2 size={18} className="text-green-600" />
+                        <span className="text-sm font-bold text-green-700">Passport numbers match! Verification successful.</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle size={18} className="text-red-600" />
+                        <span className="text-sm font-bold text-red-700">Passport number does not match.</span>
+                      </>
+                    )}
+                  </div>
+
+                  {verifyError && !passportMatch && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 font-medium">
+                      {verifyError}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      onClick={() => { setVerifyStep('upload'); setVerifyError(null); setExtractedPassport(null); setPassportMatch(false); }}
+                      className="px-4 py-2.5 text-sm font-semibold text-text-secondary border border-border rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      Try Another PDF
+                    </button>
+
+                    {passportMatch && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handlePromote}
+                          disabled={isPromoting}
+                          className="px-4 py-2.5 text-primary bg-primary-50 border border-primary-100 font-semibold rounded-xl hover:bg-primary-100 transition-colors disabled:opacity-50 flex items-center gap-1.5 text-xs sm:text-sm"
+                          title="Push documents directly without editing"
+                        >
+                          {isPromoting ? (
+                            <><Loader2 size={14} className="animate-spin" /> Pushing...</>
+                          ) : (
+                            <><ShieldCheck size={14} /> Direct Push</>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleValidateAndContinue}
+                          className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-sm flex items-center gap-2 text-xs sm:text-sm"
+                        >
+                          Verify & Continue <ArrowRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface rounded-3xl border border-border shadow-2xl w-full max-w-2xl overflow-hidden animate-scale-up">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                  <Edit2 size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-text-primary text-lg">Edit Quick Registration</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Modify candidate information & broker connection</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditTarget(null)}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-text-tertiary transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveEdit} className="flex flex-col max-h-[90vh]">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 max-h-[68vh]">
+                
+                {/* Section 1: Passport & Personal Details */}
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-border pb-1.5">
+                    <User size={14} /> Passport & Personal Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Given Names */}
+                    <div>
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Given Names <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.givenNames}
+                        onChange={e => setEditForm(prev => ({ ...prev, givenNames: e.target.value.toUpperCase() }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-text-primary placeholder:text-text-tertiary/40"
+                      />
+                    </div>
+
+                    {/* Surname */}
+                    <div>
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Surname <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.surname}
+                        onChange={e => setEditForm(prev => ({ ...prev, surname: e.target.value.toUpperCase() }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-text-primary placeholder:text-text-tertiary/40"
+                      />
+                    </div>
+
+                    {/* Passport Number */}
+                    <div>
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Passport Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.passportNumber}
+                        onChange={e => setEditForm(prev => ({ ...prev, passportNumber: e.target.value.toUpperCase() }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-text-primary placeholder:text-text-tertiary/40"
+                      />
+                    </div>
+
+                    {/* Religion */}
+                    <div>
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Religion
+                      </label>
+                      <select
+                        value={editForm.religion}
+                        onChange={e => setEditForm(prev => ({ ...prev, religion: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 bg-white text-text-primary"
+                      >
+                        <option value="">Select Religion</option>
+                        <option value="Muslim">Muslim</option>
+                        <option value="Non muslim">Non muslim</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Additional Info */}
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-border pb-1.5">
+                    <Globe size={14} /> Additional Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Marital Status */}
+                    <div>
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Marital Status
+                      </label>
+                      <select
+                        value={editForm.maritalStatus}
+                        onChange={e => setEditForm(prev => ({ ...prev, maritalStatus: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 bg-white text-text-primary"
+                      >
+                        <option value="">Select...</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                      </select>
+                    </div>
+
+                    {/* Number of Children */}
+                    {editForm.maritalStatus === 'Married' && (
+                      <div>
+                        <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                          Number of Children
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={editForm.numberOfChildren}
+                          onChange={e => setEditForm(prev => ({ ...prev, numberOfChildren: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-text-primary"
+                        />
+                      </div>
+                    )}
+
+
+                    {/* Passport Type Dropdown */}
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Passport Type
+                      </label>
+                      <select
+                        value={editForm.passportType}
+                        onChange={e => setEditForm(prev => ({ ...prev, passportType: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 bg-white text-text-primary transition-all cursor-pointer"
+                      >
+                        <option value="scan">Scan</option>
+                        <option value="original">Original</option>
+                      </select>
+                    </div>
+
+                    {/* Labour ID Number */}
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Labour ID Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter Labour ID Number"
+                        value={editForm.labourId || ''}
+                        onChange={e => setEditForm(prev => ({ ...prev, labourId: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-text-primary"
+                      />
+                    </div>
+
+                    {/* Broker Connection */}
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                        Broker Connection
+                      </label>
+                      <select
+                        value={editForm.brokerId}
+                        onChange={e => setEditForm(prev => ({ ...prev, brokerId: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 bg-white text-text-primary"
+                      >
+                        <option value="">Direct / No Broker</option>
+                        {brokers.map(b => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Languages Section */}
+                    <div className="md:col-span-2 pt-4 border-t border-border/60">
+                      <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">Languages</label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {(editForm.languages || []).map(lang => (
+                          <span key={lang} className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                            {lang}
+                            <button
+                              type="button"
+                              onClick={() => setEditForm(prev => ({ ...prev, languages: (prev.languages || []).filter(l => l !== lang) }))}
+                              className="hover:text-primary-dark ml-1 font-bold text-sm"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                        {(editForm.languages || []).length === 0 && (
+                          <span className="text-xs text-text-tertiary italic">No languages added yet.</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <select
+                          value={selectedLang}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setSelectedLang(val);
+                            if (val) {
+                              addLanguage(val);
+                              setSelectedLang('');
+                            }
+                          }}
+                          className="flex-1 h-11 px-4 py-2 text-sm rounded-xl border border-border bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all cursor-pointer"
+                        >
+                          <option value="">Choose a language...</option>
+                          {["Arabic", "English", "Amharic", "Afaan Oromo", "Sidamu", "Somali", "Tigrinya"]
+                            .filter(l => !(editForm.languages || []).includes(l))
+                            .map(l => (
+                              <option key={l} value={l}>{l}</option>
+                            ))}
+                        </select>
+                        <div className="flex gap-2 flex-1">
+                          <input
+                            type="text"
+                            placeholder="Or type custom language..."
+                            value={customLanguage}
+                            onChange={e => setCustomLanguage(e.target.value)}
+                            className="flex-1 px-4 py-2 text-sm rounded-xl border border-border bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (customLanguage.trim()) {
+                                addLanguage(customLanguage);
+                                setCustomLanguage('');
+                              }
+                            }}
+                            className="px-4 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Documents & Video Uploads */}
+                <div className="pt-4 border-t border-border mt-6">
+                  <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <FileText size={14} className="text-primary" /> Uploaded Documents & Video
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {[
+                      { label: 'Passport Image', field: 'passportImageUrl', current: editTarget?.passportImageUrl, accept: 'image/*' },
+                      { label: 'COC Document', field: 'cocDocumentUrl', current: editTarget?.cocDocumentUrl, accept: 'application/pdf,image/*' },
+                      { label: 'Candidate ID Image', field: 'candidateIdImageUrl', current: editTarget?.candidateIdImageUrl, accept: 'image/*' },
+                      { label: 'Relative ID Image', field: 'relativeIdImageUrl', current: editTarget?.relativeIdImageUrl, accept: 'image/*' },
+                      { label: 'Candidate Video', field: 'videoUrl', current: editTarget?.videoUrl, accept: 'video/*' },
+                    ].map(doc => {
+                      const isStaged = (editForm as any)[doc.field] !== undefined;
+                      const isDragging = modalDragTarget === doc.field;
+                      return (
+                        <div
+                          key={doc.field}
+                          onDragOver={e => handleModalDragOver(e, doc.field)}
+                          onDragLeave={handleModalDragLeave}
+                          onDrop={e => handleModalDrop(e, doc.field)}
+                          className={cn(
+                            "p-3 rounded-xl border flex flex-col justify-between gap-2.5 transition-all relative overflow-hidden",
+                            isDragging
+                              ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-md"
+                              : "bg-gray-50 border-border hover:border-primary/30 hover:bg-gray-100/50"
+                          )}
+                        >
+                          {isDragging && (
+                            <div className="absolute inset-0 bg-primary/15 backdrop-blur-[1px] flex flex-col items-center justify-center gap-1 z-30 pointer-events-none border-2 border-dashed border-primary rounded-xl">
+                              <Upload size={20} className="text-primary animate-bounce" />
+                              <span className="text-[10px] font-bold text-primary">Drop to replace</span>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" title={doc.label}>
+                              {doc.label}
+                            </p>
+                            {doc.current && !isStaged && (
+                              <a
+                                href={getFileUrl(doc.current)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-primary hover:underline font-semibold block mt-1 truncate"
+                              >
+                                View Current File
+                              </a>
+                            )}
+                            {!doc.current && !isStaged && (
+                              <p className="text-[10px] text-text-tertiary font-medium block mt-1">Not Provided</p>
+                            )}
+                            {isStaged && (
+                              <p className="text-[10px] text-green-600 font-bold block mt-1 flex items-center gap-1">
+                                <CheckCircle2 size={12} className="shrink-0" /> New File Staged
+                              </p>
+                            )}
+                          </div>
+                          <label className="w-full text-center py-1.5 bg-white border border-border rounded-lg text-[10px] font-bold text-text-secondary hover:bg-primary/5 hover:text-primary hover:border-primary/30 cursor-pointer block transition-colors shadow-2xs">
+                            <input
+                              type="file"
+                              accept={doc.accept}
+                              className="hidden"
+                              onChange={e => handleFileChange(doc.field, e.target.files?.[0] || null)}
+                            />
+                            {isStaged ? 'Change Staged File' : 'Click or Drag & Drop File'}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-gray-50/50">
+                <button
+                  type="button"
+                  onClick={() => setEditTarget(null)}
+                  disabled={isSaving}
+                  className="px-4 py-2.5 text-sm font-semibold text-text-secondary border border-border rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm"
+                >
+                  {isSaving ? (
+                    <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Musaned Hold Modal */}
+      {musanedHoldTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+            <button
+              onClick={() => {
+                setMusanedHoldTarget(null);
+                setMusanedHoldFile(null);
+                setMusanedHoldPreview(null);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-xl text-text-tertiary hover:text-text-primary hover:bg-gray-100 transition-all cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-600 rounded-2xl">
+                <FolderOpen size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-text-primary">Musaned Hold</h3>
+                <p className="text-xs text-text-secondary">
+                  Candidate: <span className="font-bold">{musanedHoldTarget.givenNames} {musanedHoldTarget.surname}</span>
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 font-semibold">
+              ⚠️ Uploading a photo/document is <strong>strictly required</strong> to mark this candidate as Musaned Hold.
+            </p>
+
+            {/* Drag and Drop Dropzone */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsMusanedHoldDrag(true); }}
+              onDragLeave={() => setIsMusanedHoldDrag(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsMusanedHoldDrag(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleMusanedHoldFile(file);
+              }}
+              className={cn(
+                "border-2 border-dashed rounded-2xl p-6 text-center transition-all flex flex-col items-center justify-center gap-3 cursor-pointer relative overflow-hidden",
+                isMusanedHoldDrag ? "border-amber-500 bg-amber-500/10 scale-95" : "border-border hover:border-amber-500/40 hover:bg-amber-50/30"
+              )}
+              onClick={() => musanedFileInputRef.current?.click()}
+            >
+              <input
+                ref={musanedFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleMusanedHoldFile(file);
+                }}
+              />
+
+              {musanedHoldPreview ? (
+                <div className="relative w-full h-44 rounded-xl overflow-hidden border border-amber-200">
+                  <img src={musanedHoldPreview.startsWith('http') || musanedHoldPreview.startsWith('data:') || musanedHoldPreview.startsWith('/uploads') ? getFileUrl(musanedHoldPreview) : musanedHoldPreview} alt="Hold Photo Preview" className="w-full h-full object-contain bg-slate-900" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMusanedHoldFile(null);
+                      setMusanedHoldPreview(null);
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md cursor-pointer"
+                    title="Remove photo"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="p-3 bg-amber-100 text-amber-700 rounded-full">
+                    <Upload size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-text-primary">Drag & drop Musaned Hold image here</p>
+                    <p className="text-[10px] text-text-tertiary mt-0.5">PNG, JPG or WEBP (Required)</p>
+                  </div>
+                  <span className="px-3 py-1 bg-white border border-border text-xs font-bold text-text-secondary rounded-lg shadow-xs hover:bg-gray-50">
+                    Browse Image
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="flex items-center gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setMusanedHoldTarget(null);
+                  setMusanedHoldFile(null);
+                  setMusanedHoldPreview(null);
+                }}
+                className="flex-1 py-2.5 px-4 border border-border text-text-secondary font-bold rounded-xl text-xs hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!musanedHoldPreview || isSavingMusanedHold}
+                onClick={submitMusanedHold}
+                className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-amber-600/20 cursor-pointer"
+              >
+                {isSavingMusanedHold ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Confirm Musaned Hold'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
