@@ -13,14 +13,19 @@ if (!dbUrl) {
   console.error('❌ DATABASE_URL is not set in .env');
 }
 
-// cPanel production auto-detect: switch to local MySQL when running on the server
+// cPanel production auto-detect
 export const isCPanel =
+  process.env.IS_CPANEL === 'true' ||
+  process.env.NODE_ENV === 'production' ||
+  Boolean(process.env.HOME?.includes('/home/')) ||
+  Boolean(process.env.PWD?.includes('/home/')) ||
   process.env.HOME?.includes('skyforoo') ||
   process.env.USER === 'skyforoo' ||
   process.env.PWD?.includes('skyforoo');
 
-if (isCPanel && !dbUrl.includes('127.0.0.1') && !dbUrl.includes('localhost')) {
-  console.log('🤖 cPanel detected — switching to local MySQL (127.0.0.1)');
+// Only use fallback URL if DATABASE_URL was not specified in .env
+if (!dbUrl && isCPanel) {
+  console.log('🤖 cPanel detected — using fallback local MySQL');
   dbUrl = 'mysql://skyforoo_un:%40Sky132435@127.0.0.1:3306/skyforoo_db';
 }
 
