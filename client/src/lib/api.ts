@@ -11,11 +11,23 @@
 
 import { getSession } from './auth-client';
 
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-  'http://localhost:4000'
-).replace(/\/$/, '');
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:4000';
+    }
+  }
+  // Local development / SSR fallback
+  if (process.env.NODE_ENV !== 'production' || !process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL.includes('localhost')) {
+    return 'http://localhost:4000';
+  }
+  return (
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
+    'http://localhost:4000'
+  ).replace(/\/$/, '');
+}
 
 // ── Token cache ───────────────────────────────────────────────────────────────
 const CACHE_TTL_MS   = 4 * 60 * 1000;   // 4 min normal cache
@@ -71,8 +83,13 @@ async function getAuthToken(forceRefresh = false): Promise<string | null> {
       let token: string | null = null;
 
       if (!forceRefresh) {
-        // Try cookie first (fast, no network)
-        token = readSessionCookie();
+        // Try localStorage first, then cookie (fast, no network)
+        if (typeof window !== 'undefined') {
+          token = localStorage.getItem('selam_session_token');
+        }
+        if (!token) {
+          token = readSessionCookie();
+        }
       }
 
       if (!token) {
@@ -85,9 +102,9 @@ async function getAuthToken(forceRefresh = false): Promise<string | null> {
         cacheExpiry = Date.now() + CACHE_TTL_MS;
         scheduleProactiveRefresh();
       } else {
-        // No token — clear cache
+        // No bearer token in body — session relies on cookies; cache null briefly to avoid hammering fetchFreshToken
         cachedToken = null;
-        cacheExpiry = 0;
+        cacheExpiry = Date.now() + 30 * 1000;
       }
 
       return token;
@@ -125,7 +142,7 @@ export function clearAuthTokenCache() {
 // ── Main API call ─────────────────────────────────────────────────────────────
 export async function api(path: string, options: RequestInit = {}): Promise<Response> {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  const url = `${API_BASE_URL}${cleanPath}`;
+  const url = `${getApiBaseUrl()}${cleanPath}`;
   const isFormData = options.body instanceof FormData;
 
   const makeRequest = async (token: string | null): Promise<Response> => {

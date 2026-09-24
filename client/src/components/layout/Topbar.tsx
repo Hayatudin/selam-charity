@@ -2,11 +2,29 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, ChevronDown, User, FileText, X, Loader2, CheckCheck, Menu, RotateCw, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Search,
+  Bell,
+  ChevronDown,
+  User,
+  FileText,
+  X,
+  Loader2,
+  CheckCheck,
+  Menu,
+  RotateCw,
+  LogOut,
+  Globe,
+  ExternalLink,
+  Landmark,
+  Newspaper,
+  Images,
+  GraduationCap
+} from 'lucide-react';
 import { cn, getFileUrl } from '@/lib/utils';
 import { useSession, signOut } from '@/lib/auth-client';
 import { api } from '@/lib/api';
-import { getUserMajorAgency } from '@/lib/cv-templates';
 
 interface TopbarProps {
   onMobileMenuToggle?: () => void;
@@ -109,25 +127,16 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const handleSelectCandidate = (id: string) => {
-    setSearchQuery('');
-    setShowResults(false);
-    router.push(`/candidates/${id}`);
-  };
-
   const role = (session?.user as any)?.role ?? 'user';
-  const userAgency = getUserMajorAgency(session?.user);
-  const isFenero = userAgency.toLowerCase().includes('fenero');
-  const agencyName = isFenero ? 'FENERO' : 'SKY';
-  const badgeBg = isFenero ? 'bg-indigo-600' : 'bg-primary';
 
   return (
     <header className="sticky top-0 z-40 h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-4 md:px-6 gap-3">
-      {/* Left: menu + brand */}
+      {/* Left: menu + brand + Current Charity Link */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           onClick={onMobileMenuToggle}
           className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+          aria-label="Open sidebar"
         >
           <Menu size={20} className="text-slate-600" />
         </button>
@@ -142,15 +151,32 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
           </button>
         )}
 
-        <div className="hidden sm:flex items-center gap-2.5 pl-1">
-          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", badgeBg)}>
-            <span className="text-white font-black text-[10px]">{agencyName}</span>
+        <Link href="/dashboard" className="hidden sm:flex items-center gap-2.5 pl-1 hover:opacity-90 transition-opacity">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-600 overflow-hidden p-0.5 shadow-sm">
+            <img src="/Selam-logo.jpg" alt="Selam Charity" className="w-full h-full object-contain rounded" />
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-bold text-slate-800">{agencyName} Agency</p>
-            <p className="text-[10px] text-slate-400 font-medium hidden md:block">Foreign Employment System</p>
+            <p className="text-sm font-bold text-slate-800">SELAM Charity</p>
+            <p className="text-[10px] text-emerald-600 font-semibold hidden md:block">Management System</p>
           </div>
-        </div>
+        </Link>
+
+        {/* CURRENT CHARITY NAVBAR OPTION */}
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-semibold transition-all shadow-xs hover:shadow group ml-1"
+          title="Visit Live Charity Website"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <Globe size={13} className="text-emerald-700 group-hover:scale-110 transition-transform" />
+          <span className="font-bold">Current Charity</span>
+          <ExternalLink size={11} className="text-emerald-600/70 group-hover:text-emerald-800 group-hover:translate-x-0.5 transition-all" />
+        </Link>
       </div>
 
       {/* Search */}
@@ -158,78 +184,84 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
         <div className="relative group">
           <Search size={16} className={cn(
             "absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 transition-colors duration-200",
-            searchQuery ? "text-primary" : "text-text-tertiary"
+            searchQuery ? "text-emerald-600" : "text-text-tertiary"
           )} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-            placeholder="Search candidates..."
-            className="w-full pl-9 sm:pl-12 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm rounded-xl sm:rounded-2xl border border-border/60 bg-gray-50/50 text-text-primary placeholder:text-text-tertiary/60 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all duration-300"
+            onFocus={() => setShowResults(true)}
+            placeholder="Search charity records, news, donations..."
+            className="w-full pl-9 sm:pl-12 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/70 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-emerald-500/15 focus:border-emerald-500 transition-all duration-200"
           />
-          {isSearching ? (
-            <Loader2 size={14} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-primary animate-spin" />
-          ) : searchQuery && (
+          {searchQuery && (
             <button 
-              onClick={() => { setSearchQuery(''); setResults([]); }}
-              className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-danger transition-colors"
+              onClick={() => { setSearchQuery(''); setShowResults(false); }}
+              className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Search Results Dropdown */}
-        {showResults && (results.length > 0 || searchQuery.length >= 2) && (
-          <div className="absolute top-full mt-2 w-full sm:w-80 md:w-96 bg-white rounded-2xl border border-border shadow-2xl shadow-primary/10 overflow-hidden animate-slide-in-top z-50">
-            {results.length > 0 ? (
-              <div className="p-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary px-3 py-2">Quick Results</p>
-                {results.map((candidate) => (
-                  <button
-                    key={candidate.id}
-                    onClick={() => handleSelectCandidate(candidate.id)}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-primary/5 rounded-xl transition-colors text-left group"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-primary font-bold overflow-hidden border border-border/50 group-hover:border-primary/30">
-                      {candidate.facePhotoUrl ? (
-                        <img src={getFileUrl(candidate.facePhotoUrl)} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
-                      ) : (
-                        <span>{candidate.givenNames.charAt(0)}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-text-primary truncate">{candidate.givenNames} {candidate.surname}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] font-mono font-bold text-text-tertiary px-1.5 py-0.5 bg-gray-100 rounded">{candidate.passportNumber}</span>
-                        <span className="text-[10px] text-text-tertiary truncate opacity-60">{candidate.job}</span>
-                      </div>
-                    </div>
-                    <ChevronDown size={14} className="text-text-tertiary -rotate-90 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </button>
-                ))}
-              </div>
-            ) : !isSearching && (
-              <div className="p-8 text-center">
-                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Search size={20} className="text-text-tertiary opacity-20" />
+        {/* Quick Charity Navigation / Search Dropdown */}
+        {showResults && (
+          <div className="absolute top-full mt-2 w-full sm:w-80 md:w-96 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden animate-slide-in-top z-50 p-2">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1.5">Charity Portals & Actions</p>
+            <div className="space-y-1">
+              <Link
+                href="/charity/donations"
+                onClick={() => setShowResults(false)}
+                className="w-full flex items-center gap-3 p-2.5 hover:bg-emerald-50 rounded-xl transition-colors text-left group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                  <Landmark size={16} />
                 </div>
-                <p className="text-sm font-bold text-text-primary">No results found</p>
-                <p className="text-xs text-text-tertiary mt-1">Try a different name or passport</p>
-              </div>
-            )}
-            
-            {results.length > 0 && (
-              <div className="bg-gray-50/50 p-2 border-t border-border/50">
-                <button 
-                  onClick={() => router.push(`/candidates?q=${searchQuery}`)}
-                  className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                >
-                  View all results
-                </button>
-              </div>
-            )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-emerald-700">Donations & Receipts</p>
+                  <p className="text-xs text-slate-400 truncate">Verify donor submissions and bank slips</p>
+                </div>
+              </Link>
+              <Link
+                href="/charity/news"
+                onClick={() => setShowResults(false)}
+                className="w-full flex items-center gap-3 p-2.5 hover:bg-blue-50 rounded-xl transition-colors text-left group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                  <Newspaper size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">News & Announcements</p>
+                  <p className="text-xs text-slate-400 truncate">Publish and manage charity stories</p>
+                </div>
+              </Link>
+              <Link
+                href="/charity/gallery"
+                onClick={() => setShowResults(false)}
+                className="w-full flex items-center gap-3 p-2.5 hover:bg-amber-50 rounded-xl transition-colors text-left group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
+                  <Images size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-amber-700">Gallery & Videos</p>
+                  <p className="text-xs text-slate-400 truncate">Manage community photos & YouTube embeds</p>
+                </div>
+              </Link>
+              <Link
+                href="/charity/school"
+                onClick={() => setShowResults(false)}
+                className="w-full flex items-center gap-3 p-2.5 hover:bg-violet-50 rounded-xl transition-colors text-left group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs">
+                  <GraduationCap size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-violet-700">School CMS</p>
+                  <p className="text-xs text-slate-400 truncate">Edit programs, facilities, and campus life</p>
+                </div>
+              </Link>
+            </div>
           </div>
         )}
       </div>

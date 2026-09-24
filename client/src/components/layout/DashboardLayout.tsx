@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { cn } from '@/lib/utils';
-import { useSession } from '@/lib/auth-client';
+import { useSession, getSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
@@ -12,12 +12,78 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { data: session, isPending } = useSession();
+  const [isVerifying, setIsVerifying] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!isPending && !session) {
-      window.location.href = '/login';
+    let isMounted = true;
+
+    // 1. In-memory session resolved
+    if (session) {
+      setIsVerifying(false);
+      return;
     }
+
+    const savedToken = typeof window !== 'undefined' ? localStorage.getItem('selam_session_token') : null;
+
+    // 2. Still loading and no saved token
+    if (isPending && !savedToken) {
+      setIsVerifying(true);
+      return;
+    }
+
+    // 3. No in-memory session and no token anywhere
+    if (!isPending && !savedToken) {
+      window.location.href = '/login';
+      return;
+    }
+
+    // 4. Verify session asynchronously
+    const verify = async () => {
+      try {
+        // Try Better Auth getSession first
+        const res = await getSession();
+        if (!isMounted) return;
+        if (res?.data) {
+          setIsVerifying(false);
+          return;
+        }
+
+        // Fallback: direct check with Bearer token if getSession cookie wasn't picked up
+        if (savedToken) {
+          const directRes = await fetch('/api/auth/get-session', {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          });
+          const directData = await directRes.json().catch(() => null);
+          if (!isMounted) return;
+          if (directData && directData.user) {
+            setIsVerifying(false);
+            return;
+          }
+        }
+
+        // Truly unauthenticated
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('selam_session_token');
+          localStorage.removeItem('selam_user');
+        }
+        window.location.href = '/login';
+      } catch (err) {
+        if (!isMounted) return;
+        // In local development or network hiccup, don't kick user out if they have a saved token
+        if (savedToken) {
+          setIsVerifying(false);
+        } else {
+          window.location.href = '/login';
+        }
+      }
+    };
+
+    verify();
+
+    return () => {
+      isMounted = false;
+    };
   }, [session, isPending]);
 
   // Close mobile sidebar on route change or resize to desktop
@@ -41,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { document.body.style.overflow = ''; };
   }, [isMobileOpen]);
 
-  if (isPending) {
+  if (isPending || (isVerifying && !session)) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
@@ -52,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!session) {
+  if (!session && !isVerifying) {
     return null;
   }
 

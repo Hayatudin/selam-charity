@@ -15,7 +15,7 @@ type Mode = 'signin' | 'signup';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/charity/dashboard';
 
   const [mode, setMode] = useState<Mode>('signin');
   const [name, setName]       = useState('');
@@ -30,6 +30,54 @@ function LoginForm() {
 
   // reset error when switching modes
   useEffect(() => { setError(''); }, [mode]);
+
+  const saveSessionAndRedirect = (data: any, role?: string) => {
+    const token = data?.session?.token || data?.token;
+    if (token) {
+      try {
+        localStorage.setItem('selam_session_token', token);
+        if (data.user) {
+          localStorage.setItem('selam_user', JSON.stringify(data.user));
+        }
+        document.cookie = `better-auth.session_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+      } catch (e) {
+        console.error('Failed to store session in localStorage:', e);
+      }
+    }
+
+    const userRole = role || (data?.user as any)?.role;
+    const target = (callbackUrl && callbackUrl !== '/dashboard' && callbackUrl !== '/login') 
+      ? callbackUrl 
+      : '/charity/dashboard';
+
+    if (userRole === 'agency') {
+      window.location.href = '/agency/contracts';
+    } else {
+      window.location.href = target;
+    }
+  };
+
+  const handleDevAdminLogin = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const { data, error: signInError } = await signIn.email({
+        email: 'admin@selamcharity.org',
+        password: 'admin123',
+      });
+      if (!signInError && data) {
+        saveSessionAndRedirect(data);
+        return;
+      }
+      if (signInError) {
+        setError((signInError as any)?.message || 'Failed to sign in as admin');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +103,10 @@ function LoginForm() {
           25000
         );
 
-        if (!signUpError && data) { router.push('/'); return; }
+        if (!signUpError && data) { 
+          saveSessionAndRedirect(data);
+          return; 
+        }
 
         const msg = (signUpError as any)?.message || (signUpError as any)?.error || '';
         if (msg.toLowerCase().includes('already exists')) {
@@ -75,14 +126,7 @@ function LoginForm() {
       );
 
       if (!signInError && signInData) {
-        const role = (signInData.user as any)?.role;
-        if (role === 'agency') {
-          router.push('/agency/contracts');
-        } else if (DASHBOARD_ROLES.includes(role)) {
-          router.push(callbackUrl);
-        } else {
-          router.push('/');
-        }
+        saveSessionAndRedirect(signInData);
         return;
       }
 
@@ -176,7 +220,7 @@ function LoginForm() {
             </h1>
             <p className="text-[13px] text-gray-500 mt-1.5 leading-snug">
               {mode === 'signin'
-                ? 'Welcome back to the SKY agency portal.'
+                ? 'Welcome back to the Selam Charity Portal.'
                 : 'Fill in the details below to get started.'}
             </p>
           </div>
@@ -283,6 +327,24 @@ function LoginForm() {
                 mode === 'signin' ? 'Get Started' : 'Create Account'
               )}
             </button>
+
+            {mode === 'signin' && (
+              <div className="pt-2">
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="flex-shrink mx-3 text-gray-400 text-[11px] font-medium uppercase tracking-wider">or dev login</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDevAdminLogin}
+                  disabled={isLoading}
+                  className="w-full py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[13px] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  ⚡ Sign in as Admin (One-Click Dev Access)
+                </button>
+              </div>
+            )}
           </form>
 
           {/* Mode switcher */}
@@ -315,7 +377,7 @@ function LoginForm() {
 
         {/* Footer label */}
         <p className="text-center text-[11px] text-sky-700/60 mt-4 tracking-wide">
-          SKY Foreign Employment Agency System
+          Selam Charity Management System
         </p>
       </div>
     </div>

@@ -1,85 +1,150 @@
 /**
- * CHARITY DOMAIN TYPES
- * 
- * Defines core contracts for campaigns, donations, projects, volunteers, and impact metrics.
+ * CHARITY CMS TYPES
  */
 
-export type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed';
-export type DonationStatus = 'pending' | 'completed' | 'failed' | 'refunded';
-export type ProjectStatus = 'planning' | 'active' | 'completed';
-export type VolunteerStatus = 'pending' | 'approved' | 'active' | 'inactive';
-export type PaymentMethod = 'telebirr' | 'chapa' | 'cbe_birr' | 'bank_transfer' | 'stripe' | 'manual';
+// --- 1. MEDIA LIBRARY ---
+export type CharityFileType = 'image' | 'video' | 'document';
 
-export interface CharityCampaign {
+export interface CharityMediaItem {
   id: string;
-  slug: string;
-  title: string;
-  subtitle?: string;
-  description: string;
-  category: 'Emergency Relief' | 'Education' | 'Healthcare' | 'Clean Water' | 'Food Security' | 'General';
-  targetAmount: number;
-  raisedAmount: number;
-  currency: string;
-  featuredImageUrl?: string;
-  galleryImages?: string[];
-  startDate?: string;
-  endDate?: string;
-  isFeatured: boolean;
-  status: CampaignStatus;
-  createdById?: string;
+  name: string;
+  originalName: string;
+  url: string;
+  fileType: CharityFileType;
+  mimeType?: string | null;
+  sizeBytes: number;
+  caption?: string | null;
+  uploadedById?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CharityDonation {
+// --- 2. NEWS ---
+export type NewsStatus = 'draft' | 'published';
+
+export interface CharityNewsItem {
   id: string;
-  campaignId?: string;
-  campaign?: CharityCampaign;
-  donorName?: string;
-  donorEmail?: string;
-  donorPhone?: string;
-  isAnonymous: boolean;
-  amount: number;
+  slug: string;
+  title: string;
+  excerpt?: string | null;
+  content: string;
+  category: string;
+  featuredImageUrl?: string | null;
+  status: NewsStatus;
+  publishedAt?: string | null;
+  authorId?: string | null;
+  authorName?: string | null;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- 3. GALLERY ---
+export type GalleryMediaType = 'image' | 'video';
+
+export interface CharityGalleryItem {
+  id: string;
+  title: string;
+  caption?: string | null;
+  mediaType: GalleryMediaType;
+  mediaUrl: string;
+  thumbnailUrl?: string | null;
+  category: string;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- 4. SCHOOL CONTENT ---
+export type SchoolSectionKey = 'intro' | 'programs' | 'activities' | 'facilities';
+
+export interface SchoolSectionData {
+  id?: string;
+  sectionKey: SchoolSectionKey;
+  title: string;
+  subtitle?: string | null;
+  content?: string | null;
+  mediaUrls?: string[];
+  metadata?: any;
+  updatedAt?: string;
+}
+
+export type SchoolAllSections = Record<SchoolSectionKey, SchoolSectionData>;
+
+// --- 5. PAGES CMS ---
+export type PageContentKey = 'about' | 'mission' | 'contact' | 'general';
+
+export interface PageContentData {
+  id?: string;
+  pageKey: PageContentKey;
+  title: string;
+  subtitle?: string | null;
+  content?: string | null;
+  bannerImageUrl?: string | null;
+  metadata?: any;
+  updatedAt?: string;
+}
+
+export type PagesAllContent = Record<PageContentKey, PageContentData>;
+
+// --- 6. DASHBOARD STATS ---
+export interface CharityDashboardStats {
+  stats: {
+    donations?: { total: number; pending: number; totalAmountETB: number; totalAmountUSD: number };
+    news: { total: number; published: number };
+    gallery: { total: number; images: number; videos: number };
+    media: { total: number; images: number; videos: number; documents: number };
+  };
+  recentDonations?: CharityDonationItem[];
+  recentNews: CharityNewsItem[];
+  recentUploads: CharityMediaItem[];
+}
+
+// --- 7. DONATIONS & RECEIPTS ---
+export type DonationStatus = 'pending' | 'verified' | 'rejected';
+
+export interface CharityDonationItem {
+  id: string;
+  campaignId?: string | null;
+  donorName: string;
+  donorEmail?: string | null;
+  donorPhone?: string | null;
+  isAnonymous?: boolean;
+  amount: string | number;
   currency: string;
-  paymentMethod: PaymentMethod;
-  transactionReference?: string;
-  receiptUrl?: string;
-  notes?: string;
+  paymentMethod: string;
+  bankName: string;
+  accountNumber?: string | null;
+  transactionReference?: string | null;
+  receiptUrl?: string | null;
+  notes?: string | null;
   status: DonationStatus;
-  userId?: string;
-  createdAt: string;
-}
-
-export interface CharityProject {
-  id: string;
-  title: string;
-  slug: string;
-  summary?: string;
-  content?: string;
-  location?: string;
-  coverImageUrl?: string;
-  status: ProjectStatus;
+  verifiedAt?: string | null;
+  verifiedBy?: string | null;
+  userId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CharityVolunteer {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  skills?: string[];
-  interests?: string;
-  availability: 'weekends' | 'full-time' | 'part-time' | 'remote';
-  status: VolunteerStatus;
-  userId?: string;
-  createdAt: string;
+export interface CharityDonationStats {
+  totalDonations: number;
+  totalAmountETB: number;
+  totalAmountUSD: number;
+  pendingCount: number;
+  verifiedCount: number;
+  rejectedCount: number;
 }
 
-export interface CharityImpactSummary {
-  totalDonationsAmount: number;
-  totalDonorsCount: number;
-  activeCampaignsCount: number;
-  beneficiariesReached: number;
-  projectsCompleted: number;
+export interface SubmitDonationReceiptInput {
+  donorName: string;
+  donorPhone: string;
+  donorEmail?: string;
+  bankName: string;
+  accountNumber?: string;
+  amount: number | string;
+  currency?: string;
+  transactionReference?: string;
+  notes?: string;
+  receiptFile?: File;
+  receiptUrl?: string;
 }

@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { user, session, account } from './core';
 import { leader, broker, candidate, generatedCV, quickRegistration, invoice } from './agency';
-import { charityCampaign, charityDonation, charityVolunteer } from './charity';
+import { charityCampaign, charityDonation, charityVolunteer, charityNews, charityMedia } from './charity';
 
 // ==========================================
 // CORE RELATIONS
@@ -16,6 +16,8 @@ export const userRelations = relations(user, ({ many }) => ({
   createdCampaigns: many(charityCampaign),
   donations: many(charityDonation),
   volunteers: many(charityVolunteer),
+  newsArticles: many(charityNews),
+  uploadedMedia: many(charityMedia),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -111,6 +113,20 @@ export const charityDonationRelations = relations(charityDonation, ({ one }) => 
 export const charityVolunteerRelations = relations(charityVolunteer, ({ one }) => ({
   user: one(user, {
     fields: [charityVolunteer.userId],
+    references: [user.id],
+  }),
+}));
+
+export const charityNewsRelations = relations(charityNews, ({ one }) => ({
+  author: one(user, {
+    fields: [charityNews.authorId],
+    references: [user.id],
+  }),
+}));
+
+export const charityMediaRelations = relations(charityMedia, ({ one }) => ({
+  uploadedBy: one(user, {
+    fields: [charityMedia.uploadedById],
     references: [user.id],
   }),
 }));

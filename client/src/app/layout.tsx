@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "SKY Foreign Employment Agency",
-  description: "SKY Foreign Employment Agency - Connecting Ethiopian talent with Gulf country opportunities through reliable, professional recruitment services.",
+  title: "Selam Charity & Development Association | Education & Community Support",
+  description: "Selam Charity & Development Association and Selam School - Empowering children and families through quality education, nutrition, and compassionate community care.",
 };
 
 export default function RootLayout({

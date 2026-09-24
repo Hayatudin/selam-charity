@@ -817,5 +817,111 @@ export async function ensureDatabaseSchema() {
     console.warn('⚠️ Performance index check warning:', idxErr.message || idxErr);
   }
 
+  // 16. Charity CMS Tables Self-Healing
+  try {
+    console.log('🌱 Ensuring Charity CMS tables exist...');
+
+    // CharityMedia
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityMedia\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`name\` VARCHAR(255) NOT NULL,
+        \`originalName\` VARCHAR(255) NOT NULL,
+        \`url\` TEXT NOT NULL,
+        \`fileType\` VARCHAR(50) NOT NULL,
+        \`mimeType\` VARCHAR(100) NULL,
+        \`sizeBytes\` INT DEFAULT 0,
+        \`caption\` TEXT NULL,
+        \`uploadedById\` VARCHAR(191) NULL,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        INDEX \`CharityMedia_fileType_idx\` (\`fileType\`),
+        INDEX \`CharityMedia_uploadedById_idx\` (\`uploadedById\`),
+        INDEX \`CharityMedia_createdAt_idx\` (\`createdAt\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharityNews
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityNews\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`slug\` VARCHAR(191) NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`excerpt\` TEXT NULL,
+        \`content\` LONGTEXT NOT NULL,
+        \`category\` VARCHAR(100) NOT NULL DEFAULT 'General',
+        \`featuredImageUrl\` TEXT NULL,
+        \`status\` VARCHAR(50) NOT NULL DEFAULT 'draft',
+        \`publishedAt\` DATETIME(3) NULL,
+        \`authorId\` VARCHAR(191) NULL,
+        \`viewCount\` INT NOT NULL DEFAULT 0,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`CharityNews_slug_key\` (\`slug\`),
+        INDEX \`CharityNews_status_idx\` (\`status\`),
+        INDEX \`CharityNews_category_idx\` (\`category\`),
+        INDEX \`CharityNews_publishedAt_idx\` (\`publishedAt\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharityGallery
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityGallery\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`caption\` TEXT NULL,
+        \`mediaType\` VARCHAR(50) NOT NULL DEFAULT 'image',
+        \`mediaUrl\` TEXT NOT NULL,
+        \`thumbnailUrl\` TEXT NULL,
+        \`category\` VARCHAR(100) NOT NULL DEFAULT 'General',
+        \`orderIndex\` INT NOT NULL DEFAULT 0,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        INDEX \`CharityGallery_category_idx\` (\`category\`),
+        INDEX \`CharityGallery_mediaType_idx\` (\`mediaType\`),
+        INDEX \`CharityGallery_orderIndex_idx\` (\`orderIndex\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharitySchoolContent
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharitySchoolContent\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`sectionKey\` VARCHAR(100) NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`subtitle\` VARCHAR(500) NULL,
+        \`content\` LONGTEXT NULL,
+        \`mediaUrls\` JSON NULL,
+        \`metadata\` JSON NULL,
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`CharitySchoolContent_sectionKey_key\` (\`sectionKey\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharityPageContent
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityPageContent\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`pageKey\` VARCHAR(100) NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`subtitle\` VARCHAR(500) NULL,
+        \`content\` LONGTEXT NULL,
+        \`bannerImageUrl\` TEXT NULL,
+        \`metadata\` JSON NULL,
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`CharityPageContent_pageKey_key\` (\`pageKey\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    console.log('✅ Verified/Created Charity CMS tables.');
+  } catch (charityErr: any) {
+    console.warn('⚠️ Charity CMS table self-healing warning:', charityErr.message || charityErr);
+  }
+
   console.log('✅ Database self-healing complete.');
 }

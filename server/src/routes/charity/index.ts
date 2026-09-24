@@ -4,6 +4,14 @@ import { charityCampaign, charityDonation, charityProject, charityVolunteer } fr
 import { desc, eq } from 'drizzle-orm';
 import { authenticateSession, requireRole } from '../../middlewares/auth';
 
+import dashboardRoutes from './dashboard';
+import newsRoutes from './news';
+import galleryRoutes from './gallery';
+import mediaRoutes from './media';
+import schoolRoutes from './school';
+import pagesRoutes from './pages';
+import donationsRoutes from './donations';
+
 const router = Router();
 
 // ==========================================
@@ -12,8 +20,14 @@ const router = Router();
 router.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'online',
-    module: 'Charity API',
+    module: 'Charity CMS API',
     endpoints: [
+      '/dashboard/stats',
+      '/news',
+      '/gallery',
+      '/media',
+      '/school',
+      '/pages',
       '/campaigns',
       '/donations',
       '/projects',
@@ -24,7 +38,18 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 // ==========================================
-// 2. PUBLIC CAMPAIGNS ENDPOINT
+// 2. SUB-ROUTERS
+// ==========================================
+router.use('/dashboard', dashboardRoutes);
+router.use('/news', newsRoutes);
+router.use('/gallery', galleryRoutes);
+router.use('/media', mediaRoutes);
+router.use('/school', schoolRoutes);
+router.use('/pages', pagesRoutes);
+router.use('/donations', donationsRoutes);
+
+// ==========================================
+// 3. PUBLIC CAMPAIGNS & PROJECTS
 // ==========================================
 router.get('/campaigns', async (req: Request, res: Response) => {
   try {
@@ -41,9 +66,6 @@ router.get('/campaigns', async (req: Request, res: Response) => {
   }
 });
 
-// ==========================================
-// 3. PUBLIC PROJECTS ENDPOINT
-// ==========================================
 router.get('/projects', async (req: Request, res: Response) => {
   try {
     const projects = await db
@@ -83,23 +105,6 @@ router.post('/volunteers', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('[CHARITY] Failed to register volunteer:', err);
     res.status(500).json({ error: 'Failed to register volunteer', details: err.message });
-  }
-});
-
-// ==========================================
-// 5. ADMIN DONATIONS LIST (Protected)
-// ==========================================
-router.get('/donations', authenticateSession, requireRole(['super_admin', 'charity_admin']), async (req: Request, res: Response) => {
-  try {
-    const donations = await db
-      .select()
-      .from(charityDonation)
-      .orderBy(desc(charityDonation.createdAt));
-
-    res.json(donations);
-  } catch (err: any) {
-    console.error('[CHARITY] Failed to fetch donations:', err);
-    res.status(500).json({ error: 'Failed to fetch donations', details: err.message });
   }
 });
 

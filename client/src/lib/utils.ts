@@ -24,15 +24,34 @@ export function getDownloadUrl(path: string | null | undefined) {
   return `${baseUrl}/api/files/${cleanPath}`;
 }
 
-export function getFileUrl(path: string | null | undefined) {
+export function getFileUrl(path: string | null | undefined): string {
   if (!path) return '';
-  if (path.startsWith('http') || path.startsWith('data:')) return path;
-  
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'http://localhost:4000').replace(/\/$/, '');
-  
-  // Ensure the path uses our new secure proxy route
-  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-  return `${baseUrl}/api/assets/${cleanPath}`;
+  if (
+    path.startsWith('http://') ||
+    path.startsWith('https://') ||
+    path.startsWith('data:') ||
+    path.startsWith('blob:')
+  ) {
+    return path;
+  }
+
+  // Next.js local public assets (e.g. /Selam-logo.jpg) stay local
+  if (path.startsWith('/') && !path.startsWith('/uploads') && !path.startsWith('/api')) {
+    return path;
+  }
+
+  let baseUrl = 'http://localhost:4000';
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      baseUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || '').replace(/\/$/, '');
+    }
+  } else if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('localhost')) {
+    baseUrl = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+  }
+
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
 }
 
 export function generateId(): string {

@@ -121,12 +121,39 @@ async function uploadToLocalDisk(fileString: string, folder: string): Promise<st
 /**
  * Upload a local disk file (saved by multer) to the target storage backend (local public folder or Cloudinary)
  */
-export async function uploadFileFromDisk(filePath: string | null | undefined, folder: string): Promise<string | null> {
+export async function uploadFileFromDisk(
+  filePath: string | null | undefined,
+  folder: string,
+  originalName?: string
+): Promise<string | null> {
   if (!filePath) return null;
 
   if (isLocal) {
-    const fileName = path.basename(filePath);
-    return `/uploads/${folder}/${fileName}`;
+    try {
+      const ext = originalName ? path.extname(originalName) : path.extname(filePath);
+      const baseName = path.basename(filePath);
+      const fileName = ext && !baseName.endsWith(ext) ? `${baseName}${ext}` : baseName;
+
+      const targetDir = path.join(process.cwd(), 'public', 'uploads', folder);
+      await mkdir(targetDir, { recursive: true });
+
+      const targetPath = path.join(targetDir, fileName);
+
+      // Move file from temp to target location
+      const fs = await import('fs/promises');
+      try {
+        await fs.rename(filePath, targetPath);
+      } catch (renameErr) {
+        // If rename fails across volumes, fallback to copy + delete
+        await fs.copyFile(filePath, targetPath);
+        try { await fs.unlink(filePath); } catch (_) {}
+      }
+
+      return `/uploads/${folder}/${fileName}`;
+    } catch (err) {
+      console.error(`Local file move error for ${folder}:`, err);
+      return null;
+    }
   } else {
     try {
       const result = await cloudinary.uploader.upload(filePath, {

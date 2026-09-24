@@ -14,7 +14,7 @@ if (!dbUrl) {
 }
 
 // cPanel production auto-detect: switch to local MySQL when running on the server
-const isCPanel =
+export const isCPanel =
   process.env.HOME?.includes('skyforoo') ||
   process.env.USER === 'skyforoo' ||
   process.env.PWD?.includes('skyforoo');

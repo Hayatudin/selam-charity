@@ -77,19 +77,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/candidates/:path*',
-    '/requested/:path*',
-    '/fit-candidates/:path*',
-    '/brokers/:path*',
-    '/registration/:path*',
-    '/cv-generator/:path*',
-    '/generated-cvs/:path*',
-    '/backup/:path*',
+    '/charity/:path*',
     '/settings/:path*',
     '/users/:path*',
-    '/quick-registration/:path*',
-    '/quick-registered/:path*',
-    '/invoice/:path*',
-    '/agency/:path*',
   ],
 };

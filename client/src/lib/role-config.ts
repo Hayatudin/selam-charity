@@ -29,6 +29,7 @@ export const DASHBOARD_ROLES: Role[] = [
   'genaral',
   'calling',
   'charity_admin',
+  'user',
 ];
 
 import { getUserMajorAgency } from '@/lib/cv-templates';
@@ -48,26 +49,16 @@ export function canAccessCalling(user: any): boolean {
 
 // Route → which roles can see/access it
 export const ROUTE_ACCESS: Record<string, Role[]> = {
-  '/dashboard': ['super_admin', 'processor', 'coordinator', 'accountant', 'genaral', 'calling'],
-  '/candidates': ['super_admin', 'processor', 'coordinator', 'genaral', 'calling'],
-  '/quick-registration': ['super_admin', 'genaral', 'calling'],
-  '/calling': ['super_admin', 'registrar', 'processor', 'coordinator', 'accountant', 'video_uploader', 'agency', 'genaral', 'calling', 'user'],
-  '/quick-registered': ['super_admin', 'registrar', 'processor', 'genaral'],
-  '/requested': ['super_admin', 'coordinator', 'accountant', 'genaral'],
-  '/fit-candidates': [], // temporarily hidden — re-enable by restoring: ['super_admin', 'coordinator', 'genaral']
-  '/registration': ['super_admin', 'processor', 'genaral'],
-  '/cv-generator': ['super_admin', 'processor', 'coordinator', 'genaral'],
-  '/generated-cvs': ['super_admin', 'processor', 'genaral'],
-  '/invoice': ['super_admin', 'accountant', 'genaral'],
-  '/deployments': ['super_admin', 'processor', 'coordinator', 'accountant', 'genaral'],
-  '/brokers': ['super_admin', 'processor', 'genaral'],
-  '/backup': ['super_admin', 'processor', 'coordinator', 'genaral'],
-  '/settings': ['super_admin', 'registrar', 'processor', 'coordinator', 'accountant', 'video_uploader', 'agency', 'genaral', 'calling'],
+  '/dashboard': ['super_admin', 'charity_admin', 'user'],
+  '/charity/dashboard': ['super_admin', 'charity_admin', 'user'],
+  '/charity/donations': ['super_admin', 'charity_admin', 'user'],
+  '/charity/news': ['super_admin', 'charity_admin', 'user'],
+  '/charity/gallery': ['super_admin', 'charity_admin', 'user'],
+  '/charity/media': ['super_admin', 'charity_admin', 'user'],
+  '/charity/school': ['super_admin', 'charity_admin', 'user'],
+  '/charity/pages': ['super_admin', 'charity_admin', 'user'],
+  '/settings': ['super_admin', 'charity_admin', 'user'],
   '/users': ['super_admin'],
-  '/agency/available-candidates': ['agency'],
-  '/agency/contracts': ['super_admin', 'agency', 'processor', 'coordinator', 'accountant', 'genaral'],
-  '/wakala': ['super_admin', 'agency', 'processor', 'coordinator', 'accountant', 'genaral', 'calling', 'user', 'registrar', 'video_uploader'],
-  '/available-passport': ['super_admin', 'genaral'],
 };
 
 // Helper: check if a role can access a specific route
