@@ -37,13 +37,10 @@ function writeFallbackMedia(data: any[]) {
   }
 }
 
-// Configure local multer temp destination
-const tempUploadDir = path.join(process.cwd(), 'public', 'uploads', 'temp');
-if (!fs.existsSync(tempUploadDir)) {
-  try {
-    fs.mkdirSync(tempUploadDir, { recursive: true });
-  } catch (_) {}
-}
+import os from 'os';
+
+// Configure multer temp destination using OS temp directory (always writable on Linux/cPanel)
+const tempUploadDir = os.tmpdir();
 
 const upload = multer({
   dest: tempUploadDir,

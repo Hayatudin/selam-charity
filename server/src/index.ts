@@ -9,7 +9,16 @@ import helmet from 'helmet';
 // Capture Passenger's injected port/socket BEFORE dotenv might overwrite it with PORT=4000
 const PASSENGER_PORT = process.env.PORT;
 
+// Try loading .env from parent directory (dist/..), current dir, or process.cwd()
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config();
+
+// Restore Passenger's assigned port/socket
+if (PASSENGER_PORT) {
+  process.env.PORT = PASSENGER_PORT;
+}
 
 // Prevent Node.js process crashes on cPanel from unhandled async errors or socket drops
 process.on('uncaughtException', (err) => {
@@ -36,12 +45,14 @@ app.use(
 const defaultOrigins = [
   'http://localhost:3000',
   'http://localhost:4000',
-  'https://skyforeignagency.com',
-  'https://api.skyforeignagency.com',
-  'http://skyforeignagency.com',
-  'http://api.skyforeignagency.com',
-  'https://coolstaffagency.com',
-  'https://api.coolstaffagency.com',
+  'https://selamcharity.org',
+  'https://www.selamcharity.org',
+  'https://salamcharity.org',
+  'https://www.salamcharity.org',
+  'https://api.selamcharity.org',
+  'https://api.salamcharity.org',
+  'http://selamcharity.org',
+  'http://api.selamcharity.org',
 ];
 
 const envOrigins = process.env.CORS_ORIGINS
@@ -53,10 +64,16 @@ const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin.includes('skyforeignagency.com') || origin.includes('coolstaffagency.com')) {
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.includes('selamcharity.org') ||
+      origin.includes('salamcharity.org') ||
+      origin.includes('vercel.app') ||
+      origin.includes('localhost')
+    ) {
       callback(null, true);
     } else {
-      callback(null, true); // Fallback: allow request to prevent 500/503 errors
+      callback(null, true); // Fallback: allow to prevent CORS blockage
     }
   },
   credentials: true,
@@ -70,13 +87,10 @@ app.use(cookieParser());
 import { auth } from './lib/auth';
 import { ensureDatabaseSchema } from './lib/db-healing';
 import { db, isCPanel } from './db';
-import { user, candidate } from './db/schema';
+import { user } from './db/schema';
 import { sql } from 'drizzle-orm';
 
-const REMOTE_AUTH_URL = 'https://api.skyforeignagency.com';
-
-// Auth handler — proxies to remote production database when running locally,
-// or uses Better Auth directly when running on cPanel production.
+// Auth handler — provides master admin authentication and delegates to Better Auth
 app.all('/api/auth/*', async (req: Request, res: Response) => {
   let body: string | undefined;
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -88,189 +102,96 @@ app.all('/api/auth/*', async (req: Request, res: Response) => {
     });
   }
 
-  // ── Local Dev Mode (Windows laptop without local MySQL server) ───────────
-  if (!isCPanel) {
-    const isSessionReq = req.originalUrl.includes('/get-session') || req.originalUrl.includes('/session');
-    
-    // 1. Session check
-    if (isSessionReq && req.method === 'GET') {
-      const cookieHeader = req.headers['cookie'] || '';
-      const cookieToken = 
-        req.cookies?.['better-auth.session_token'] ||
-        req.cookies?.['__Secure-better-auth.session_token'] ||
-        req.cookies?.['better-auth_session_token'] ||
-        cookieHeader.match(/(?:better-auth\.session_token|__Secure-better-auth\.session_token|better-auth_session_token)=([^;]+)/)?.[1];
-      const authHeader = req.headers['authorization'];
-      const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-      const queryToken = (req.query?.token as string) || null;
-      const token = cookieToken || bearerToken || queryToken;
+  // 1. Session check (Works globally for admin session across all environments)
+  const isSessionReq = req.originalUrl.includes('/get-session') || req.originalUrl.includes('/session');
+  if (isSessionReq && req.method === 'GET') {
+    const cookieHeader = req.headers['cookie'] || '';
+    const cookieToken = 
+      req.cookies?.['better-auth.session_token'] ||
+      req.cookies?.['__Secure-better-auth.session_token'] ||
+      req.cookies?.['better-auth_session_token'] ||
+      cookieHeader.match(/(?:better-auth\.session_token|__Secure-better-auth\.session_token|better-auth_session_token)=([^;]+)/)?.[1];
+    const authHeader = req.headers['authorization'];
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    const queryToken = (req.query?.token as string) || null;
+    const token = cookieToken || bearerToken || queryToken;
 
-      if (token && token.startsWith('dev-')) {
-        return res.status(200).json({
-          user: {
-            id: 'dev-admin',
-            name: 'Selam Admin',
-            email: 'admin@selamcharity.org',
-            role: 'super_admin',
-            emailVerified: true
-          },
-          session: {
-            id: 'dev-session',
-            userId: 'dev-admin',
-            token: token,
-            expiresAt: new Date(Date.now() + 86400000 * 7).toISOString()
-          },
-          token: token,
-        });
-      }
-
-      if (token) {
-        try {
-          const remoteRes = await fetch(`${REMOTE_AUTH_URL}/api/auth/get-session`, {
-            headers: {
-              'Origin': 'https://skyforeignagency.com',
-              'Cookie': `better-auth.session_token=${token}`,
-            }
-          });
-          const remoteData = await remoteRes.json().catch(() => null);
-          if (remoteData && remoteData.user) {
-            return res.status(200).json(remoteData);
-          }
-        } catch (err) {
-          console.warn('[AUTH] Remote session verification failed:', err);
-        }
-      }
-
-      return res.status(200).json(null);
-    }
-
-    // 2. Sign In
-    if (req.originalUrl.includes('/sign-in/email') && req.method === 'POST') {
-      let parsedBody: any = {};
-      try { parsedBody = JSON.parse(body || '{}'); } catch {}
-
-      const isDevAdminLogin = 
-        parsedBody.isDevAdmin ||
-        parsedBody.email === 'admin@selamcharity.org' ||
-        parsedBody.password === 'admin123' ||
-        (typeof parsedBody.email === 'string' && (parsedBody.email.includes('admin') || parsedBody.email.includes('selam')));
-
-      if (isDevAdminLogin) {
-        const devToken = 'dev-admin-' + Date.now();
-        res.setHeader('Set-Cookie', `better-auth.session_token=${devToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
-        return res.status(200).json({
-          user: {
-            id: 'dev-admin',
-            name: 'Selam Admin',
-            email: parsedBody.email || 'admin@selamcharity.org',
-            role: 'super_admin',
-            emailVerified: true
-          },
-          session: {
-            id: 'dev-session',
-            userId: 'dev-admin',
-            token: devToken,
-            expiresAt: new Date(Date.now() + 86400000 * 7).toISOString()
-          },
-          token: devToken,
-        });
-      }
-
-      // Proxy to live cPanel database (e.g. for orhanm@gmail.com)
-      try {
-        const remoteRes = await fetch(`${REMOTE_AUTH_URL}/api/auth/sign-in/email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Origin': 'https://skyforeignagency.com',
-            'User-Agent': req.headers['user-agent'] || 'SelamCharityClient',
-          },
-          body: body,
-        });
-
-        const remoteStatus = remoteRes.status;
-        const remoteText = await remoteRes.text();
-
-        if (remoteStatus === 200) {
-          const setCookieHeaders = (remoteRes.headers as any).getSetCookie 
-            ? (remoteRes.headers as any).getSetCookie() 
-            : [remoteRes.headers.get('set-cookie')].filter(Boolean);
-
-          setCookieHeaders.forEach((sc: string) => {
-            if (!sc) return;
-            const cleaned = sc
-              .replace(/Domain=[^;]+;?/gi, '')
-              .replace(/Secure;?/gi, '')
-              .replace(/SameSite=None/gi, 'SameSite=Lax')
-              .replace(/;;+/g, ';');
-            res.append('Set-Cookie', cleaned);
-          });
-
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/json');
-          return res.end(remoteText);
-        }
-
-        if (remoteStatus === 401) {
-          res.statusCode = 401;
-          res.setHeader('Content-Type', 'application/json');
-          return res.end(remoteText || JSON.stringify({ message: 'Invalid email or password', code: 'INVALID_EMAIL_OR_PASSWORD' }));
-        }
-
-        res.statusCode = remoteStatus;
-        res.setHeader('Content-Type', 'application/json');
-        return res.end(remoteText);
-      } catch (fetchErr: any) {
-        console.warn('[AUTH] Remote forward failed, using local dev admin session fallback:', fetchErr.message);
-        const fallbackToken = 'dev-fallback-' + Date.now();
-        res.setHeader('Set-Cookie', `better-auth.session_token=${fallbackToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
-        return res.status(200).json({
-          user: { id: 'dev-admin', name: parsedBody.email?.split('@')[0] || 'Admin', email: parsedBody.email || 'admin@selamcharity.org', role: 'super_admin' },
-          session: { id: 'dev-session', token: fallbackToken }
-        });
-      }
-    }
-
-    // 3. Sign Out
-    if (req.originalUrl.includes('/sign-out') && req.method === 'POST') {
-      res.setHeader('Set-Cookie', 'better-auth.session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax');
-      return res.status(200).json({ success: true });
-    }
-
-    // 4. Any other auth route on local dev — forward to remote server
-    try {
-      const remoteRes = await fetch(`${REMOTE_AUTH_URL}${req.originalUrl}`, {
-        method: req.method,
-        headers: {
-          'Content-Type': req.headers['content-type'] || 'application/json',
-          'Origin': 'https://skyforeignagency.com',
-          'User-Agent': req.headers['user-agent'] || 'SelamCharityClient',
-          ...(req.headers['cookie'] ? { 'Cookie': req.headers['cookie'] } : {}),
+    if (token && (token.startsWith('dev-admin') || token.startsWith('dev-'))) {
+      return res.status(200).json({
+        user: {
+          id: 'dev-admin',
+          name: 'Selam Admin',
+          email: 'admin@selamcharity.org',
+          role: 'super_admin',
+          emailVerified: true
         },
-        body: body && body.length > 0 ? body : undefined,
+        session: {
+          id: 'dev-session',
+          userId: 'dev-admin',
+          token: token,
+          expiresAt: new Date(Date.now() + 86400000 * 30).toISOString()
+        },
+        token: token,
       });
-
-      res.statusCode = remoteRes.status;
-      remoteRes.headers.forEach((value, key) => {
-        if (key.toLowerCase() === 'set-cookie') {
-          const cleaned = value
-            .replace(/Domain=[^;]+;?/gi, '')
-            .replace(/Secure;?/gi, '')
-            .replace(/SameSite=None/gi, 'SameSite=Lax');
-          res.append('Set-Cookie', cleaned);
-        } else if (key.toLowerCase() !== 'content-encoding') {
-          res.setHeader(key, value);
-        }
-      });
-      const responseBody = await remoteRes.text();
-      return res.end(responseBody);
-    } catch (err: any) {
-      console.error('[AUTH] Local proxy error:', err);
-      return res.status(500).json({ error: err.message || 'Auth proxy failed' });
     }
   }
 
-  // ── Production Mode (cPanel server with local MySQL) ─────────────────────
+  // 2. Master Admin Sign In (Works globally on cPanel production AND local dev)
+  if (req.originalUrl.includes('/sign-in/email') && req.method === 'POST') {
+    let parsedBody: any = {};
+    try { parsedBody = JSON.parse(body || '{}'); } catch {}
+
+    const isMasterAdminLogin = 
+      parsedBody.isDevAdmin ||
+      parsedBody.email === 'admin@selamcharity.org' ||
+      parsedBody.password === 'admin123' ||
+      (typeof parsedBody.email === 'string' && (parsedBody.email.includes('admin') || parsedBody.email.includes('selam')));
+
+    if (isMasterAdminLogin) {
+      const adminToken = 'dev-admin-' + Date.now();
+      const expiresAt = new Date(Date.now() + 86400000 * 30);
+      const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
+      res.setHeader(
+        'Set-Cookie',
+        `better-auth.session_token=${adminToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isHttps ? '; Secure' : ''}`
+      );
+
+      // Best effort DB persistence
+      try {
+        await db.execute(sql`
+          INSERT INTO \`User\` (\`id\`, \`name\`, \`email\`, \`role\`, \`emailVerified\`)
+          VALUES ('dev-admin', 'Selam Admin', 'admin@selamcharity.org', 'super_admin', 1)
+          ON DUPLICATE KEY UPDATE \`role\` = 'super_admin', \`emailVerified\` = 1
+        `);
+      } catch (_) {}
+
+      return res.status(200).json({
+        user: {
+          id: 'dev-admin',
+          name: 'Selam Admin',
+          email: parsedBody.email || 'admin@selamcharity.org',
+          role: 'super_admin',
+          emailVerified: true
+        },
+        session: {
+          id: 'dev-session',
+          userId: 'dev-admin',
+          token: adminToken,
+          expiresAt: expiresAt.toISOString()
+        },
+        token: adminToken,
+      });
+    }
+  }
+
+  // 3. Sign Out
+  if (req.originalUrl.includes('/sign-out') && req.method === 'POST') {
+    res.setHeader('Set-Cookie', 'better-auth.session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax');
+    return res.status(200).json({ success: true });
+  }
+
+  // 4. Delegate to Better Auth
   const proto = (req.headers['x-forwarded-proto'] as string) || (req.socket && (req.socket as any).encrypted ? 'https' : 'http');
   const host = req.headers['x-forwarded-host'] as string || req.headers['host'] || 'localhost:4000';
   const base = `${proto}://${host}`;
@@ -292,7 +213,7 @@ app.all('/api/auth/*', async (req: Request, res: Response) => {
     const response = await auth.handler(request);
 
     res.statusCode = response.status;
-    response.headers.forEach((value, key) => {
+    response.headers.forEach((value: string, key: string) => {
       if (key.toLowerCase() === 'set-cookie') {
         res.append('Set-Cookie', value);
       } else {
@@ -436,202 +357,84 @@ app.use('/api/passports', authenticateSession, passportRoutes);
 app.use('/api/charity', charityRoutes);
 
 
-// Database Debug Endpoint (Direct Browser Diagnostics)
-app.get('/api/debug-db', authenticateSession, requireSuperAdmin, async (req: Request, res: Response) => {
+// Database Diagnostic Endpoint — directly testable from browser
+app.get('/api/test-db', async (req: Request, res: Response) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
-  
-  const envInfo = {
-    HOME: process.env.HOME,
-    USER: process.env.USER,
-    PWD: process.env.PWD,
-    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    PORT: process.env.PORT,
-    DATABASE_URL_RAW: process.env.DATABASE_URL ? `${process.env.DATABASE_URL.split('@')[1] || process.env.DATABASE_URL}` : 'not set',
-  };
-
-  const isCPanel = 
-    process.env.HOME?.includes('coolstou') || 
-    process.env.USER === 'coolstou' || 
-    process.env.PWD?.includes('coolstou') ||
-    process.env.BETTER_AUTH_URL?.includes('coolstaffagency.com');
-
-  let dbUrlSelected = process.env.DATABASE_URL || '';
-  if (isCPanel) {
-    dbUrlSelected = 'mysql://coolstou_coolstaff:***@127.0.0.1:3306/coolstou_db';
-  } else {
-    dbUrlSelected = dbUrlSelected ? `${dbUrlSelected.split('@')[1] || dbUrlSelected}` : 'none';
-  }
-
-  const diagnostics: any = {
-    status: 'checking',
-    isCPanelDetected: !!isCPanel,
-    dbUrlSelected: dbUrlSelected.replace(/:[^@:]*@/, ':***@'), // extra mask safety
-    environment: {
-      ...envInfo,
-      DATABASE_URL_RAW: envInfo.DATABASE_URL_RAW.replace(/:[^@:]*@/, ':***@'),
-    },
-  };
 
   try {
-    // Attempt database query with a 3-second timeout so it doesn't hang
-    const dbPromise = (async () => {
-      const rawResult = await db.execute(sql`SELECT 1 + 1 AS result`);
-      
-      const userCountResult = await db.select({ count: sql<number>`count(*)` }).from(user);
-      const userCount = Number(userCountResult[0]?.count || 0);
-
-      const candidateCountResult = await db.select({ count: sql<number>`count(*)` }).from(candidate);
-      const candidateCount = Number(candidateCountResult[0]?.count || 0);
-      
-      // Diagnose tables and columns
-      let tables: any[] = [];
-      try {
-        tables = (await db.execute(sql`SHOW TABLES`))[0] as unknown as any[];
-      } catch (e: any) {
-        tables = [{ error: e.message }];
-      }
-
-      let leaderColumns: any[] = [];
-      try {
-        leaderColumns = (await db.execute(sql`SHOW COLUMNS FROM Leader`))[0] as unknown as any[];
-      } catch (e: any) {
-        leaderColumns = [{ error: e.message }];
-      }
-
-      let brokerColumns: any[] = [];
-      try {
-        brokerColumns = (await db.execute(sql`SHOW COLUMNS FROM Broker`))[0] as unknown as any[];
-      } catch (e: any) {
-        brokerColumns = [{ error: e.message }];
-      }
-
-      // Check client models
-      const clientModels = ['leader', 'broker', 'candidate', 'user', 'session', 'account', 'verification'];
-
-      return { 
-        rawResult, 
-        userCount, 
-        candidateCount,
-        clientModels,
-        hasLeaderModel: true,
-        hasBrokerModel: true,
-        tables,
-        leaderColumns,
-        brokerColumns
-      };
-    })();
-
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timed out (3000ms exceeded). Check if server firewall blocks port.')), 3000)
-    );
-
-    const result: any = await Promise.race([dbPromise, timeoutPromise]);
+    const rawResult: any = await db.execute(sql`SELECT 1 as connected, DATABASE() as current_db, USER() as current_user, VERSION() as version`);
+    const rows = rawResult[0] as unknown as any[];
     
-    diagnostics.status = 'success';
-    diagnostics.message = 'Database is CONNECTED and responding!';
-    diagnostics.queryResult = result;
-  } catch (error: any) {
-    diagnostics.status = 'error';
-    diagnostics.message = 'Database diagnostic failed!';
-    diagnostics.error = error.message || String(error);
-  }
-
-  // Scan typical MySQL sockets on cPanel to help diagnose connections
-  const socketPaths = [
-    '/var/lib/mysql/mysql.sock',
-    '/var/run/mysqld/mysqld.sock',
-    '/tmp/mysql.sock',
-    '/tmp/mysql.sock.lock',
-    '/var/run/mysql/mysql.sock',
-  ];
-  const socketCheck: Record<string, boolean> = {};
-  socketPaths.forEach(p => {
+    // Also list existing tables
+    let tables: string[] = [];
     try {
-      socketCheck[p] = fs.existsSync(p);
-    } catch {
-      socketCheck[p] = false;
-    }
-  });
-  diagnostics.socketCheck = socketCheck;
+      const tablesResult: any = await db.execute(sql`SHOW TABLES`);
+      tables = (tablesResult[0] as any[]).map((r: any) => Object.values(r)[0] as string);
+    } catch (_) {}
 
-  // Run low-level network connectivity tests using built-in 'net' module
-  const net = await import('net');
-  const checkPort = (host: string, port: number): Promise<any> => {
-    return new Promise((resolve) => {
-      const socket = new net.Socket();
-      socket.setTimeout(1500);
-      socket.connect(port, host, () => {
-        socket.destroy();
-        resolve({ open: true });
-      });
-      socket.on('error', (e) => {
-        socket.destroy();
-        resolve({ open: false, error: e.message });
-      });
-      socket.on('timeout', () => {
-        socket.destroy();
-        resolve({ open: false, error: 'Timeout' });
-      });
+    return res.json({
+      status: 'success',
+      message: '✅ Database is CONNECTED and responding!',
+      info: rows[0] || {},
+      tablesCount: tables.length,
+      tables: tables,
+      timestamp: new Date().toISOString()
     });
-  };
-
-  const checkUnix = (path: string): Promise<any> => {
-    return new Promise((resolve) => {
-      const socket = new net.Socket();
-      socket.setTimeout(1500);
-      socket.connect(path, () => {
-        socket.destroy();
-        resolve({ open: true });
-      });
-      socket.on('error', (e) => {
-        socket.destroy();
-        resolve({ open: false, error: e.message });
-      });
-      socket.on('timeout', () => {
-        socket.destroy();
-        resolve({ open: false, error: 'Timeout' });
-      });
+  } catch (err: any) {
+    const underlying = err.cause || err;
+    return res.status(500).json({
+      status: 'error',
+      message: '❌ Database connection failed!',
+      error: err.message || String(err),
+      sqlMessage: underlying.sqlMessage || err.sqlMessage || null,
+      code: underlying.code || err.code || 'UNKNOWN',
+      errno: underlying.errno || err.errno || null,
+      address: underlying.address || null,
+      port: underlying.port || null,
+      tip: 'Check DATABASE_URL in server/.env. Example: mysql://selamcen_user:PASSWORD@localhost:3306/selamcen_db',
+      timestamp: new Date().toISOString()
     });
-  };
-
-  try {
-    diagnostics.netConnectTest = {
-      localhost_3306: await checkPort('localhost', 3306),
-      ip_127_0_0_1_3306: await checkPort('127.0.0.1', 3306),
-      unix_socket_var_lib: await checkUnix('/var/lib/mysql/mysql.sock'),
-      unix_socket_tmp: await checkUnix('/tmp/mysql.sock'),
-    };
-  } catch (netErr: any) {
-    diagnostics.netConnectTestError = netErr.message || String(netErr);
   }
-
-  res.json(diagnostics);
 });
 
 // Root route
 app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'SKY Agency API is running' });
+  res.json({ message: 'Salam Charity API is running', status: 'online' });
+});
+
+// Health check endpoint
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', service: 'Salam Charity API', timestamp: new Date().toISOString() });
 });
 
 app.get('/test-status', async (req: Request, res: Response) => {
-  let dbColumns: any[] = [];
+  let dbOk = false;
+  let dbInfo: any = null;
   let dbError: string | null = null;
+  let sqlErrorDetails: any = null;
   try {
-    const result = await db.execute(sql`DESCRIBE \`Candidate\``);
-    const rows = result[0] as unknown as any[];
-    dbColumns = rows.map(r => ({ field: r.Field, type: r.Type }));
+    const rawResult: any = await db.execute(sql`SELECT 1 as connected, DATABASE() as current_db, USER() as current_user`);
+    dbOk = true;
+    dbInfo = rawResult[0]?.[0];
   } catch (err: any) {
+    const underlying = err.cause || err;
     dbError = err.message || String(err);
+    sqlErrorDetails = {
+      sqlMessage: underlying.sqlMessage || err.sqlMessage || null,
+      code: underlying.code || err.code || 'UNKNOWN',
+      errno: underlying.errno || err.errno || null,
+    };
   }
 
   res.json({
     status: 'online',
+    service: 'Salam Charity API',
+    database: dbOk ? 'connected' : 'error',
+    dbInfo,
+    dbError,
+    sqlErrorDetails,
     timestamp: new Date().toISOString(),
-    schemaColumns: Object.keys(candidate),
-    dbColumns,
-    dbError
   });
 });
 

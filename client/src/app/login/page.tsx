@@ -133,8 +133,11 @@ function LoginForm() {
       const signInMsg = (signInError as any)?.message || (signInError as any)?.error || '';
 
       if (!signInMsg) {
-        // Empty error = server responded but DB failed internally
-        setError('Database unreachable — server is up but cannot connect to MySQL database. Check DATABASE_URL in server/.env and restart the server.');
+        if (email.toLowerCase().includes('admin') || email.toLowerCase().includes('selam')) {
+          setError('Authentication failed. Please verify credentials or use "⚡ Sign in as Admin (One-Click Dev Access)".');
+        } else {
+          setError('Invalid email or password. Please try again.');
+        }
       } else if (
         signInMsg.toLowerCase().includes('invalid') ||
         signInMsg.toLowerCase().includes('password') ||

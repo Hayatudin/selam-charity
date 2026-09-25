@@ -2,7 +2,7 @@ import { db } from '../db';
 import { sql } from 'drizzle-orm';
 
 export async function ensureDatabaseSchema() {
-  console.log('🔧 Starting database self-healing schema checks...');
+  console.log('🔧 Starting Salam Charity database self-healing checks...');
 
   // 1. Create Core Better Auth Tables
   try {
@@ -14,7 +14,6 @@ export async function ensureDatabaseSchema() {
         \`emailVerified\` TINYINT(1) NOT NULL DEFAULT 0,
         \`image\` VARCHAR(191) NULL,
         \`role\` VARCHAR(191) NOT NULL DEFAULT 'user',
-        \`agency\` VARCHAR(191) NULL,
         \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
         \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
         PRIMARY KEY (\`id\`),
@@ -26,16 +25,6 @@ export async function ensureDatabaseSchema() {
     console.log(`✅ Verified/Created 'User' table.`);
   } catch (e: any) {
     console.warn('⚠️ User table check warning:', e.message || e);
-  }
-
-  try {
-    await db.execute(sql`ALTER TABLE \`User\` ADD COLUMN \`agency\` VARCHAR(191) NULL`);
-    console.log(`✅ Successfully added column 'agency' to User table.`);
-  } catch (e: any) {
-    const msg = e.message || String(e);
-    if (!msg.includes('Duplicate column') && !msg.includes('already exists')) {
-      console.warn(`⚠️ User column fallback update warning for 'agency':`, msg);
-    }
   }
 
   try {
@@ -106,721 +95,8 @@ export async function ensureDatabaseSchema() {
     console.warn('⚠️ Verification table check warning:', e.message || e);
   }
 
-  // 1b. Create Leader Table
+  // 2. Charity CMS & Core Tables
   try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`Leader\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`name\` VARCHAR(191) NOT NULL,
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`Leader_name_key\` (\`name\`)
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'Leader' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ Leader table check warning:', e.message || e);
-  }
-
-  // 2. Create Broker Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`Broker\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`name\` VARCHAR(191) NOT NULL,
-        \`isLocked\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`leaderId\` VARCHAR(191) NULL,
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`Broker_name_key\` (\`name\`),
-        INDEX \`Broker_leaderId_idx\` (\`leaderId\`)
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'Broker' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ Broker table check warning:', e.message || e);
-  }
-
-  // 3. Create Candidate Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`Candidate\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`shelfId\` VARCHAR(191) NULL,
-        \`passportNumber\` VARCHAR(191) NOT NULL,
-        \`surname\` VARCHAR(191) NOT NULL,
-        \`givenNames\` VARCHAR(191) NOT NULL,
-        \`dateOfBirth\` DATETIME(3) NOT NULL,
-        \`gender\` VARCHAR(191) NOT NULL,
-        \`nationality\` VARCHAR(191) NOT NULL,
-        \`issuingCountry\` VARCHAR(191) NOT NULL,
-        \`dateOfIssue\` DATETIME(3) NOT NULL,
-        \`dateOfExpiry\` DATETIME(3) NOT NULL,
-        \`placeOfBirth\` VARCHAR(191) NOT NULL,
-        \`maritalStatus\` VARCHAR(191) NOT NULL,
-        \`numberOfChildren\` INT NOT NULL DEFAULT 0,
-        \`religion\` VARCHAR(191) NOT NULL,
-        \`bloodType\` VARCHAR(191) NOT NULL,
-        \`height\` VARCHAR(191) NULL,
-        \`weight\` VARCHAR(191) NULL,
-        \`phone\` VARCHAR(191) NULL,
-        \`additionalPhones\` JSON NULL,
-        \`email\` VARCHAR(191) NULL,
-        \`address\` VARCHAR(191) NULL,
-        \`city\` VARCHAR(191) NULL,
-        \`state\` VARCHAR(191) NULL,
-        \`country\` VARCHAR(191) NULL,
-        \`idNumber\` VARCHAR(191) NULL,
-        \`job\` VARCHAR(191) NULL,
-        \`educationLevel\` VARCHAR(191) NULL,
-        \`languages\` JSON NULL,
-        \`workExperience\` JSON NULL,
-        \`skills\` JSON NULL,
-        \`medicalStatus\` VARCHAR(191) NOT NULL DEFAULT 'Pending',
-        \`biometricStatus\` VARCHAR(191) NOT NULL DEFAULT 'Pending',
-        \`medicalDate\` DATETIME(3) NULL,
-        \`biometricDate\` DATETIME(3) NULL,
-        \`knownConditions\` VARCHAR(191) NULL,
-        \`cvDeadline\` DATETIME(3) NULL,
-        \`emergencyContactName\` VARCHAR(191) NULL,
-        \`emergencyContactRelation\` VARCHAR(191) NULL,
-        \`emergencyContactPhone\` VARCHAR(191) NULL,
-        \`emergencyContactAddress\` VARCHAR(191) NULL,
-        \`passportImageUrl\` VARCHAR(191) NULL,
-        \`facePhotoUrl\` VARCHAR(191) NULL,
-        \`fullBodyPhotoUrl\` VARCHAR(191) NULL,
-        \`cocDocumentUrl\` LONGTEXT NULL,
-        \`medicalDocumentUrl\` VARCHAR(191) NULL,
-        \`candidateIdImageUrl\` LONGTEXT NULL,
-        \`relativeIdImageUrl\` LONGTEXT NULL,
-        \`labourId\` VARCHAR(191) NULL,
-        \`isRequested\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`visaOrContractNumber\` VARCHAR(191) NULL,
-        \`isFlagged\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`flaggedAt\` DATETIME(3) NULL,
-        \`Youtube_URL\` VARCHAR(191) NULL,
-        \`quickVideoUrl\` LONGTEXT NULL,
-        \`registeredAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        \`status\` VARCHAR(191) NOT NULL DEFAULT 'pending',
-        \`visaSelected\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`visaDate\` DATETIME(3) NULL,
-        \`salary\` VARCHAR(191) NULL DEFAULT '1000SR',
-        \`agency\` VARCHAR(191) NULL DEFAULT 'Sky',
-        \`flightStatus\` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
-        \`brokerId\` VARCHAR(191) NULL,
-        \`registeredById\` VARCHAR(191) NULL,
-        PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`Candidate_passportNumber_key\` (\`passportNumber\`),
-        INDEX \`Candidate_passportNumber_idx\` (\`passportNumber\`),
-        INDEX \`Candidate_nationality_idx\` (\`nationality\`),
-        FOREIGN KEY (\`brokerId\`) REFERENCES \`Broker\`(\`id\`) ON DELETE SET NULL ON UPDATE CASCADE,
-        FOREIGN KEY (\`registeredById\`) REFERENCES \`User\`(\`id\`) ON DELETE SET NULL ON UPDATE CASCADE
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'Candidate' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ Candidate table check warning:', e.message || e);
-  }
-
-  // 4. Create QuickRegistration Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`QuickRegistration\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`passportNumber\` VARCHAR(191) NOT NULL,
-        \`passportType\` VARCHAR(191) NOT NULL DEFAULT 'original',
-        \`surname\` VARCHAR(191) NOT NULL,
-        \`givenNames\` VARCHAR(191) NOT NULL,
-        \`dateOfBirth\` VARCHAR(191) NULL,
-        \`gender\` VARCHAR(191) NULL,
-        \`nationality\` VARCHAR(191) NULL,
-        \`dateOfExpiry\` VARCHAR(191) NULL,
-        \`issuingCountry\` VARCHAR(191) NULL,
-        \`placeOfBirth\` VARCHAR(191) NULL,
-        \`educationLevel\` VARCHAR(191) NULL,
-        \`jobExperience\` LONGTEXT NULL,
-        \`maritalStatus\` VARCHAR(191) NULL,
-        \`numberOfChildren\` INT NOT NULL DEFAULT 0,
-        \`passportImageUrl\` LONGTEXT NULL,
-        \`religion\` VARCHAR(191) NULL,
-        \`relativePhones\` JSON NULL,
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        \`verificationStatus\` VARCHAR(191) NOT NULL DEFAULT 'pending',
-        \`musanedCvUrl\` LONGTEXT NULL,
-        \`verificationNotes\` VARCHAR(191) NULL,
-        \`verifiedAt\` DATETIME(3) NULL,
-        \`promotedAt\` DATETIME(3) NULL,
-        \`promotedCandidateId\` VARCHAR(191) NULL,
-        \`cocDocumentUrl\` LONGTEXT NULL,
-        \`labourId\` VARCHAR(191) NULL,
-        \`candidateIdImageUrl\` LONGTEXT NULL,
-        \`relativeIdImageUrl\` LONGTEXT NULL,
-        \`agency\` VARCHAR(191) NULL DEFAULT 'Sky',
-        \`videoUrl\` VARCHAR(500) NULL,
-        \`brokerId\` VARCHAR(191) NULL,
-        PRIMARY KEY (\`id\`),
-        INDEX \`QuickRegistration_createdAt_idx\` (\`createdAt\`),
-        INDEX \`QuickRegistration_brokerId_idx\` (\`brokerId\`),
-        FOREIGN KEY (\`brokerId\`) REFERENCES \`Broker\`(\`id\`) ON DELETE SET NULL ON UPDATE CASCADE
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'QuickRegistration' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ QuickRegistration table check warning:', e.message || e);
-  }
-
-  // 5. Create GeneratedCV Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`GeneratedCV\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`candidateId\` VARCHAR(191) NOT NULL,
-        \`templateId\` VARCHAR(191) NOT NULL,
-        \`facePhotoUrl\` TEXT NULL,
-        \`fullBodyPhotoUrl\` TEXT NULL,
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`id\`),
-        INDEX \`GeneratedCV_templateId_idx\` (\`templateId\`),
-        INDEX \`GeneratedCV_candidateId_idx\` (\`candidateId\`),
-        FOREIGN KEY (\`candidateId\`) REFERENCES \`Candidate\`(\`id\`) ON DELETE CASCADE ON UPDATE CASCADE
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'GeneratedCV' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ GeneratedCV table check warning:', e.message || e);
-  }
-
-  // 6. Create Notification Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`Notification\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`title\` VARCHAR(191) NOT NULL,
-        \`message\` VARCHAR(191) NOT NULL,
-        \`isRead\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`candidateId\` VARCHAR(191) NULL,
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`id\`),
-        INDEX \`Notification_createdAt_idx\` (\`createdAt\`),
-        INDEX \`Notification_isRead_idx\` (\`isRead\`)
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'Notification' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ Notification table check warning:', e.message || e);
-  }
-
-  // 7. Create/Heal PreRegisteredVideo Table
-  try {
-    let hasPassportNumber = false;
-    let hasFacePhoto = false;
-    let hasFullBodyPhoto = false;
-    let hasFullName = false;
-
-    try {
-      const [columns] = await db.execute(sql`SHOW COLUMNS FROM \`PreRegisteredVideo\``) as any[];
-      hasPassportNumber = columns.some((c: any) => c.Field === 'passportNumber');
-      hasFacePhoto = columns.some((c: any) => c.Field === 'facePhotoUrl');
-      hasFullBodyPhoto = columns.some((c: any) => c.Field === 'fullBodyPhotoUrl');
-      hasFullName = columns.some((c: any) => c.Field === 'fullName');
-    } catch (_) {
-      // Table doesn't exist yet, we will create it below
-    }
-
-    if (hasFullName) {
-      try {
-        await db.execute(sql`ALTER TABLE \`PreRegisteredVideo\` DROP INDEX \`PreRegisteredVideo_fullName_key\``);
-      } catch (_) {}
-      try {
-        await db.execute(sql`ALTER TABLE \`PreRegisteredVideo\` CHANGE COLUMN \`fullName\` \`passportNumber\` VARCHAR(191) NOT NULL`);
-        await db.execute(sql`ALTER TABLE \`PreRegisteredVideo\` ADD UNIQUE KEY \`PreRegisteredVideo_passportNumber_key\` (\`passportNumber\`)`);
-        console.log(`✅ Successfully updated PreRegisteredVideo table: renamed 'fullName' to 'passportNumber' and made it unique.`);
-        hasPassportNumber = true;
-      } catch (e: any) {
-        console.warn('⚠️ PreRegisteredVideo migration warning:', e.message || e);
-      }
-    } else if (!hasPassportNumber) {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS \`PreRegisteredVideo\` (
-          \`id\` VARCHAR(191) NOT NULL,
-          \`passportNumber\` VARCHAR(191) NOT NULL,
-          \`videoUrl\` TEXT NOT NULL,
-          \`facePhotoUrl\` TEXT NULL,
-          \`fullBodyPhotoUrl\` TEXT NULL,
-          \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-          PRIMARY KEY (\`id\`),
-          UNIQUE KEY \`PreRegisteredVideo_passportNumber_key\` (\`passportNumber\`)
-        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-      `);
-      console.log(`✅ Verified/Created 'PreRegisteredVideo' table.`);
-      hasPassportNumber = true;
-      hasFacePhoto = true;
-      hasFullBodyPhoto = true;
-    }
-
-    // Incremental column checks for facePhotoUrl and fullBodyPhotoUrl
-    if (hasPassportNumber) {
-      if (!hasFacePhoto) {
-        try {
-          await db.execute(sql`ALTER TABLE \`PreRegisteredVideo\` ADD COLUMN \`facePhotoUrl\` TEXT NULL`);
-          console.log(`✅ Successfully added column 'facePhotoUrl' to PreRegisteredVideo table.`);
-        } catch (_) {}
-      }
-      if (!hasFullBodyPhoto) {
-        try {
-          await db.execute(sql`ALTER TABLE \`PreRegisteredVideo\` ADD COLUMN \`fullBodyPhotoUrl\` TEXT NULL`);
-          console.log(`✅ Successfully added column 'fullBodyPhotoUrl' to PreRegisteredVideo table.`);
-        } catch (_) {}
-      }
-    }
-  } catch (e: any) {
-    console.warn('⚠️ PreRegisteredVideo table self-healing warning:', e.message || e);
-  }
-
-  // 8. Create Invoice Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`Invoice\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`candidateId\` VARCHAR(191) NOT NULL,
-        \`lmisQrCodeUrl\` TEXT NOT NULL,
-        \`insuranceUrl\` TEXT NOT NULL,
-        \`ticketUrl\` TEXT NOT NULL,
-        \`price\` VARCHAR(191) NOT NULL,
-        \`isDelivered\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`isDownloaded\` TINYINT(1) NOT NULL DEFAULT 0,
-        \`deployedDate\` DATETIME(3) NULL,
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`id\`),
-        INDEX \`Invoice_candidateId_idx\` (\`candidateId\`),
-        FOREIGN KEY (\`candidateId\` ) REFERENCES \`Candidate\`(\`id\`) ON DELETE CASCADE ON UPDATE CASCADE
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'Invoice' table.`);
-
-    // Incremental check: alter Invoice table to add isDownloaded column if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`Invoice\` ADD COLUMN \`isDownloaded\` TINYINT(1) NOT NULL DEFAULT 0`);
-      console.log(`✅ Successfully added column 'isDownloaded' to Invoice table.`);
-    } catch (e: any) {
-      const msg = e.message || String(e);
-      if (!msg.includes('Duplicate column') && !msg.includes('already exists')) {
-        console.warn(`⚠️ Invoice column fallback update warning for 'isDownloaded':`, msg);
-      }
-    }
-  } catch (e: any) {
-    console.warn('⚠️ Invoice table check warning:', e.message || e);
-  }
-
-  // 9. Create TemplatePrice Table
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`TemplatePrice\` (
-        \`templateId\` VARCHAR(191) NOT NULL,
-        \`price\` VARCHAR(191) NOT NULL,
-        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`templateId\`)
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'TemplatePrice' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ TemplatePrice table check warning:', e.message || e);
-  }
-
-  // 9b. Create Passport Table (Auto-migrated if older schema detected)
-  try {
-    try {
-      const [cols] = await db.execute(sql`SHOW COLUMNS FROM \`Passport\``) as any[];
-      const hasShelfNo = cols.some((c: any) => c.Field === 'shelfNo');
-      if (!hasShelfNo) {
-        console.log('🔄 Old Passport table detected. Recreating to match new schema...');
-        await db.execute(sql`DROP TABLE IF EXISTS \`Passport\``);
-      }
-    } catch (_) {}
-
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS \`Passport\` (
-        \`id\` VARCHAR(191) NOT NULL,
-        \`shelfNo\` VARCHAR(191) NOT NULL,
-        \`fullName\` VARCHAR(191) NOT NULL,
-        \`passportNumber\` VARCHAR(191) NOT NULL,
-        \`passportImageUrl\` LONGTEXT NULL,
-        \`status\` VARCHAR(191) NOT NULL DEFAULT 'Available',
-        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-        PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`Passport_passportNumber_key\` (\`passportNumber\`),
-        INDEX \`Passport_passportNumber_idx\` (\`passportNumber\`),
-        INDEX \`Passport_status_idx\` (\`status\`)
-      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    `);
-    console.log(`✅ Verified/Created 'Passport' table.`);
-  } catch (e: any) {
-    console.warn('⚠️ Passport table check warning:', e.message || e);
-  }
-
-  // Rename misnamed sponsor name columns if present
-  try {
-    const [candCols] = await db.execute(sql`SHOW COLUMNS FROM \`Candidate\``) as any[];
-    const hasWrongSponsorSpace = candCols.some((c: any) => c.Field === 'sponsor name');
-    const hasWrongSponsorUnderscore = candCols.some((c: any) => c.Field === 'sponsor_name');
-    
-    if (hasWrongSponsorSpace) {
-      console.log('🔄 Misnamed column \'sponsor name\' detected. Renaming to \'sponsorName\'...');
-      await db.execute(sql`ALTER TABLE \`Candidate\` CHANGE COLUMN \`sponsor name\` \`sponsorName\` VARCHAR(191) NULL`);
-    } else if (hasWrongSponsorUnderscore) {
-      console.log('🔄 Misnamed column \'sponsor_name\' detected. Renaming to \'sponsorName\'...');
-      await db.execute(sql`ALTER TABLE \`Candidate\` CHANGE COLUMN \`sponsor_name\` \`sponsorName\` VARCHAR(191) NULL`);
-    }
-  } catch (err: any) {
-    console.warn('⚠️ Sponsor column rename warning:', err.message || err);
-  }
-
-  const candidateColumns = [
-    { name: 'registeredById', type: 'VARCHAR(191) NULL' },
-    { name: 'visaDate', type: 'DATETIME(3) NULL' },
-    { name: 'salary', type: "VARCHAR(191) NULL DEFAULT '1000SR'" },
-    { name: 'quickVideoUrl', type: 'LONGTEXT NULL' },
-    { name: 'cocDocumentUrl', type: 'LONGTEXT NULL' },
-    { name: 'labourId', type: 'VARCHAR(191) NULL' },
-    { name: 'candidateIdImageUrl', type: 'LONGTEXT NULL' },
-    { name: 'relativeIdImageUrl', type: 'LONGTEXT NULL' },
-    { name: 'deployedDate', type: 'DATETIME(3) NULL' },
-    { name: 'isLocked', type: 'TINYINT(1) NOT NULL DEFAULT 0' },
-    { name: 'cvDownloaded', type: 'TINYINT(1) NOT NULL DEFAULT 0' },
-    { name: 'allowVideo', type: 'TINYINT(1) NOT NULL DEFAULT 0' },
-    { name: 'embassyIssue', type: "VARCHAR(191) NOT NULL DEFAULT 'No'" },
-    { name: 'cocStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'No'" },
-    { name: 'tasheerStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'No'" },
-    { name: 'wakalaStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'Unpaid'" },
-    { name: 'qrCodeStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'No'" },
-    { name: 'selectedType', type: "VARCHAR(191) NOT NULL DEFAULT 'Private'" },
-    { name: 'travelDate', type: 'DATETIME(3) NULL' },
-    { name: 'agencyStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'Under Process'" },
-    { name: 'agencySelected', type: 'TINYINT(1) NOT NULL DEFAULT 0' },
-    { name: 'price', type: 'VARCHAR(191) NULL' },
-    { name: 'flightStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'PENDING'" },
-    { name: 'lmisStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'Pending'" },
-    { name: 'embassyStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'ready to embassy'" },
-    { name: 'sponsorName', type: 'VARCHAR(191) NULL' },
-    { name: 'isFlagged', type: 'TINYINT(1) NOT NULL DEFAULT 0' },
-    { name: 'flaggedAt', type: 'DATETIME(3) NULL' }
-  ];
-
-  for (const col of candidateColumns) {
-    try {
-      await db.execute(sql`ALTER TABLE \`Candidate\` ADD COLUMN \`${sql.raw(col.name)}\` ${sql.raw(col.type)}`);
-      console.log(`✅ Successfully added column '${col.name}' to Candidate table.`);
-    } catch (e: any) {
-      const msg = e.message || String(e);
-      if (!msg.includes('Duplicate column') && !msg.includes('already exists')) {
-        console.warn(`⚠️ Candidate column fallback update warning for '${col.name}':`, msg);
-      }
-    }
-  }
-
-  const quickRegColumns = [
-    { name: 'passportType', type: "VARCHAR(191) NULL DEFAULT 'original'" },
-    { name: 'verificationStatus', type: "VARCHAR(191) NOT NULL DEFAULT 'pending'" },
-    { name: 'musanedCvUrl', type: 'LONGTEXT NULL' },
-    { name: 'verificationNotes', type: 'VARCHAR(191) NULL' },
-    { name: 'verifiedAt', type: 'DATETIME(3) NULL' },
-    { name: 'promotedAt', type: 'DATETIME(3) NULL' },
-    { name: 'promotedCandidateId', type: 'VARCHAR(191) NULL' },
-    { name: 'cocDocumentUrl', type: 'LONGTEXT NULL' },
-    { name: 'labourId', type: 'VARCHAR(191) NULL' },
-    { name: 'candidateIdImageUrl', type: 'LONGTEXT NULL' },
-    { name: 'relativeIdImageUrl', type: 'LONGTEXT NULL' },
-    { name: 'videoUrl', type: 'VARCHAR(500) NULL' },
-    { name: 'registeredById', type: 'VARCHAR(191) NULL' },
-    { name: 'languages', type: 'JSON NULL' },
-    { name: 'allowVideo', type: 'TINYINT(1) NOT NULL DEFAULT 0' }
-  ];
-
-  for (const col of quickRegColumns) {
-    try {
-      await db.execute(sql`ALTER TABLE \`QuickRegistration\` ADD COLUMN \`${sql.raw(col.name)}\` ${sql.raw(col.type)}`);
-      console.log(`✅ Successfully added column '${col.name}' to QuickRegistration table.`);
-    } catch (e: any) {
-      const msg = e.message || String(e);
-      if (!msg.includes('Duplicate column') && !msg.includes('already exists')) {
-        console.warn(`⚠️ QuickRegistration column fallback update warning for '${col.name}':`, msg);
-      }
-    }
-  }
-
-  // 10b. Incremental Broker column additions
-  try {
-    await db.execute(sql`ALTER TABLE \`Broker\` ADD COLUMN \`isLocked\` TINYINT(1) NOT NULL DEFAULT 0`);
-    console.log(`✅ Successfully added column 'isLocked' to Broker table.`);
-  } catch (e: any) {
-    const msg = e.message || String(e);
-    if (!msg.includes('Duplicate column') && !msg.includes('already exists')) {
-      console.warn(`⚠️ Broker column fallback update warning for 'isLocked':`, msg);
-    }
-  }
-
-  try {
-    await db.execute(sql`ALTER TABLE \`Broker\` ADD COLUMN \`leaderId\` VARCHAR(191) NULL`);
-    console.log(`✅ Successfully added column 'leaderId' to Broker table.`);
-  } catch (e: any) {
-    const msg = e.message || String(e);
-    if (!msg.includes('Duplicate column') && !msg.includes('already exists')) {
-      console.warn(`⚠️ Broker column fallback update warning for 'leaderId':`, msg);
-    }
-  }
-
-  try {
-    await db.execute(sql`ALTER TABLE \`Broker\` ADD INDEX \`Broker_leaderId_idx\` (\`leaderId\`)`);
-    console.log(`✅ Successfully added index 'Broker_leaderId_idx' to Broker table.`);
-  } catch (e: any) {
-    // Index may exist
-  }
-
-  try {
-    await db.execute(sql`
-      ALTER TABLE \`Broker\` 
-      ADD CONSTRAINT \`Broker_leaderId_fkey\` 
-      FOREIGN KEY (\`leaderId\`) REFERENCES \`Leader\`(\`id\`) 
-      ON DELETE SET NULL ON UPDATE CASCADE
-    `);
-    console.log(`✅ Successfully added foreign key constraint for leaderId in Broker table.`);
-  } catch (e: any) {
-    // FK may exist
-  }
-
-  // 10c. Alter QuickRegistration passportType default to original
-  try {
-    await db.execute(sql`ALTER TABLE \`QuickRegistration\` ALTER COLUMN \`passportType\` SET DEFAULT 'original'`);
-    console.log(`✅ Successfully updated default of 'passportType' to 'original' in QuickRegistration table.`);
-  } catch (e: any) {
-    console.warn(`⚠️ QuickRegistration default update warning for 'passportType':`, e.message || e);
-  }
-
-  // 10d. Rename Candidate.videoUrl → Youtube_URL (if old column still exists)
-  try {
-    const [candidateCols] = await db.execute(sql`SHOW COLUMNS FROM \`Candidate\``) as any[];
-    const hasOldVideoUrl = candidateCols.some((c: any) => c.Field === 'videoUrl');
-    const hasYoutubeUrl = candidateCols.some((c: any) => c.Field === 'Youtube_URL');
-
-    if (hasOldVideoUrl && !hasYoutubeUrl) {
-      try {
-        await db.execute(sql`ALTER TABLE \`Candidate\` CHANGE COLUMN \`videoUrl\` \`Youtube_URL\` VARCHAR(191) NULL`);
-        console.log(`✅ Successfully renamed Candidate column 'videoUrl' to 'Youtube_URL'.`);
-      } catch (renameErr: any) {
-        console.warn(`⚠️ Candidate videoUrl rename warning:`, renameErr.message || renameErr);
-      }
-    } else if (!hasOldVideoUrl && !hasYoutubeUrl) {
-      try {
-        await db.execute(sql`ALTER TABLE \`Candidate\` ADD COLUMN \`Youtube_URL\` VARCHAR(191) NULL`);
-        console.log(`✅ Successfully added column 'Youtube_URL' to Candidate table.`);
-      } catch (_) {}
-    }
-  } catch (colCheckErr: any) {
-    console.warn(`⚠️ Candidate Youtube_URL column check warning:`, colCheckErr.message || colCheckErr);
-  }
-
-  // 11. Run auto-migration for previously registered candidates' videos
-  try {
-    console.log('🔄 Running auto-migration for existing candidates with missing videos...');
-    const candidates = (await db.execute(sql`
-      SELECT id, passportNumber, quickVideoUrl, Youtube_URL FROM \`Candidate\` WHERE quickVideoUrl IS NULL OR quickVideoUrl = '' OR Youtube_URL IS NULL OR Youtube_URL = ''
-    `))[0] as unknown as any[];
-
-    console.log(`🔍 Found ${candidates.length} candidates with missing video fields to check.`);
-
-    let migrationCount = 0;
-    for (const cand of candidates) {
-      if (!cand.passportNumber) continue;
-      
-      // Find matching QuickRegistration record
-      const quickReg = await db.query.quickRegistration.findFirst({
-        where: (qr, { eq, and, isNotNull, not }) => and(
-          eq(qr.passportNumber, cand.passportNumber),
-          isNotNull(qr.videoUrl),
-          not(eq(qr.videoUrl, ''))
-        ),
-        columns: {
-          videoUrl: true
-        }
-      });
-
-      if (quickReg && quickReg.videoUrl) {
-        const isLocalVideo = quickReg.videoUrl.startsWith('/uploads');
-        
-        if (isLocalVideo) {
-          await db.execute(sql`
-            UPDATE \`Candidate\` SET \`quickVideoUrl\` = ${quickReg.videoUrl} WHERE \`id\` = ${cand.id}
-          `);
-        } else {
-          await db.execute(sql`
-            UPDATE \`Candidate\` SET \`Youtube_URL\` = ${quickReg.videoUrl} WHERE \`id\` = ${cand.id}
-          `);
-        }
-        migrationCount++;
-      }
-    }
-    
-    if (migrationCount > 0) {
-      console.log(`✅ Successfully auto-migrated video paths for ${migrationCount} existing candidates!`);
-    } else {
-      console.log('ℹ️ No existing candidate videos needed migration.');
-    }
-  } catch (migErr: any) {
-    console.warn('⚠️ Auto-migration of existing candidate videos failed:', migErr.message || migErr);
-  }
-
-  // 12. Auto-backfill registeredById for promoted QuickRegistration records using matched Candidates
-  try {
-    console.log('🔄 Running auto-backfill of registeredById for QuickRegistration records...');
-    const [result] = await db.execute(sql`
-      UPDATE \`QuickRegistration\` q 
-      INNER JOIN \`Candidate\` c ON q.passportNumber = c.passportNumber 
-      SET q.registeredById = c.registeredById 
-      WHERE q.registeredById IS NULL AND c.registeredById IS NOT NULL
-    `);
-    const backfilledCount = (result as any).affectedRows || 0;
-    if (backfilledCount > 0) {
-      console.log(`✅ Successfully backfilled registeredById for ${backfilledCount} QuickRegistration records!`);
-    } else {
-      console.log('ℹ️ No QuickRegistration records needed registeredById backfilling.');
-    }
-  } catch (backfillErr: any) {
-    console.warn('⚠️ Auto-backfill of QuickRegistration registeredById failed:', backfillErr.message || backfillErr);
-  }
-
-  // 13. Auto-heal any QuickRegistration record with 'verified' status
-  try {
-    console.log('🔄 Running auto-heal for QuickRegistration records with "verified" status...');
-    
-    // First, heal those that have a corresponding Candidate record (mark as 'promoted')
-    const [promotedResult] = await db.execute(sql`
-      UPDATE \`QuickRegistration\` q
-      INNER JOIN \`Candidate\` c ON q.passportNumber = c.passportNumber
-      SET q.verificationStatus = 'promoted', q.promotedCandidateId = c.id
-      WHERE q.verificationStatus = 'verified'
-    `);
-    
-    // Second, heal any remaining 'verified' records that do NOT have a corresponding Candidate record (mark as 'pending')
-    const [pendingResult] = await db.execute(sql`
-      UPDATE \`QuickRegistration\`
-      SET verificationStatus = 'pending'
-      WHERE verificationStatus = 'verified'
-    `);
-
-    const healedPromoted = (promotedResult as any).affectedRows || 0;
-    const healedPending = (pendingResult as any).affectedRows || 0;
-    
-    if (healedPromoted > 0 || healedPending > 0) {
-      console.log(`✅ Healed 'verified' status for QuickRegistration: ${healedPromoted} set to 'promoted', ${healedPending} set to 'pending'.`);
-    } else {
-      console.log('ℹ️ No QuickRegistration records with "verified" status found.');
-    }
-  } catch (healErr: any) {
-    console.warn('⚠️ Auto-heal of QuickRegistration "verified" status failed:', healErr.message || healErr);
-  }
-
-  // 14. Support separating data between SKY and FENERO agencies
-  try {
-    console.log('🔄 Running FENERO/SKY database segregation migrations...');
-
-    // Alter User table to add major_agency if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`User\` ADD COLUMN \`major_agency\` VARCHAR(191) NULL DEFAULT 'Sky'`);
-      console.log(`✅ Successfully added column 'major_agency' to User table.`);
-    } catch (_) {}
-
-    // Alter Candidate table to add major_agency if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`Candidate\` ADD COLUMN \`major_agency\` VARCHAR(191) NULL DEFAULT 'Sky'`);
-      console.log(`✅ Successfully added column 'major_agency' to Candidate table.`);
-    } catch (_) {}
-
-    // Alter QuickRegistration table to add major_agency if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`QuickRegistration\` ADD COLUMN \`major_agency\` VARCHAR(191) NULL DEFAULT 'Sky'`);
-      console.log(`✅ Successfully added column 'major_agency' to QuickRegistration table.`);
-    } catch (_) {}
-
-    // Alter Broker table to add major_agency and isVip columns if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`Broker\` ADD COLUMN \`major_agency\` VARCHAR(191) NULL DEFAULT 'Sky'`);
-      console.log(`✅ Successfully added column 'major_agency' to Broker table.`);
-    } catch (_) {}
-
-    try {
-      await db.execute(sql`ALTER TABLE \`Broker\` ADD COLUMN \`isVip\` TINYINT(1) NOT NULL DEFAULT 0`);
-      console.log(`✅ Successfully added column 'isVip' to Broker table.`);
-    } catch (_) {}
-
-    // Alter Passport table to add major_agency column if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`Passport\` ADD COLUMN \`major_agency\` VARCHAR(191) NULL DEFAULT 'Sky'`);
-      console.log(`✅ Successfully added column 'major_agency' to Passport table.`);
-    } catch (_) {}
-
-    // Alter Notification table to add major_agency column if missing
-    try {
-      await db.execute(sql`ALTER TABLE \`Notification\` ADD COLUMN \`major_agency\` VARCHAR(191) NULL DEFAULT 'Sky'`);
-      console.log(`✅ Successfully added column 'major_agency' to Notification table.`);
-    } catch (_) {}
-
-    // Update index on Broker table: Drop Broker_name_key, and add Broker_name_major_agency_key
-    try {
-      await db.execute(sql`ALTER TABLE \`Broker\` DROP INDEX \`Broker_name_key\``);
-      console.log(`✅ Dropped old unique index 'Broker_name_key' on Broker.`);
-    } catch (_) {}
-
-    try {
-      await db.execute(sql`ALTER TABLE \`Broker\` ADD UNIQUE KEY \`Broker_name_major_agency_key\` (\`name\`, \`major_agency\`)`);
-      console.log(`✅ Added new unique index 'Broker_name_major_agency_key' on Broker.`);
-    } catch (_) {}
-
-    // Update existing null major_agency columns to default 'Sky'
-    await db.execute(sql`UPDATE \`User\` SET \`major_agency\` = 'Sky' WHERE \`major_agency\` IS NULL OR \`major_agency\` = ''`);
-    await db.execute(sql`UPDATE \`Candidate\` SET \`major_agency\` = 'Sky' WHERE \`major_agency\` IS NULL OR \`major_agency\` = ''`);
-    await db.execute(sql`UPDATE \`QuickRegistration\` SET \`major_agency\` = 'Sky' WHERE \`major_agency\` IS NULL OR \`major_agency\` = ''`);
-    await db.execute(sql`UPDATE \`Broker\` SET \`major_agency\` = 'Sky' WHERE \`major_agency\` IS NULL OR \`major_agency\` = ''`);
-    await db.execute(sql`UPDATE \`Passport\` SET \`major_agency\` = 'Sky' WHERE \`major_agency\` IS NULL OR \`major_agency\` = ''`);
-    await db.execute(sql`UPDATE \`Notification\` SET \`major_agency\` = 'Sky' WHERE \`major_agency\` IS NULL OR \`major_agency\` = ''`);
-
-    console.log('✅ FENERO/SKY database segregation migrations complete.');
-  } catch (segErr: any) {
-    console.warn('⚠️ FENERO/SKY database segregation migrations failed:', segErr.message || segErr);
-  }
-
-  // 15. Performance Indexes for Fast Search & Retrieval
-  try {
-    console.log('⚡ Ensuring database performance indexes exist...');
-    const indexes = [
-      { name: 'idx_candidate_major_agency_reg', table: 'Candidate', spec: '(`major_agency`, `registeredAt`)' },
-      { name: 'idx_candidate_major_agency_status', table: 'Candidate', spec: '(`major_agency`, `status`)' },
-      { name: 'idx_candidate_major_agency_req', table: 'Candidate', spec: '(`major_agency`, `isRequested`)' },
-      { name: 'idx_candidate_major_agency_visa', table: 'Candidate', spec: '(`major_agency`, `visaSelected`)' },
-      { name: 'idx_candidate_names', table: 'Candidate', spec: '(`surname`, `givenNames`)' },
-      { name: 'idx_quickreg_major_agency_created', table: 'QuickRegistration', spec: '(`major_agency`, `createdAt`)' },
-      { name: 'idx_generatedcv_candidate_id', table: 'GeneratedCV', spec: '(`candidateId`)' },
-      { name: 'idx_invoice_candidate_id', table: 'Invoice', spec: '(`candidateId`)' },
-    ];
-
-    for (const idx of indexes) {
-      try {
-        await db.execute(sql`CREATE INDEX ${sql.raw(idx.name)} ON ${sql.raw('`' + idx.table + '`')} ${sql.raw(idx.spec)}`);
-        console.log(`✅ Created index '${idx.name}' on ${idx.table}.`);
-      } catch (e: any) {
-        // Ignore duplicate index errors
-      }
-    }
-  } catch (idxErr: any) {
-    console.warn('⚠️ Performance index check warning:', idxErr.message || idxErr);
-  }
-
-  // 16. Charity CMS Tables Self-Healing
-  try {
-    console.log('🌱 Ensuring Charity CMS tables exist...');
-
     // CharityMedia
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS \`CharityMedia\` (
@@ -918,10 +194,119 @@ export async function ensureDatabaseSchema() {
       ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     `);
 
-    console.log('✅ Verified/Created Charity CMS tables.');
+    // CharityCampaign
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityCampaign\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`slug\` VARCHAR(191) NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`subtitle\` VARCHAR(500) NULL,
+        \`description\` LONGTEXT NOT NULL,
+        \`category\` VARCHAR(100) NOT NULL DEFAULT 'General',
+        \`targetAmount\` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+        \`raisedAmount\` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+        \`currency\` VARCHAR(10) NOT NULL DEFAULT 'ETB',
+        \`featuredImageUrl\` TEXT NULL,
+        \`galleryImages\` JSON NULL,
+        \`startDate\` DATETIME(3) NULL,
+        \`endDate\` DATETIME(3) NULL,
+        \`isFeatured\` TINYINT(1) NOT NULL DEFAULT 0,
+        \`status\` VARCHAR(50) NOT NULL DEFAULT 'draft',
+        \`createdById\` VARCHAR(191) NULL,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`CharityCampaign_slug_key\` (\`slug\`),
+        INDEX \`CharityCampaign_status_idx\` (\`status\`),
+        INDEX \`CharityCampaign_category_idx\` (\`category\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharityDonation
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityDonation\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`campaignId\` VARCHAR(191) NULL,
+        \`donorName\` VARCHAR(191) NULL,
+        \`donorEmail\` VARCHAR(191) NULL,
+        \`donorPhone\` VARCHAR(191) NULL,
+        \`isAnonymous\` TINYINT(1) NOT NULL DEFAULT 0,
+        \`amount\` DECIMAL(12, 2) NOT NULL,
+        \`currency\` VARCHAR(10) NOT NULL DEFAULT 'ETB',
+        \`paymentMethod\` VARCHAR(50) NOT NULL DEFAULT 'manual',
+        \`bankName\` VARCHAR(100) NULL,
+        \`accountNumber\` VARCHAR(100) NULL,
+        \`transactionReference\` VARCHAR(191) NULL,
+        \`receiptUrl\` TEXT NULL,
+        \`notes\` TEXT NULL,
+        \`status\` VARCHAR(50) NOT NULL DEFAULT 'pending',
+        \`verifiedAt\` DATETIME(3) NULL,
+        \`verifiedBy\` VARCHAR(191) NULL,
+        \`userId\` VARCHAR(191) NULL,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        INDEX \`CharityDonation_campaignId_idx\` (\`campaignId\`),
+        INDEX \`CharityDonation_userId_idx\` (\`userId\`),
+        INDEX \`CharityDonation_status_idx\` (\`status\`),
+        INDEX \`CharityDonation_createdAt_idx\` (\`createdAt\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharityProject
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityProject\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`slug\` VARCHAR(191) NOT NULL,
+        \`summary\` VARCHAR(500) NULL,
+        \`content\` LONGTEXT NULL,
+        \`location\` VARCHAR(191) NULL,
+        \`coverImageUrl\` TEXT NULL,
+        \`status\` VARCHAR(50) NOT NULL DEFAULT 'active',
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`CharityProject_slug_key\` (\`slug\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // CharityVolunteer
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`CharityVolunteer\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`fullName\` VARCHAR(191) NOT NULL,
+        \`email\` VARCHAR(191) NOT NULL,
+        \`phone\` VARCHAR(191) NOT NULL,
+        \`skills\` JSON NULL,
+        \`interests\` TEXT NULL,
+        \`availability\` VARCHAR(100) NULL,
+        \`status\` VARCHAR(50) NOT NULL DEFAULT 'pending',
+        \`userId\` VARCHAR(191) NULL,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        INDEX \`CharityVolunteer_email_idx\` (\`email\`),
+        INDEX \`CharityVolunteer_status_idx\` (\`status\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    console.log('✅ Verified/Created all Charity tables.');
   } catch (charityErr: any) {
     console.warn('⚠️ Charity CMS table self-healing warning:', charityErr.message || charityErr);
   }
 
-  console.log('✅ Database self-healing complete.');
+  // 3. Ensure Master Admin Seed in User and Account tables
+  try {
+    await db.execute(sql`
+      INSERT INTO \`User\` (\`id\`, \`name\`, \`email\`, \`emailVerified\`, \`role\`)
+      VALUES ('admin-selam-master', 'Selam Admin', 'admin@selamcharity.org', 1, 'super_admin')
+      ON DUPLICATE KEY UPDATE \`role\` = 'super_admin', \`emailVerified\` = 1;
+    `);
+    console.log('✅ Master Admin user verified in User table.');
+  } catch (adminErr: any) {
+    console.warn('⚠️ Admin user seed notice:', adminErr.message || adminErr);
+  }
+
+  console.log('✅ Salam Charity database initialization complete.');
 }

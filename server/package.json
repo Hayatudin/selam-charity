@@ -1,7 +1,7 @@
 {
-  "name": "sky-server",
+  "name": "salam-charity-api",
   "version": "1.0.0",
-  "description": "Backend server for SKY Foreign Employment Agency",
+  "description": "Backend API server for Salam Charity",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
