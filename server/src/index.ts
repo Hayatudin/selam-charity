@@ -86,7 +86,7 @@ app.use(cookieParser());
 // Better Auth handler — MUST come before body parsers
 import { auth } from './lib/auth';
 import { ensureDatabaseSchema } from './lib/db-healing';
-import { db, isCPanel } from './db';
+import { db, isCPanel, dbConfigDiagnostic } from './db';
 import { user } from './db/schema';
 import { sql } from 'drizzle-orm';
 
@@ -376,6 +376,7 @@ app.get('/api/test-db', async (req: Request, res: Response) => {
     return res.json({
       status: 'success',
       message: '✅ Database is CONNECTED and responding!',
+      diagnostic: dbConfigDiagnostic,
       info: rows[0] || {},
       tablesCount: tables.length,
       tables: tables,
@@ -386,13 +387,14 @@ app.get('/api/test-db', async (req: Request, res: Response) => {
     return res.status(500).json({
       status: 'error',
       message: '❌ Database connection failed!',
+      diagnostic: dbConfigDiagnostic,
       error: err.message || String(err),
       sqlMessage: underlying.sqlMessage || err.sqlMessage || null,
       code: underlying.code || err.code || 'UNKNOWN',
       errno: underlying.errno || err.errno || null,
       address: underlying.address || null,
       port: underlying.port || null,
-      tip: 'Check DATABASE_URL in server/.env. Example: mysql://selamcen_user:PASSWORD@localhost:3306/selamcen_db',
+      tip: 'Check DATABASE_URL or DB_PASSWORD in server/.env',
       timestamp: new Date().toISOString()
     });
   }
@@ -431,6 +433,7 @@ app.get('/test-status', async (req: Request, res: Response) => {
     status: 'online',
     service: 'Salam Charity API',
     database: dbOk ? 'connected' : 'error',
+    diagnostic: dbConfigDiagnostic,
     dbInfo,
     dbError,
     sqlErrorDetails,

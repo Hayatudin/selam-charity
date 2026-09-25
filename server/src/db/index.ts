@@ -3,13 +3,14 @@ import mysql from 'mysql2/promise';
 import * as schema from './schema';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
-// Load .env from multiple candidate paths
-dotenv.config({ path: path.join(__dirname, '../../.env') });
-dotenv.config({ path: path.join(__dirname, '../.env') });
-dotenv.config({ path: path.join(__dirname, '.env') });
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
-dotenv.config();
+// Force override existing cached environment variables with .env file values
+dotenv.config({ path: path.join(__dirname, '../../.env'), override: true });
+dotenv.config({ path: path.join(__dirname, '../.env'), override: true });
+dotenv.config({ path: path.join(__dirname, '.env'), override: true });
+dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
+dotenv.config({ override: true });
 
 let dbUrl = process.env.DATABASE_URL || '';
 
@@ -20,16 +21,15 @@ export const isCPanel =
   Boolean(process.env.HOME?.includes('/home/')) ||
   Boolean(process.env.PWD?.includes('/home/'));
 
-if (!dbUrl) {
+if (!dbUrl && !process.env.DB_USER) {
   console.warn('⚠️ DATABASE_URL is not set in .env. Checking cPanel environment...');
   if (isCPanel) {
-    // Standard cPanel credential format for selamcen
-    dbUrl = 'mysql://selamcen_user:@127.0.0.1:3306/selamcen_db';
+    dbUrl = 'mysql://selamcen_user:@localhost:3306/selamcen_db';
     console.log('🤖 Defaulting to local cPanel MySQL socket/TCP: selamcen_db');
   }
 }
 
-// Strip ?ssl-mode=REQUIRED from URL — mysql2 handles SSL via pool options
+// Strip ?ssl-mode=REQUIRED from URL
 let cleanUrl = dbUrl.replace(/[?&]ssl-mode=[^&]*/i, '').replace(/\?$/, '');
 
 const isCloud = cleanUrl.includes('aivencloud.com') || cleanUrl.includes('rds.amazonaws.com');
@@ -37,15 +37,13 @@ const isCloud = cleanUrl.includes('aivencloud.com') || cleanUrl.includes('rds.am
 // Robust URL parser that safely handles unencoded special characters in passwords
 function parseConnectionDetails(urlStr: string) {
   try {
-    // Regex matches: mysql://user:password@host:port/database
     const match = urlStr.match(/^mysql(?:2)?:\/\/(?:([^:]+):(.*)@)?([^:/]+)(?::(\d+))?\/(.+)$/);
     if (match) {
       const [, rawUser, rawPass, rawHost, rawPort, rawDb] = match;
-      const host = rawHost === 'localhost' ? '127.0.0.1' : rawHost;
       return {
         user: decodeURIComponent(rawUser || 'selamcen_user'),
         password: decodeURIComponent(rawPass || ''),
-        host: host || '127.0.0.1',
+        host: rawHost || 'localhost',
         port: rawPort ? parseInt(rawPort, 10) : 3306,
         database: (rawDb || 'selamcen_db').split('?')[0],
       };
@@ -58,9 +56,14 @@ function parseConnectionDetails(urlStr: string) {
 
 const parsedDetails = parseConnectionDetails(cleanUrl);
 
-import fs from 'fs';
+// Support both discrete DB_ variables AND parsed DATABASE_URL
+export const effectiveUser = process.env.DB_USER || parsedDetails?.user || 'selamcen_user';
+export const effectivePassword = process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : (parsedDetails?.password || '');
+export const effectiveDatabase = process.env.DB_NAME || parsedDetails?.database || 'selamcen_db';
+export const effectiveHost = process.env.DB_HOST || parsedDetails?.host || 'localhost';
+export const effectivePort = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : (parsedDetails?.port || 3306);
 
-// Check for cPanel Unix sockets (standard across cPanel servers for fastest & most reliable local connection)
+// Check for cPanel Unix sockets (native Unix socket on cPanel)
 const candidateSockets = [
   '/var/lib/mysql/mysql.sock',
   '/tmp/mysql.sock',
@@ -75,15 +78,28 @@ const unixSocket = candidateSockets.find((s) => {
   }
 });
 
+export const dbConfigDiagnostic = {
+  effectiveUser,
+  effectiveDatabase,
+  effectiveHost,
+  effectivePort,
+  socketPath: unixSocket || null,
+  isCloud,
+  hasDiscretePassword: Boolean(process.env.DB_PASSWORD),
+  passwordLength: effectivePassword.length,
+  passwordFirstChar: effectivePassword.length > 0 ? effectivePassword[0] : null,
+  passwordLastChar: effectivePassword.length > 0 ? effectivePassword[effectivePassword.length - 1] : null,
+};
+
 let poolOptions: mysql.PoolOptions;
 
 if (unixSocket && !isCloud) {
-  console.log(`🔌 DB target: Unix Socket (${unixSocket}) [DB: ${parsedDetails?.database || 'selamcen_db'}, User: ${parsedDetails?.user || 'selamcen_user'}]`);
+  console.log(`🔌 DB target: Unix Socket (${unixSocket}) [DB: ${effectiveDatabase}, User: ${effectiveUser}]`);
   poolOptions = {
     socketPath: unixSocket,
-    user: parsedDetails?.user || 'selamcen_user',
-    password: parsedDetails?.password || '',
-    database: parsedDetails?.database || 'selamcen_db',
+    user: effectiveUser,
+    password: effectivePassword,
+    database: effectiveDatabase,
     waitForConnections: true,
     connectionLimit: 15,
     queueLimit: 0,
@@ -93,14 +109,15 @@ if (unixSocket && !isCloud) {
     idleTimeout: 60000,
     connectTimeout: 20000,
   };
-} else if (parsedDetails && !isCloud) {
-  console.log(`🔌 DB target: TCP ${parsedDetails.host}:${parsedDetails.port} [DB: ${parsedDetails.database}, User: ${parsedDetails.user}]`);
+} else if (!isCloud) {
+  const host = effectiveHost === 'localhost' ? '127.0.0.1' : effectiveHost;
+  console.log(`🔌 DB target: TCP ${host}:${effectivePort} [DB: ${effectiveDatabase}, User: ${effectiveUser}]`);
   poolOptions = {
-    host: parsedDetails.host,
-    port: parsedDetails.port,
-    user: parsedDetails.user,
-    password: parsedDetails.password,
-    database: parsedDetails.database,
+    host: host,
+    port: effectivePort,
+    user: effectiveUser,
+    password: effectivePassword,
+    database: effectiveDatabase,
     waitForConnections: true,
     connectionLimit: 15,
     queueLimit: 0,
@@ -111,13 +128,6 @@ if (unixSocket && !isCloud) {
     connectTimeout: 20000,
   };
 } else {
-  // Normalize localhost -> 127.0.0.1 for MySQL TCP reliability on Node.js
-  if (!isCloud && cleanUrl.includes('@localhost:')) {
-    cleanUrl = cleanUrl.replace('@localhost:', '@127.0.0.1:');
-  }
-
-  console.log('🔌 DB target:', cleanUrl.replace(/:([^:@]{3})[^:@]*@/, ':***@'), isCloud ? '[SSL]' : '[TCP/IP]');
-
   poolOptions = {
     uri: cleanUrl,
     waitForConnections: true,
@@ -128,15 +138,12 @@ if (unixSocket && !isCloud) {
     maxIdle: 15,
     idleTimeout: 60000,
     connectTimeout: 20000,
-    ...(isCloud && {
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    }),
+    ssl: {
+      rejectUnauthorized: false,
+    },
   };
 }
 
 export const poolConnection = mysql.createPool(poolOptions);
 
 export const db = drizzle(poolConnection, { schema, mode: 'default' });
-
