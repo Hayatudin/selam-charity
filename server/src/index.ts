@@ -82,9 +82,12 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+app.use(express.json({ limit: '80mb' }));
+app.use(express.urlencoded({ extended: true, limit: '80mb' }));
 
-// Better Auth handler — MUST come before body parsers
+// Better Auth handler
 import { auth } from './lib/auth';
+import { toNodeHandler } from 'better-auth/node';
 import { ensureDatabaseSchema } from './lib/db-healing';
 import { db, isCPanel, dbConfigDiagnostic } from './db';
 import { user } from './db/schema';
@@ -92,15 +95,6 @@ import { sql } from 'drizzle-orm';
 
 // Auth handler — provides master admin authentication and delegates to Better Auth
 app.all('/api/auth/*', async (req: Request, res: Response) => {
-  let body: string | undefined;
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    body = await new Promise<string>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      req.on('data', (chunk: Buffer) => chunks.push(chunk));
-      req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-      req.on('error', reject);
-    });
-  }
 
   // 1. Session check (Works globally for admin session across all environments)
   const isSessionReq = req.originalUrl.includes('/get-session') || req.originalUrl.includes('/session');
@@ -138,8 +132,7 @@ app.all('/api/auth/*', async (req: Request, res: Response) => {
 
   // 2. Master Admin Sign In (Works globally on cPanel production AND local dev)
   if (req.originalUrl.includes('/sign-in/email') && req.method === 'POST') {
-    let parsedBody: any = {};
-    try { parsedBody = JSON.parse(body || '{}'); } catch {}
+    const parsedBody: any = (req.body && typeof req.body === 'object') ? req.body : {};
 
     const isMasterAdminLogin = 
       parsedBody.isDevAdmin ||
@@ -192,50 +185,8 @@ app.all('/api/auth/*', async (req: Request, res: Response) => {
   }
 
   // 4. Delegate to Better Auth
-  const proto = (req.headers['x-forwarded-proto'] as string) || (req.socket && (req.socket as any).encrypted ? 'https' : 'http');
-  const host = req.headers['x-forwarded-host'] as string || req.headers['host'] || 'localhost:4000';
-  const base = `${proto}://${host}`;
-  const url = `${base}${req.originalUrl}`;
-
-  const headers = new Headers();
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (Array.isArray(value)) value.forEach(v => headers.append(key, v));
-    else if (value) headers.set(key, value as string);
-  }
-
-  try {
-    const request = new globalThis.Request(url, {
-      method: req.method,
-      headers,
-      body: body && body.length > 0 ? body : undefined,
-    });
-
-    const response = await auth.handler(request);
-
-    res.statusCode = response.status;
-    response.headers.forEach((value: string, key: string) => {
-      if (key.toLowerCase() === 'set-cookie') {
-        res.append('Set-Cookie', value);
-      } else {
-        res.setHeader(key, value);
-      }
-    });
-
-    const responseBody = await response.text();
-    res.end(responseBody);
-  } catch (err: any) {
-    console.error('[AUTH] handler error:', err);
-    if (!res.headersSent) {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: err.message || 'Internal auth error' }));
-    }
-  }
+  return toNodeHandler(auth)(req, res);
 });
-
-// Body parsers — AFTER auth handler (express.json drains the stream)
-app.use(express.json({ limit: '80mb' }));
-app.use(express.urlencoded({ extended: true, limit: '80mb' }));
 
 import { decryptPath } from './lib/crypto';
 import { authenticateSession, requireSuperAdmin } from './middlewares/auth';
@@ -363,7 +314,7 @@ app.get('/api/test-db', async (req: Request, res: Response) => {
   res.setHeader('Content-Type', 'application/json');
 
   try {
-    const rawResult: any = await db.execute(sql`SELECT 1 as connected, DATABASE() as current_db, USER() as current_user, VERSION() as version`);
+    const rawResult: any = await db.execute(sql`SELECT 1 as connected, DATABASE() as db_name, USER() as db_user, VERSION() as db_version`);
     const rows = rawResult[0] as unknown as any[];
     
     // Also list existing tables
@@ -416,7 +367,7 @@ app.get('/test-status', async (req: Request, res: Response) => {
   let dbError: string | null = null;
   let sqlErrorDetails: any = null;
   try {
-    const rawResult: any = await db.execute(sql`SELECT 1 as connected, DATABASE() as current_db, USER() as current_user`);
+    const rawResult: any = await db.execute(sql`SELECT 1 as connected, DATABASE() as db_name, USER() as db_user`);
     dbOk = true;
     dbInfo = rawResult[0]?.[0];
   } catch (err: any) {

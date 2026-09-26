@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   ShieldCheck, 
@@ -17,7 +17,10 @@ import {
   Quote,
   GraduationCap,
   Briefcase,
-  Star
+  Star,
+  Plus,
+  X,
+  Mail
 } from 'lucide-react';
 import { usePagesContent } from '@/hooks/charity';
 
@@ -26,6 +29,18 @@ export default function CharityAboutPage() {
   const about = pagesContent?.about;
   const mission = pagesContent?.mission;
   const general = pagesContent?.general;
+
+  const [selectedMember, setSelectedMember] = useState<{
+    name: string;
+    role: string;
+    category: 'board' | 'management';
+    desc: string;
+    fullBio: string;
+    image: string;
+    credentials?: string[];
+    email?: string;
+    linkedin?: string;
+  } | null>(null);
 
   return (
     <div className="flex flex-col w-full">
@@ -208,67 +223,383 @@ export default function CharityAboutPage() {
         </div>
       </section>
 
-      {/* ── 3. MEMBERS & LEADERSHIP ───────────────────────────────── */}
-      <section id="members" className="py-20 bg-white scroll-mt-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Our People
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
-              Members &amp; Leadership
-            </h2>
-            <p className="text-slate-600 mt-2 text-sm sm:text-base">
-              Meet the devoted team, board members, and educational leaders steering our mission.
-            </p>
-          </div>
+      {/* ── 3. OUR PEOPLE (BOARD MEMBERS & MANAGEMENT TEAM) ─────────── */}
+      <section id="members" className="relative py-24 bg-[#fafbff] overflow-hidden scroll-mt-24 border-t border-slate-200/60">
+        {/* Soft pastel ambient background glow inspired by design */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-purple-50/30 to-transparent pointer-events-none -z-0" />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                name: 'Ustaz Ahmed Nur',
-                role: 'Executive Director & Board President',
-                desc: 'Over 18 years leading humanitarian and educational nonprofits across East Africa.',
-                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-              },
-              {
-                name: 'Sister Fatima Al-Hassan',
-                role: 'Head of Selam School Administration',
-                desc: 'Dedicated educationalist specializing in child pedagogy, curriculum, and inclusive learning.',
-                image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
-              },
-              {
-                name: 'Dr. Ibrahim Mohammed',
-                role: 'Director of Community Health & Nutrition',
-                desc: 'Public health physician coordinating preventive health checkups and student meal programs.',
-                image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-              },
-              {
-                name: 'Zahra Abdurrahman',
-                role: 'Community Outreach & Sponsorship Coordinator',
-                desc: 'Liaison for international partners, donor relations, and family welfare assessment.',
-                image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
-              },
-            ].map((member, idx) => (
-              <div key={idx} className="rounded-2xl bg-slate-50 border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-center">
-                <div className="h-48 overflow-hidden bg-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
+
+          {/* ════════ SUBSECTION A: BOARD MEMBERS ════════ */}
+          <div id="board" className="scroll-mt-28">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-14">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800 mb-4">
+                  <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                  <span>Strategic Governance</span>
+                </div>
+                <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                  Meet the<br />board of trustees
+                </h2>
+              </div>
+              <p className="text-slate-600 max-w-md text-sm sm:text-base leading-relaxed">
+                The fiduciary stewards, legal advocates, and community elders providing ethical oversight, institutional integrity, and long-term sustainability to Selam Charity.
+              </p>
+            </div>
+
+            {/* Board Members Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+              {[
+                {
+                  name: 'Ustaz Ahmed Nur',
+                  role: 'Board President & Founder',
+                  category: 'board' as const,
+                  desc: 'Over 20 years guiding educational philanthropy, Islamic scholarship, and institutional governance across East Africa.',
+                  fullBio: 'Ustaz Ahmed Nur founded Selam Charity with the unyielding conviction that every child deserves equitable education, nutritious food, and dignified support. With over two decades of nonprofit stewardship, he oversees high-level strategic alignment, international diaspora partnerships, and institutional integrity.',
+                  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['M.A. in Non-Profit Governance', 'Fellow, East Africa Civil Society Forum', '20+ Years Community Leadership'],
+                  email: 'president@selamcharity.org'
+                },
+                {
+                  name: 'Dr. Selamawit Bekele',
+                  role: 'Vice President & Legal Counsel',
+                  category: 'board' as const,
+                  desc: 'Constitutional jurist specializing in NGO regulatory compliance, child welfare rights, and international trust governance.',
+                  fullBio: 'Dr. Selamawit brings 16 years of legal expertise in civil society law, institutional compliance, and human rights advocacy. She ensures that all Selam operations strictly adhere to federal regulatory frameworks while championing child protection policies.',
+                  image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['Ph.D. in International Law', 'Member, Ethiopian Bar Association', 'Child Rights Legal Consultant'],
+                  email: 'legal@selamcharity.org'
+                },
+                {
+                  name: 'Sheikh Mohammed Al-Amoudi',
+                  role: 'Senior Ethics & Community Trustee',
+                  category: 'board' as const,
+                  desc: 'Prominent community mediator ensuring equitable Zakat distribution, moral stewardship, and grassroots consensus.',
+                  fullBio: 'A respected elder and religious scholar, Sheikh Mohammed oversees ethical vetting of social programs, zakat distribution criteria, and interfaith harmony initiatives, anchoring Selam’s programs in empathy and communal trust.',
+                  image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['Senior Scholar in Islamic Jurisprudence', 'Interfaith Peace Ambassador', '30+ Years Civic Mediation'],
+                  email: 'ethics@selamcharity.org'
+                },
+                {
+                  name: 'Eng. Dawit Haile',
+                  role: 'Trustee of Capital & Infrastructure',
+                  category: 'board' as const,
+                  desc: 'Supervising school campus construction, water well drilling, and solar energy installations across remote communities.',
+                  fullBio: 'Eng. Dawit provides strategic technical supervision for Selam’s physical expansion, overseeing architectural resilience, clean water facilities, modern classrooms, and sustainable green campus structures.',
+                  image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['M.Sc. Structural Engineering', 'Registered Professional Engineer (PE)', 'Lead Designer, Selam Academic Complex'],
+                  email: 'infrastructure@selamcharity.org'
+                },
+                {
+                  name: 'Dr. Meron Tadesse',
+                  role: 'Health Strategy & Welfare Trustee',
+                  category: 'board' as const,
+                  desc: 'Pediatric consultant leading student nutritional policies, vaccination campaigns, and medical emergency funds.',
+                  fullBio: 'Dr. Meron is an associate professor of pediatric medicine and healthcare consultant who oversees Selam’s community wellness, vaccination tracking, and clean feeding programs for underprivileged children.',
+                  image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['M.D. Pediatrics & Child Health', 'Advisor, Maternal & Child Health Taskforce', '15+ Years Clinical Research'],
+                  email: 'health.trustee@selamcharity.org'
+                },
+                {
+                  name: 'Ato Yonas Assefa',
+                  role: 'Audit & Sustainability Committee Chair',
+                  category: 'board' as const,
+                  desc: 'Senior financial auditor maintaining donor transparency, independent audits, and endowment longevity.',
+                  fullBio: 'With 22 years of forensic auditing experience across international NGOs and financial institutions, Ato Yonas leads the independent audit committee, publishing full transparent accounting for all funds received.',
+                  image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['Certified Public Accountant (CPA)', 'Former Lead Auditor, Pan-African NGO Alliance', 'Expert in Endowment Accounting'],
+                  email: 'audit@selamcharity.org'
+                }
+              ].map((member, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setSelectedMember(member)}
+                  className="group relative aspect-[4/5] rounded-[28px] overflow-hidden bg-slate-900 cursor-pointer shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1"
+                >
+                  {/* Monochromatic portrait image */}
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover object-top filter grayscale contrast-105 brightness-95 group-hover:scale-105 group-hover:grayscale-0 transition-all duration-700 ease-out"
                   />
+
+                  {/* Gradient overlay for bottom text legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+
+                  {/* Top indicator tag */}
+                  <div className="absolute top-4 left-4">
+                    <span className="text-[11px] font-semibold tracking-wide text-white/90 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                      Board Trustee
+                    </span>
+                  </div>
+
+                  {/* Bottom content row: Name & Role on left, white round + button on right */}
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-3">
+                    <div className="min-w-0 pr-1">
+                      <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug truncate drop-shadow-sm">
+                        {member.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-300 font-normal truncate mt-0.5">
+                        {member.role}
+                      </p>
+                    </div>
+
+                    {/* Floating White Plus Button */}
+                    <button
+                      type="button"
+                      aria-label={`View bio of ${member.name}`}
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-slate-950 flex-shrink-0 flex items-center justify-center shadow-lg group-hover:bg-emerald-400 group-hover:rotate-90 group-hover:scale-110 transition-all duration-300"
+                    >
+                      <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
+                    </button>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <h4 className="font-bold text-slate-900 text-base">{member.name}</h4>
-                  <p className="text-xs font-semibold text-emerald-700 mt-1 mb-2">{member.role}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed">{member.desc}</p>
+              ))}
+            </div>
+          </div>
+
+
+          {/* ════════ SUBSECTION B: MANAGEMENT TEAM ════════ */}
+          <div id="management" className="scroll-mt-28 pt-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-14">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800 mb-4">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                  <span>Our expert crew</span>
                 </div>
+                <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                  Meet the<br />leadership team
+                </h2>
               </div>
-            ))}
+              <p className="text-slate-600 max-w-md text-sm sm:text-base leading-relaxed">
+                The devoted operational directors, educators, and field specialists who turn donor generosity into everyday classroom success and community transformation.
+              </p>
+            </div>
+
+            {/* Management Team Grid - 8 Cards matching the 4x2 grid of the user design inspiration */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7">
+              {[
+                {
+                  name: 'Zemedkun Fikre',
+                  role: 'Chief Executive Director',
+                  category: 'management' as const,
+                  desc: 'Guiding daily operations, cross-departmental coordination, and strategic program delivery across Ethiopia.',
+                  fullBio: 'Zemedkun leads day-to-day operations across Selam Charity. He coordinates cross-functional teams, drives resource mobilization, and ensures that every educational and humanitarian project achieves tangible, measurable community outcomes.',
+                  image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['M.Sc. in Organizational Leadership', '12+ Years Executive NGO Management', 'Project Management Professional (PMP)'],
+                  email: 'director@selamcharity.org'
+                },
+                {
+                  name: 'Sister Fatima Al-Hassan',
+                  role: 'Head of School Administration',
+                  category: 'management' as const,
+                  desc: 'Leading teacher training, modern curriculum standards, and inclusive child pedagogy at Selam School.',
+                  fullBio: 'Sister Fatima oversees the educational ecosystem of Selam School, nurturing over 1,200 students with inclusive learning standards, STEM programs, and character-building extracurriculars.',
+                  image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['B.Ed. & M.Ed. Educational Leadership', 'Distinguished Educator Award 2023', 'Specialist in Child Pedagogy'],
+                  email: 'school@selamcharity.org'
+                },
+                {
+                  name: 'Dr. Ibrahim Mohammed',
+                  role: 'Director of Community Health',
+                  category: 'management' as const,
+                  desc: 'Managing school wellness clinics, nutritional meal distribution, and emergency pediatric care.',
+                  fullBio: 'Dr. Ibrahim runs the on-campus health clinic and community outreach brigades, providing regular health checkups, dental screening, and daily nutrient-dense meal plans for vulnerable students.',
+                  image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['Medical Doctor (M.D.)', 'Postgraduate Diploma in Tropical Medicine', '10+ Years Field Medical Experience'],
+                  email: 'health@selamcharity.org'
+                },
+                {
+                  name: 'Zahra Abdurrahman',
+                  role: 'Community Outreach Coordinator',
+                  category: 'management' as const,
+                  desc: 'Managing student orphan sponsorships, family welfare evaluations, and donor progress reporting.',
+                  fullBio: 'Zahra connects sponsors with orphaned and disadvantaged students, providing individualized progress reports and coordinating direct livelihood stipends to underprivileged families.',
+                  image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['B.A. in Social Work & Community Welfare', 'Orphan Care Liaison Certified', 'Fluency in 4 Regional Languages'],
+                  email: 'sponsorship@selamcharity.org'
+                },
+                {
+                  name: 'Tewodros Kassaye',
+                  role: 'Chief Financial Officer',
+                  category: 'management' as const,
+                  desc: 'Overseeing transparent bookkeeping, procurement integrity, and international grant escrow management.',
+                  fullBio: 'Tewodros handles financial transparency and statutory audit reporting. His meticulous stewardship ensures that every birr and foreign currency donation is accounted for and maximized.',
+                  image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['B.Sc. Accounting & Finance, ACCA', '14+ Years Financial Systems Administration', 'Audited 50+ Major Donor Grants'],
+                  email: 'finance@selamcharity.org'
+                },
+                {
+                  name: 'Rahel Solomon',
+                  role: 'Director of Vocational Programs',
+                  category: 'management' as const,
+                  desc: 'Empowering disadvantaged youth and single mothers through trade skills, sewing, and micro-grants.',
+                  fullBio: 'Rahel leads vocational training workshops that transition vulnerable youths and mothers into economic self-reliance, graduating hundreds of skilled artisans and entrepreneurs every year.',
+                  image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['M.A. Sustainable Socioeconomic Development', 'Certified Enterprise Incubator Coach', 'Women Empowerment Advocate'],
+                  email: 'vocational@selamcharity.org'
+                },
+                {
+                  name: 'Bilal Kedir',
+                  role: 'Head of Operations & Logistics',
+                  category: 'management' as const,
+                  desc: 'Coordinating emergency relief fleets, educational material shipments, and campus facilities.',
+                  fullBio: 'Bilal coordinates field supply chains and rapid response teams, delivering emergency food parcels, textbooks, and essential supplies across remote communities during crises.',
+                  image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['B.Sc. Supply Chain & Logistics', 'Certified Humanitarian Logistics Specialist', 'Field Security Coordinator'],
+                  email: 'operations@selamcharity.org'
+                },
+                {
+                  name: 'Hanif Jemal',
+                  role: 'Digital Communications Lead',
+                  category: 'management' as const,
+                  desc: 'Capturing field stories, multimedia documentaries, and transparent digital donor portals.',
+                  fullBio: 'Hanif bridges Selam’s on-the-ground work with our international donor community, managing multi-channel digital transparency, video documentaries, and online donor verification portals.',
+                  image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
+                  credentials: ['B.Sc. Information Systems & Media', 'Digital Storyteller & Documentary Producer', 'Tech for Good Enthusiast'],
+                  email: 'media@selamcharity.org'
+                }
+              ].map((member, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setSelectedMember(member)}
+                  className="group relative aspect-[4/5] rounded-[28px] overflow-hidden bg-slate-900 cursor-pointer shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1"
+                >
+                  {/* Monochromatic portrait image */}
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover object-top filter grayscale contrast-105 brightness-95 group-hover:scale-105 group-hover:grayscale-0 transition-all duration-700 ease-out"
+                  />
+
+                  {/* Gradient overlay for bottom text legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+
+                  {/* Bottom content row: Name & Role on left, white round + button on right */}
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-3">
+                    <div className="min-w-0 pr-1">
+                      <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug truncate drop-shadow-sm">
+                        {member.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-300 font-normal truncate mt-0.5">
+                        {member.role}
+                      </p>
+                    </div>
+
+                    {/* Floating White Plus Button */}
+                    <button
+                      type="button"
+                      aria-label={`View bio of ${member.name}`}
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-slate-950 flex-shrink-0 flex items-center justify-center shadow-lg group-hover:bg-emerald-400 group-hover:rotate-90 group-hover:scale-110 transition-all duration-300"
+                    >
+                      <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
         </div>
+
+        {/* ── BIOGRAPHY DETAIL MODAL ──────────────────────────────── */}
+        {selectedMember && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setSelectedMember(null)}
+          >
+            <div
+              className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col md:flex-row max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setSelectedMember(null)}
+                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Photo Side */}
+              <div className="w-full md:w-5/12 h-64 md:h-auto relative bg-slate-900 flex-shrink-0">
+                <img
+                  src={selectedMember.image}
+                  alt={selectedMember.name}
+                  className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:hidden" />
+                <div className="absolute bottom-3 left-4 md:hidden text-white">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+                    {selectedMember.category === 'board' ? 'Board of Trustees' : 'Management Team'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Information Side */}
+              <div className="w-full md:w-7/12 p-6 sm:p-8 flex flex-col justify-between space-y-5">
+                <div>
+                  <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 mb-2">
+                    {selectedMember.category === 'board' ? 'Board of Trustees' : 'Management Team'}
+                  </div>
+
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                    {selectedMember.name}
+                  </h3>
+                  <p className="text-sm font-semibold text-emerald-600 mt-0.5">
+                    {selectedMember.role}
+                  </p>
+
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                      Biography &amp; Contribution
+                    </h4>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {selectedMember.fullBio}
+                    </p>
+                  </div>
+
+                  {selectedMember.credentials && (
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Credentials &amp; Milestones
+                      </h4>
+                      <ul className="space-y-1.5">
+                        {selectedMember.credentials.map((cred, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs text-slate-700">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                            <span>{cred}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  {selectedMember.email && (
+                    <a
+                      href={`mailto:${selectedMember.email}`}
+                      className="inline-flex items-center gap-2 text-xs font-medium text-slate-600 hover:text-emerald-600 transition-colors"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>{selectedMember.email}</span>
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMember(null)}
+                    className="ml-auto px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── 4. TESTIMONIALS ───────────────────────────────────────── */}
