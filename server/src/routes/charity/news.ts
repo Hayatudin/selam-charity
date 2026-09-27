@@ -11,7 +11,15 @@ import { createId } from '@paralleldrive/cuid2';
 
 const router = Router();
 
-const newsFallbackPath = path.join(process.cwd(), 'public', 'uploads', 'charity', 'news_store.json');
+// Resolve project root anchored from __dirname (works on both local dev and cPanel).
+// __dirname = .../dist/routes/charity  →  up 3 levels = project root
+function getProjectRoot(): string {
+  const fromDirname = path.resolve(__dirname, '..', '..', '..');
+  if (fs.existsSync(path.join(fromDirname, 'public'))) return fromDirname;
+  return process.cwd();
+}
+
+const newsFallbackPath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'news_store.json');
 function readFallbackNews(): any[] {
   try {
     if (fs.existsSync(newsFallbackPath)) {

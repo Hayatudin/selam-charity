@@ -14,6 +14,17 @@ const router = Router();
 
 import os from 'os';
 
+// Resolve project root anchored from __dirname (works on both local dev and cPanel).
+// __dirname = .../dist/routes/charity  →  up 3 levels = project root
+function getProjectRoot(): string {
+  const fromDirname = path.resolve(__dirname, '..', '..', '..');
+  const publicFromDirname = path.join(fromDirname, 'public');
+  if (fs.existsSync(publicFromDirname)) {
+    return fromDirname;
+  }
+  return process.cwd();
+}
+
 // Configure multer temp upload directory using OS temp directory (always writable on Linux/cPanel)
 const tempUploadDir = os.tmpdir();
 
@@ -23,7 +34,7 @@ const upload = multer({
 });
 
 // JSON fallback file for local development if MySQL connection is offline
-const fallbackStorePath = path.join(process.cwd(), 'public', 'uploads', 'charity', 'donations_store.json');
+const fallbackStorePath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'donations_store.json');
 function ensureFallbackDir() {
   const dir = path.dirname(fallbackStorePath);
   if (!fs.existsSync(dir)) {
@@ -122,7 +133,7 @@ router.post('/', upload.single('receiptFile'), async (req: Request, res: Respons
 
     // Handle uploaded file if present
     if (req.file) {
-      const targetDir = path.join(process.cwd(), 'public', 'uploads', 'charity', 'receipts');
+      const targetDir = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'receipts');
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }

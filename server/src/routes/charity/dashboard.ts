@@ -8,9 +8,17 @@ import fs from 'fs';
 
 const router = Router();
 
+// Resolve project root anchored from __dirname (works on both local dev and cPanel).
+// __dirname = .../dist/routes/charity  →  up 3 levels = project root
+function getProjectRoot(): string {
+  const fromDirname = path.resolve(__dirname, '..', '..', '..');
+  if (fs.existsSync(path.join(fromDirname, 'public'))) return fromDirname;
+  return process.cwd();
+}
+
 function getFallbackDonations(): any[] {
   try {
-    const fallbackPath = path.join(process.cwd(), 'public', 'uploads', 'charity', 'donations_store.json');
+    const fallbackPath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'donations_store.json');
     if (fs.existsSync(fallbackPath)) {
       return JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
     }

@@ -12,8 +12,16 @@ import fs from 'fs';
 
 const router = Router();
 
+// Resolve project root anchored from __dirname (works on both local dev and cPanel).
+// __dirname = .../dist/routes/charity  →  up 3 levels = project root
+function getProjectRoot(): string {
+  const fromDirname = path.resolve(__dirname, '..', '..', '..');
+  if (fs.existsSync(path.join(fromDirname, 'public'))) return fromDirname;
+  return process.cwd();
+}
+
 // Fallback JSON store path
-const mediaFallbackPath = path.join(process.cwd(), 'public', 'uploads', 'charity', 'media_store.json');
+const mediaFallbackPath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'media_store.json');
 
 function readFallbackMedia(): any[] {
   try {
@@ -293,7 +301,7 @@ router.delete('/:id', authenticateSession, requireRole(['super_admin', 'charity_
     writeFallbackMedia(filtered);
 
     if (existing?.url && existing.url.startsWith('/uploads/')) {
-      const localFilePath = path.join(process.cwd(), 'public', existing.url.substring(1));
+      const localFilePath = path.join(getProjectRoot(), 'public', existing.url.substring(1));
       try {
         if (fs.existsSync(localFilePath)) {
           fs.unlinkSync(localFilePath);

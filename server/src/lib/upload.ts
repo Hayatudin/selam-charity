@@ -16,6 +16,38 @@ cloudinary.config({
 const isLocal = process.env.STORAGE_MODE === 'local';
 
 /**
+ * Resolve the server project root reliably on both local dev and cPanel.
+ *
+ * On cPanel, Phusion Passenger sets process.cwd() to the domain document root
+ * (e.g. /home/selamcen/api.selamcharity.org) which does NOT contain the
+ * public/ folder and is not writable by the app.
+ *
+ * __dirname inside the compiled dist/ folder is:
+ *   /home/selamcen/api.selamcharity.org/<app_dir>/dist/lib
+ * So going up 3 levels (lib → dist → app_dir) gives us the project root
+ * where public/ lives.
+ *
+ * We also fall back to process.cwd() for local development where __dirname
+ * and cwd() are already aligned.
+ */
+function getProjectRoot(): string {
+  // __dirname = .../dist/lib  →  go up to dist/  →  go up to project root
+  const fromDirname = path.resolve(__dirname, '..', '..');
+  const publicFromDirname = path.join(fromDirname, 'public');
+
+  // Prefer __dirname-derived path when public/ exists there, otherwise fall
+  // back to process.cwd() (works fine in local development).
+  try {
+    const fs = require('fs');
+    if (fs.existsSync(publicFromDirname)) {
+      return fromDirname;
+    }
+  } catch (_) {}
+
+  return process.cwd();
+}
+
+/**
  * Upload a base64 file string to either Cloudinary or local storage.
  * Controlled by the STORAGE_MODE environment variable.
  */
@@ -104,8 +136,8 @@ async function uploadToLocalDisk(fileString: string, folder: string): Promise<st
     const buffer = Buffer.from(base64Data, 'base64');
     const fileName = `${crypto.randomBytes(16).toString('hex')}.${extension}`;
 
-    // Updated path to point to server's sibling public folder or server's own public folder
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', folder);
+    // Anchor to project root via __dirname so this works on both local dev and cPanel
+    const uploadDir = path.join(getProjectRoot(), 'public', 'uploads', folder);
     await mkdir(uploadDir, { recursive: true });
 
     const filePath = path.join(uploadDir, fileName);
@@ -134,7 +166,7 @@ export async function uploadFileFromDisk(
       const baseName = path.basename(filePath);
       const fileName = ext && !baseName.endsWith(ext) ? `${baseName}${ext}` : baseName;
 
-      const targetDir = path.join(process.cwd(), 'public', 'uploads', folder);
+      const targetDir = path.join(getProjectRoot(), 'public', 'uploads', folder);
       await mkdir(targetDir, { recursive: true });
 
       const targetPath = path.join(targetDir, fileName);

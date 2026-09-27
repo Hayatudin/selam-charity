@@ -200,7 +200,7 @@ app.use(
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   },
-  express.static(path.join(process.cwd(), 'public/uploads'), {
+  express.static(path.join(__dirname, '..', 'public', 'uploads'), {
     setHeaders: (res: Response, filePath: string) => {
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       // If file has no extension, sniff magic bytes
@@ -235,7 +235,7 @@ app.get('/api/assets/*', (req: Request, res: Response) => {
   
   // Strip leading slash to prevent joining issues
   const cleanAssetPath = assetPath.startsWith('/') ? assetPath.substring(1) : assetPath;
-  const fullPath = path.join(process.cwd(), 'public', cleanAssetPath);
+  const fullPath = path.join(__dirname, '..', 'public', cleanAssetPath);
   
   if (fs.existsSync(fullPath)) {
     res.setHeader('Access-Control-Allow-Origin', '*');
