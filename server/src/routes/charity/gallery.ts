@@ -11,11 +11,8 @@ const router = Router();
 
 // Resolve project root anchored from __dirname (works on both local dev and cPanel).
 // __dirname = .../dist/routes/charity  →  up 3 levels = project root
-function getProjectRoot(): string {
-  const fromDirname = path.resolve(__dirname, '..', '..', '..');
-  if (fs.existsSync(path.join(fromDirname, 'public'))) return fromDirname;
-  return process.cwd();
-}
+// process.cwd() on cPanel = /home/selamcen/api.selamcharity.org (the app root with public/ inside)
+function getProjectRoot(): string { return process.cwd(); }
 
 // Fallback JSON store path
 const galleryFallbackPath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'gallery_store.json');

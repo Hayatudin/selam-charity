@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 import { decryptPath } from './crypto';
 
 // Configure Cloudinary
@@ -16,18 +17,48 @@ cloudinary.config({
 const isLocal = process.env.STORAGE_MODE === 'local';
 
 /**
- * Resolve the server project root reliably on both local dev and cPanel.
+ * Resolve the upload root directory.
  *
- * Priority:
- * 1. APP_ROOT env var — set this in cPanel .env to your exact app directory
- *    e.g. APP_ROOT=/home/selamcen/api.selamcharity.org
- * 2. __dirname-relative: dist/lib → up 2 = project root
- * 3. process.cwd() fallback for local dev
+ * Strategy (in order):
+ * 1. UPLOAD_ROOT env var — explicit override pointing directly at the uploads dir
+ * 2. APP_ROOT env var — must contain a readable public/uploads subdir
+ * 3. process.cwd()/public/uploads — works on cPanel (cwd = /home/selamcen/api.selamcharity.org)
+ * 4. __dirname-relative fallback
  */
-function getProjectRoot(): string {
-  if (process.env.APP_ROOT) return process.env.APP_ROOT;
-  // __dirname = .../dist/lib  →  up 1 = dist/  →  up 1 = project root
-  return path.resolve(__dirname, '..', '..');
+function getUploadsRoot(): string {
+  // Option 1: explicit UPLOAD_ROOT points straight to uploads/
+  if (process.env.UPLOAD_ROOT) {
+    console.log(`[UPLOAD] Using UPLOAD_ROOT env: ${process.env.UPLOAD_ROOT}`);
+    return process.env.UPLOAD_ROOT;
+  }
+
+  // Option 2: APP_ROOT — only use it if public/ actually exists there
+  if (process.env.APP_ROOT) {
+    const candidate = path.join(process.env.APP_ROOT, 'public', 'uploads');
+    try {
+      // verify we can stat the parent (public/) — don't require uploads/ to exist yet
+      fs.statSync(path.join(process.env.APP_ROOT, 'public'));
+      console.log(`[UPLOAD] Using APP_ROOT env: ${process.env.APP_ROOT}`);
+      return candidate;
+    } catch {
+      console.warn(`[UPLOAD] APP_ROOT=${process.env.APP_ROOT} has no public/ subdir, ignoring`);
+    }
+  }
+
+  // Option 3: process.cwd() — on cPanel Passenger this is the app dir
+  const cwdCandidate = path.join(process.cwd(), 'public', 'uploads');
+  try {
+    fs.statSync(path.join(process.cwd(), 'public'));
+    console.log(`[UPLOAD] Using cwd: ${process.cwd()}`);
+    return cwdCandidate;
+  } catch {
+    // public/ doesn't exist yet under cwd — still use it (mkdir will create it)
+  }
+
+  // Option 4: __dirname-relative (dist/lib → up 2 = project root)
+  const dirnameCandidate = path.join(path.resolve(__dirname, '..', '..'), 'public', 'uploads');
+  console.log(`[UPLOAD] Falling back to __dirname-relative: ${dirnameCandidate}`);
+  return dirnameCandidate;
 }
 
 /**
@@ -35,7 +66,11 @@ function getProjectRoot(): string {
  * Controlled by the STORAGE_MODE environment variable.
  */
 export async function uploadToLocal(fileString: string | null | undefined, folder: string) {
-  if (!fileString) return null;
+  console.log(`[UPLOAD] uploadToLocal called, folder=${folder}, isLocal=${isLocal}, STORAGE_MODE=${process.env.STORAGE_MODE}`);
+  if (!fileString) {
+    console.warn('[UPLOAD] uploadToLocal: fileString is null/empty');
+    return null;
+  }
 
   let cleanString = fileString;
   if (cleanString.includes('/api/assets/')) {
@@ -98,6 +133,10 @@ async function uploadToCloudinary(fileString: string, folder: string): Promise<s
  * Upload to local disk (used on cPanel)
  */
 async function uploadToLocalDisk(fileString: string, folder: string): Promise<string | null> {
+  const uploadsRoot = getUploadsRoot();
+  const uploadDir = path.join(uploadsRoot, folder);
+  console.log(`[UPLOAD] uploadToLocalDisk: uploadsRoot=${uploadsRoot}, uploadDir=${uploadDir}`);
+
   try {
     let base64Data = fileString;
     let extension = 'bin';
@@ -119,54 +158,66 @@ async function uploadToLocalDisk(fileString: string, folder: string): Promise<st
     const buffer = Buffer.from(base64Data, 'base64');
     const fileName = `${crypto.randomBytes(16).toString('hex')}.${extension}`;
 
-    // Anchor to project root via __dirname so this works on both local dev and cPanel
-    const uploadDir = path.join(getProjectRoot(), 'public', 'uploads', folder);
+    console.log(`[UPLOAD] Creating dir: ${uploadDir}`);
     await mkdir(uploadDir, { recursive: true });
 
     const filePath = path.join(uploadDir, fileName);
+    console.log(`[UPLOAD] Writing file: ${filePath} (${buffer.length} bytes)`);
     await writeFile(filePath, buffer);
 
-    return `/uploads/${folder}/${fileName}`;
-  } catch (err) {
-    console.error(`Local upload error for ${folder}:`, err);
+    const result = `/uploads/${folder}/${fileName}`;
+    console.log(`[UPLOAD] Success: ${result}`);
+    return result;
+  } catch (err: any) {
+    console.error(`[UPLOAD] uploadToLocalDisk FAILED for folder=${folder}, uploadDir=${uploadDir}: ${err.message}`, err);
     return null;
   }
 }
 
 /**
- * Upload a local disk file (saved by multer) to the target storage backend (local public folder or Cloudinary)
+ * Upload a local disk file (saved by multer) to the target storage backend
  */
 export async function uploadFileFromDisk(
   filePath: string | null | undefined,
   folder: string,
   originalName?: string
 ): Promise<string | null> {
-  if (!filePath) return null;
+  console.log(`[UPLOAD] uploadFileFromDisk: filePath=${filePath}, folder=${folder}, isLocal=${isLocal}`);
+  if (!filePath) {
+    console.warn('[UPLOAD] uploadFileFromDisk: filePath is null/empty');
+    return null;
+  }
 
   if (isLocal) {
+    const uploadsRoot = getUploadsRoot();
+    const targetDir = path.join(uploadsRoot, folder);
+    console.log(`[UPLOAD] uploadFileFromDisk: uploadsRoot=${uploadsRoot}, targetDir=${targetDir}`);
+
     try {
       const ext = originalName ? path.extname(originalName) : path.extname(filePath);
       const baseName = path.basename(filePath);
       const fileName = ext && !baseName.endsWith(ext) ? `${baseName}${ext}` : baseName;
 
-      const targetDir = path.join(getProjectRoot(), 'public', 'uploads', folder);
+      console.log(`[UPLOAD] Creating dir: ${targetDir}`);
       await mkdir(targetDir, { recursive: true });
 
       const targetPath = path.join(targetDir, fileName);
+      console.log(`[UPLOAD] Moving ${filePath} → ${targetPath}`);
 
-      // Move file from temp to target location
-      const fs = await import('fs/promises');
+      const fsModule = await import('fs/promises');
       try {
-        await fs.rename(filePath, targetPath);
-      } catch (renameErr) {
-        // If rename fails across volumes, fallback to copy + delete
-        await fs.copyFile(filePath, targetPath);
-        try { await fs.unlink(filePath); } catch (_) {}
+        await fsModule.rename(filePath, targetPath);
+      } catch (renameErr: any) {
+        console.warn(`[UPLOAD] rename failed (${renameErr.message}), trying copy+delete`);
+        await fsModule.copyFile(filePath, targetPath);
+        try { await fsModule.unlink(filePath); } catch (_) {}
       }
 
-      return `/uploads/${folder}/${fileName}`;
-    } catch (err) {
-      console.error(`Local file move error for ${folder}:`, err);
+      const result = `/uploads/${folder}/${fileName}`;
+      console.log(`[UPLOAD] uploadFileFromDisk success: ${result}`);
+      return result;
+    } catch (err: any) {
+      console.error(`[UPLOAD] uploadFileFromDisk FAILED for folder=${folder}, targetDir=${targetDir}: ${err.message}`, err);
       return null;
     }
   } else {
@@ -175,10 +226,8 @@ export async function uploadFileFromDisk(
         folder: `coolstaff/${folder}`,
         resource_type: 'auto',
       });
-      const fs = require('fs');
-      try {
-        fs.unlinkSync(filePath);
-      } catch (_) {}
+      const fsSync = require('fs');
+      try { fsSync.unlinkSync(filePath); } catch (_) {}
       return result.secure_url;
     } catch (err) {
       console.error(`Cloudinary disk file upload error for ${folder}:`, err);

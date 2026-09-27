@@ -14,16 +14,8 @@ const router = Router();
 
 import os from 'os';
 
-// Resolve project root anchored from __dirname (works on both local dev and cPanel).
-// __dirname = .../dist/routes/charity  →  up 3 levels = project root
-function getProjectRoot(): string {
-  const fromDirname = path.resolve(__dirname, '..', '..', '..');
-  const publicFromDirname = path.join(fromDirname, 'public');
-  if (fs.existsSync(publicFromDirname)) {
-    return fromDirname;
-  }
-  return process.cwd();
-}
+// process.cwd() on cPanel = /home/selamcen/api.selamcharity.org (the app root with public/ inside)
+function getProjectRoot(): string { return process.cwd(); }
 
 // Configure multer temp upload directory using OS temp directory (always writable on Linux/cPanel)
 const tempUploadDir = os.tmpdir();

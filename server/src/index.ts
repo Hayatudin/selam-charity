@@ -337,6 +337,44 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'Salam Charity API', timestamp: new Date().toISOString() });
 });
 
+// Upload path diagnostic — visit /api/test-upload to confirm paths are correct on cPanel
+app.get('/api/test-upload', (req: Request, res: Response) => {
+  const appRoot = process.env.APP_ROOT || path.resolve(__dirname, '..', '..');
+  const uploadDir = path.join(appRoot, 'public', 'uploads');
+  const storageMode = process.env.STORAGE_MODE || 'NOT SET';
+  let uploadDirExists = false;
+  let uploadDirWritable = false;
+  let testWriteError: string | null = null;
+  try { uploadDirExists = fs.existsSync(uploadDir); } catch(e) {}
+  if (uploadDirExists) {
+    try {
+      const testFile = path.join(uploadDir, `.write_test_${Date.now()}`);
+      fs.writeFileSync(testFile, 'ok');
+      fs.unlinkSync(testFile);
+      uploadDirWritable = true;
+    } catch(e: any) { testWriteError = e.message; }
+  } else {
+    try {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      uploadDirExists = fs.existsSync(uploadDir);
+      uploadDirWritable = true;
+    } catch(e: any) { testWriteError = e.message; }
+  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    status: uploadDirWritable ? 'ok' : 'error',
+    appRoot,
+    uploadDir,
+    uploadDirExists,
+    uploadDirWritable,
+    storageMode,
+    __dirname,
+    cwd: process.cwd(),
+    testWriteError,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/test-status', async (req: Request, res: Response) => {
   let dbOk = false;
   let dbInfo: any = null;

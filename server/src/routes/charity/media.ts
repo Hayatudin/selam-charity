@@ -9,25 +9,20 @@ import { createId } from '@paralleldrive/cuid2';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
 const router = Router();
 
-// Resolve project root anchored from __dirname (works on both local dev and cPanel).
-// __dirname = .../dist/routes/charity  →  up 3 levels = project root
-function getProjectRoot(): string {
-  const fromDirname = path.resolve(__dirname, '..', '..', '..');
-  if (fs.existsSync(path.join(fromDirname, 'public'))) return fromDirname;
-  return process.cwd();
+// Fallback store path uses cwd() — on cPanel cwd = /home/selamcen/api.selamcharity.org
+function getFallbackStorePath(): string {
+  return path.join(process.cwd(), 'public', 'uploads', 'charity', 'media_store.json');
 }
-
-// Fallback JSON store path
-const mediaFallbackPath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'media_store.json');
 
 function readFallbackMedia(): any[] {
   try {
-    if (fs.existsSync(mediaFallbackPath)) {
-      const raw = fs.readFileSync(mediaFallbackPath, 'utf8');
-      return JSON.parse(raw);
+    const p = getFallbackStorePath();
+    if (fs.existsSync(p)) {
+      return JSON.parse(fs.readFileSync(p, 'utf8'));
     }
   } catch (err) {
     console.error('[CHARITY MEDIA] Failed to read fallback store:', err);
@@ -37,43 +32,30 @@ function readFallbackMedia(): any[] {
 
 function writeFallbackMedia(data: any[]) {
   try {
-    const dir = path.dirname(mediaFallbackPath);
+    const p = getFallbackStorePath();
+    const dir = path.dirname(p);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(mediaFallbackPath, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
     console.error('[CHARITY MEDIA] Failed to save fallback store:', err);
   }
 }
 
-import os from 'os';
-
-// Configure multer temp destination using OS temp directory (always writable on Linux/cPanel)
-const tempUploadDir = os.tmpdir();
-
+// Configure multer — use OS temp dir (always writable)
 const upload = multer({
-  dest: tempUploadDir,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max limit
+  dest: os.tmpdir(),
+  limits: { fileSize: 100 * 1024 * 1024 },
 });
 
 function detectFileType(mimeOrName: string): 'image' | 'video' | 'document' {
   const lower = mimeOrName.toLowerCase();
-  if (
-    lower.includes('image') ||
-    /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/i.test(lower)
-  ) {
-    return 'image';
-  }
-  if (
-    lower.includes('video') ||
-    /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(lower)
-  ) {
-    return 'video';
-  }
+  if (lower.includes('image') || /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/i.test(lower)) return 'image';
+  if (lower.includes('video') || /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(lower)) return 'video';
   return 'document';
 }
 
 // ==========================================
-// 1. LIST MEDIA (Search, Filter by Type)
+// 1. LIST MEDIA
 // ==========================================
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -87,32 +69,22 @@ router.get('/', async (req: Request, res: Response) => {
       }
       if (search && typeof search === 'string' && search.trim()) {
         const term = `%${search.trim()}%`;
-        conditions.push(
-          or(
-            like(charityMedia.name, term),
-            like(charityMedia.originalName, term),
-            like(charityMedia.caption, term)
-          )
-        );
+        conditions.push(or(
+          like(charityMedia.name, term),
+          like(charityMedia.originalName, term),
+          like(charityMedia.caption, term)
+        ));
       }
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-      const query = db
-        .select()
-        .from(charityMedia)
-        .where(whereClause)
-        .orderBy(desc(charityMedia.createdAt));
-
+      const query = db.select().from(charityMedia).where(whereClause).orderBy(desc(charityMedia.createdAt));
       if (limit && !isNaN(Number(limit))) query.limit(Number(limit));
       if (offset && !isNaN(Number(offset))) query.offset(Number(offset));
-
       items = await query;
     } catch (_) {
       items = readFallbackMedia();
     }
 
-    if (!items || items.length === 0) {
-      items = readFallbackMedia();
-    }
+    if (!items || items.length === 0) items = readFallbackMedia();
 
     if (fileType && typeof fileType === 'string' && fileType !== 'all') {
       items = items.filter(m => m.fileType === fileType);
@@ -120,21 +92,20 @@ router.get('/', async (req: Request, res: Response) => {
     if (search && typeof search === 'string' && search.trim()) {
       const q = search.trim().toLowerCase();
       items = items.filter(m =>
-        (m.name && m.name.toLowerCase().includes(q)) ||
-        (m.originalName && m.originalName.toLowerCase().includes(q)) ||
-        (m.caption && m.caption.toLowerCase().includes(q))
+        (m.name || '').toLowerCase().includes(q) ||
+        (m.originalName || '').toLowerCase().includes(q) ||
+        (m.caption || '').toLowerCase().includes(q)
       );
     }
 
     res.json(items);
   } catch (err: any) {
-    console.warn('[CHARITY MEDIA] List fallback:', err.message);
     res.json(readFallbackMedia());
   }
 });
 
 // ==========================================
-// 2. UPLOAD VIA BASE64 DATA STRING
+// 2. UPLOAD VIA BASE64
 // ==========================================
 router.post('/upload-base64', authenticateSession, requireRole(['super_admin', 'charity_admin', 'genaral', 'user']), async (req: Request, res: Response) => {
   try {
@@ -145,12 +116,16 @@ router.post('/upload-base64', authenticateSession, requireRole(['super_admin', '
       return res.status(400).json({ error: 'fileString and fileName are required' });
     }
 
+    console.log(`[MEDIA UPLOAD base64] fileName=${fileName}, STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}`);
+
     const detectedType = customType || detectFileType(fileName);
     const targetFolder = detectedType === 'image' ? 'charity/images' : detectedType === 'video' ? 'charity/videos' : 'charity/documents';
 
     const uploadedUrl = await uploadToLocal(fileString, targetFolder);
     if (!uploadedUrl) {
-      return res.status(500).json({ error: 'Failed to store file' });
+      const errMsg = `Upload failed: uploadToLocal returned null. STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}, APP_ROOT=${process.env.APP_ROOT || 'not set'}`;
+      console.error('[MEDIA UPLOAD base64]', errMsg);
+      return res.status(500).json({ error: 'Failed to store file', details: errMsg });
     }
 
     const sizeBytes = Math.round((fileString.length * 3) / 4);
@@ -174,15 +149,9 @@ router.post('/upload-base64', authenticateSession, requireRole(['super_admin', '
 
     try {
       await db.insert(charityMedia).values({
-        id: newMedia.id,
-        name: newMedia.name,
-        originalName: newMedia.originalName,
-        url: newMedia.url,
-        fileType: newMedia.fileType,
-        mimeType: newMedia.mimeType,
-        sizeBytes: newMedia.sizeBytes,
-        caption: newMedia.caption,
-        uploadedById: newMedia.uploadedById,
+        id: newMedia.id, name: newMedia.name, originalName: newMedia.originalName,
+        url: newMedia.url, fileType: newMedia.fileType, mimeType: newMedia.mimeType,
+        sizeBytes: newMedia.sizeBytes, caption: newMedia.caption, uploadedById: newMedia.uploadedById,
       });
     } catch (_) {}
 
@@ -194,7 +163,7 @@ router.post('/upload-base64', authenticateSession, requireRole(['super_admin', '
 });
 
 // ==========================================
-// 3. UPLOAD VIA MULTIPART/FORM-DATA (Multer)
+// 3. UPLOAD VIA MULTIPART (Multer)
 // ==========================================
 router.post('/upload-file', authenticateSession, requireRole(['super_admin', 'charity_admin', 'genaral', 'user']), upload.single('file'), async (req: Request, res: Response) => {
   try {
@@ -205,11 +174,16 @@ router.post('/upload-file', authenticateSession, requireRole(['super_admin', 'ch
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log(`[MEDIA UPLOAD file] originalname=${file.originalname}, size=${file.size}, tmpPath=${file.path}, STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}`);
+
     const detectedType = detectFileType(file.mimetype || file.originalname);
     const targetFolder = detectedType === 'image' ? 'charity/images' : detectedType === 'video' ? 'charity/videos' : 'charity/documents';
+
     const uploadedUrl = await uploadFileFromDisk(file.path, targetFolder, file.originalname);
     if (!uploadedUrl) {
-      return res.status(500).json({ error: 'Failed to store file' });
+      const errMsg = `Upload failed: uploadFileFromDisk returned null. STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}, APP_ROOT=${process.env.APP_ROOT || 'not set'}, tmpPath=${file.path}`;
+      console.error('[MEDIA UPLOAD file]', errMsg);
+      return res.status(500).json({ error: 'Failed to store file', details: errMsg });
     }
 
     const displayName = (req.body.name && req.body.name.trim()) || file.originalname;
@@ -235,15 +209,9 @@ router.post('/upload-file', authenticateSession, requireRole(['super_admin', 'ch
 
     try {
       await db.insert(charityMedia).values({
-        id: newMedia.id,
-        name: newMedia.name,
-        originalName: newMedia.originalName,
-        url: newMedia.url,
-        fileType: newMedia.fileType,
-        mimeType: newMedia.mimeType,
-        sizeBytes: newMedia.sizeBytes,
-        caption: newMedia.caption,
-        uploadedById: newMedia.uploadedById,
+        id: newMedia.id, name: newMedia.name, originalName: newMedia.originalName,
+        url: newMedia.url, fileType: newMedia.fileType, mimeType: newMedia.mimeType,
+        sizeBytes: newMedia.sizeBytes, caption: newMedia.caption, uploadedById: newMedia.uploadedById,
       });
     } catch (_) {}
 
@@ -270,20 +238,13 @@ router.patch('/:id', authenticateSession, requireRole(['super_admin', 'charity_a
     if (caption !== undefined) updated.caption = caption ? caption.trim() : null;
     updated.updatedAt = new Date().toISOString();
 
-    if (idx >= 0) {
-      list[idx] = updated;
-    } else {
-      list.push(updated);
-    }
+    if (idx >= 0) list[idx] = updated; else list.push(updated);
     writeFallbackMedia(list);
 
-    try {
-      await db.update(charityMedia).set(updated).where(eq(charityMedia.id, id));
-    } catch (_) {}
+    try { await db.update(charityMedia).set(updated).where(eq(charityMedia.id, id)); } catch (_) {}
 
     res.json(updated);
   } catch (err: any) {
-    console.error('[CHARITY MEDIA] Update error:', err);
     res.status(500).json({ error: 'Failed to update media', details: err.message });
   }
 });
@@ -297,27 +258,21 @@ router.delete('/:id', authenticateSession, requireRole(['super_admin', 'charity_
 
     const list = readFallbackMedia();
     const existing = list.find(m => m.id === id);
-    const filtered = list.filter(m => m.id !== id);
-    writeFallbackMedia(filtered);
+    writeFallbackMedia(list.filter(m => m.id !== id));
 
     if (existing?.url && existing.url.startsWith('/uploads/')) {
-      const localFilePath = path.join(getProjectRoot(), 'public', existing.url.substring(1));
+      const localFilePath = path.join(process.cwd(), 'public', existing.url.substring(1));
       try {
-        if (fs.existsSync(localFilePath)) {
-          fs.unlinkSync(localFilePath);
-        }
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
       } catch (fileErr) {
         console.warn('[CHARITY MEDIA] Failed to delete file on disk:', fileErr);
       }
     }
 
-    try {
-      await db.delete(charityMedia).where(eq(charityMedia.id, id));
-    } catch (_) {}
+    try { await db.delete(charityMedia).where(eq(charityMedia.id, id)); } catch (_) {}
 
     res.json({ success: true, message: 'Media file deleted successfully' });
   } catch (err: any) {
-    console.error('[CHARITY MEDIA] Delete error:', err);
     res.status(500).json({ error: 'Failed to delete media', details: err.message });
   }
 });
