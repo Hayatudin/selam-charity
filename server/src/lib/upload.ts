@@ -18,33 +18,16 @@ const isLocal = process.env.STORAGE_MODE === 'local';
 /**
  * Resolve the server project root reliably on both local dev and cPanel.
  *
- * On cPanel, Phusion Passenger sets process.cwd() to the domain document root
- * (e.g. /home/selamcen/api.selamcharity.org) which does NOT contain the
- * public/ folder and is not writable by the app.
- *
- * __dirname inside the compiled dist/ folder is:
- *   /home/selamcen/api.selamcharity.org/<app_dir>/dist/lib
- * So going up 3 levels (lib → dist → app_dir) gives us the project root
- * where public/ lives.
- *
- * We also fall back to process.cwd() for local development where __dirname
- * and cwd() are already aligned.
+ * Priority:
+ * 1. APP_ROOT env var — set this in cPanel .env to your exact app directory
+ *    e.g. APP_ROOT=/home/selamcen/api.selamcharity.org
+ * 2. __dirname-relative: dist/lib → up 2 = project root
+ * 3. process.cwd() fallback for local dev
  */
 function getProjectRoot(): string {
-  // __dirname = .../dist/lib  →  go up to dist/  →  go up to project root
-  const fromDirname = path.resolve(__dirname, '..', '..');
-  const publicFromDirname = path.join(fromDirname, 'public');
-
-  // Prefer __dirname-derived path when public/ exists there, otherwise fall
-  // back to process.cwd() (works fine in local development).
-  try {
-    const fs = require('fs');
-    if (fs.existsSync(publicFromDirname)) {
-      return fromDirname;
-    }
-  } catch (_) {}
-
-  return process.cwd();
+  if (process.env.APP_ROOT) return process.env.APP_ROOT;
+  // __dirname = .../dist/lib  →  up 1 = dist/  →  up 1 = project root
+  return path.resolve(__dirname, '..', '..');
 }
 
 /**

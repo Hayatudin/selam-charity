@@ -265,46 +265,22 @@ app.get('/api/assets/*', (req: Request, res: Response) => {
 });
 
 // Routes
-import candidateRoutes from './routes/candidates';
-import brokerRoutes from './routes/brokers';
-import leaderRoutes from './routes/leaders';
 import userRoutes from './routes/users';
-import cvRoutes from './routes/cv';
-import generatedCvRoutes from './routes/generated-cvs';
 import fileRoutes from './routes/files';
-import deploymentRoutes from './routes/deployments';
-import ocrRoutes from './routes/ocr';
-import extractRoutes from './routes/extract';
 import notificationRoutes from './routes/notifications';
 import accountRoutes from './routes/account';
 import searchRoutes from './routes/search';
 import cronRoutes from './routes/cron';
-import quickRegistrationRoutes from './routes/quick-registrations';
-import invoiceRoutes from './routes/invoices';
 import settingsRoutes from './routes/settings';
-import agencyRoutes from './routes/agency';
-import passportRoutes from './routes/passports';
 import charityRoutes from './routes/charity';
 
-app.use('/api/candidates', authenticateSession, candidateRoutes);
-app.use('/api/brokers', authenticateSession, brokerRoutes);
-app.use('/api/leaders', authenticateSession, leaderRoutes);
-app.use('/api/users', userRoutes); // users route mounts authenticateSession internally
-app.use('/api/cv', authenticateSession, cvRoutes);
-app.use('/api/generated-cvs', authenticateSession, generatedCvRoutes);
-app.use('/api/ocr', authenticateSession, ocrRoutes);
-app.use('/api/extract', authenticateSession, extractRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/notifications', authenticateSession, notificationRoutes);
 app.use('/api/account', authenticateSession, accountRoutes);
 app.use('/api/search', authenticateSession, searchRoutes);
-app.use('/api/cron', cronRoutes); // cron left unauthenticated for external cron-job triggers (or secure via secret key)
-app.use('/api/quick-registrations', authenticateSession, quickRegistrationRoutes);
-app.use('/api/invoices', authenticateSession, invoiceRoutes);
+app.use('/api/cron', cronRoutes);
 app.use('/api/settings', authenticateSession, settingsRoutes);
 app.use('/api/files', authenticateSession, fileRoutes);
-app.use('/api/deployments', authenticateSession, deploymentRoutes);
-app.use('/api/agency', authenticateSession, agencyRoutes);
-app.use('/api/passports', authenticateSession, passportRoutes);
 app.use('/api/charity', charityRoutes);
 
 
