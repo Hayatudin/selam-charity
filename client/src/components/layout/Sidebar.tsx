@@ -23,10 +23,12 @@ import {
   Globe,
   Landmark,
   ExternalLink,
+  FileText,
 } from 'lucide-react';
 
 const charityNavItems = [
   { label: 'Charity Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Scholarship Applications', href: '/charity/applications', icon: FileText },
   { label: 'Donations & Receipts', href: '/charity/donations', icon: Landmark },
   { label: 'News & Updates', href: '/charity/news', icon: Newspaper },
   { label: 'Gallery', href: '/charity/gallery', icon: Images },

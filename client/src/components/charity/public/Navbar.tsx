@@ -310,7 +310,7 @@ export default function CharityNavbar() {
 
             {/* Apply now Button */}
             <Link
-              href="/school#programs"
+              href="/application"
               className="rounded-full bg-[#185a3a] hover:bg-[#12422a] text-white px-6 py-2.5 text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             >
               {t('Apply now')}
@@ -467,7 +467,7 @@ export default function CharityNavbar() {
 
             <div className="pt-4 border-t border-slate-100 flex flex-col gap-2.5">
               <Link
-                href="/school#programs"
+                href="/application"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-3 rounded-full bg-[#185a3a] text-white font-semibold text-sm shadow-sm"
               >

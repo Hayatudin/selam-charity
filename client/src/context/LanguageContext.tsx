@@ -68,7 +68,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const t = useCallback(
     (keyOrText: string, fallback?: string): string => {
       if (!keyOrText) return '';
-      if (language === 'En') return fallback || keyOrText;
+      if (language === 'En') return keyOrText;
 
       const trimmed = keyOrText.trim();
 

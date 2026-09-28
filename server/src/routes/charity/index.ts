@@ -11,6 +11,7 @@ import mediaRoutes from './media';
 import schoolRoutes from './school';
 import pagesRoutes from './pages';
 import donationsRoutes from './donations';
+import applicationsRoutes from './applications';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.get('/', (req: Request, res: Response) => {
       '/pages',
       '/campaigns',
       '/donations',
+      '/applications',
       '/projects',
       '/volunteers'
     ],
@@ -47,6 +49,7 @@ router.use('/media', mediaRoutes);
 router.use('/school', schoolRoutes);
 router.use('/pages', pagesRoutes);
 router.use('/donations', donationsRoutes);
+router.use('/applications', applicationsRoutes);
 
 // ==========================================
 // 3. PUBLIC CAMPAIGNS & PROJECTS

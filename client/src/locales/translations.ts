@@ -1019,5 +1019,10 @@ export const arTranslations: Record<string, string> = {
   "Customize your dashboard experience.": 'تخصيص تجربة لوحة التحكم الخاصة بك.',
   "Timezone": 'المنطقة الزمنية',
   "Date Format": 'صيغة التاريخ',
+  "Charity Portals": 'أقسام الجمعية',
+  "Charity Portals & Actions": 'أقسام الجمعية والإجراءات',
+  "Administration": 'الإدارة العامة',
+  "Sign Out": 'تسجيل الخروج',
+  "Live Show": 'بث مباشر',
 };
 

@@ -276,7 +276,6 @@ export async function ensureDatabaseSchema() {
       CREATE TABLE IF NOT EXISTS \`CharityVolunteer\` (
         \`id\` VARCHAR(191) NOT NULL,
         \`fullName\` VARCHAR(191) NOT NULL,
-        \`email\` VARCHAR(191) NOT NULL,
         \`phone\` VARCHAR(191) NOT NULL,
         \`skills\` JSON NULL,
         \`interests\` TEXT NULL,
@@ -288,6 +287,59 @@ export async function ensureDatabaseSchema() {
         PRIMARY KEY (\`id\`),
         INDEX \`CharityVolunteer_email_idx\` (\`email\`),
         INDEX \`CharityVolunteer_status_idx\` (\`status\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+
+    // ScholarshipApplication
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS \`ScholarshipApplication\` (
+        \`id\` VARCHAR(191) NOT NULL,
+        \`applicationNumber\` VARCHAR(50) NOT NULL,
+        \`fullName\` VARCHAR(255) NOT NULL,
+        \`gender\` VARCHAR(50) NOT NULL,
+        \`placeOfBirth\` VARCHAR(255) NULL,
+        \`dateOfBirth\` VARCHAR(50) NOT NULL,
+        \`contactAddress\` TEXT NOT NULL,
+        \`phoneNumber\` VARCHAR(50) NOT NULL,
+        \`email\` VARCHAR(255) NULL,
+        \`nationalIdNumber\` VARCHAR(100) NULL,
+        \`employer\` VARCHAR(255) NOT NULL,
+        \`jobTitle\` VARCHAR(255) NOT NULL,
+        \`department\` VARCHAR(255) NULL,
+        \`employmentType\` VARCHAR(50) NULL DEFAULT 'Full-time Permanent',
+        \`workLocation\` VARCHAR(255) NOT NULL,
+        \`yearsOfService\` VARCHAR(50) NOT NULL,
+        \`highestEducation\` VARCHAR(100) NOT NULL,
+        \`undergraduateUniversity\` VARCHAR(255) NOT NULL,
+        \`undergraduateField\` VARCHAR(255) NOT NULL,
+        \`undergraduateCgpa\` VARCHAR(50) NOT NULL,
+        \`graduationYear\` VARCHAR(50) NOT NULL,
+        \`targetDegree\` VARCHAR(50) NOT NULL,
+        \`targetUniversity\` VARCHAR(255) NOT NULL,
+        \`targetField\` VARCHAR(255) NOT NULL,
+        \`enrollmentStatus\` VARCHAR(50) NULL,
+        \`programDuration\` VARCHAR(50) NULL,
+        \`academicYear\` VARCHAR(50) NULL,
+        \`scholarshipType\` VARCHAR(100) NULL,
+        \`requestedAmount\` VARCHAR(100) NULL,
+        \`motivationStatement\` LONGTEXT NULL,
+        \`communityImpact\` LONGTEXT NULL,
+        \`hasCostSharing\` TINYINT(1) NULL DEFAULT 0,
+        \`costSharingDocRef\` VARCHAR(255) NULL,
+        \`documentUrl\` TEXT NULL,
+        \`declarationAgreed\` TINYINT(1) NULL DEFAULT 1,
+        \`status\` VARCHAR(50) NOT NULL DEFAULT 'pending',
+        \`adminNotes\` TEXT NULL,
+        \`reviewedBy\` VARCHAR(191) NULL,
+        \`reviewedAt\` DATETIME(3) NULL,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`ScholarshipApplication_appNumber_key\` (\`applicationNumber\`),
+        INDEX \`ScholarshipApplication_status_idx\` (\`status\`),
+        INDEX \`ScholarshipApplication_fullName_idx\` (\`fullName\`),
+        INDEX \`ScholarshipApplication_phone_idx\` (\`phoneNumber\`),
+        INDEX \`ScholarshipApplication_createdAt_idx\` (\`createdAt\`)
       ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     `);
 

@@ -51,6 +51,7 @@ export const ROUTE_ACCESS: Record<string, Role[]> = {
   '/charity/media': ['super_admin', 'admin', 'charity_admin', 'user'],
   '/charity/school': ['super_admin', 'admin', 'charity_admin', 'user'],
   '/charity/pages': ['super_admin', 'admin', 'charity_admin', 'user'],
+  '/charity/applications': ['super_admin', 'admin', 'charity_admin', 'user'],
   '/settings': ['super_admin', 'admin', 'charity_admin', 'user'],
   '/users': ['super_admin', 'admin', 'charity_admin'],
 };

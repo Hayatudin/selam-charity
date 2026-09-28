@@ -208,3 +208,72 @@ export const charityVolunteer = mysqlTable('CharityVolunteer', {
   emailIdx: index('CharityVolunteer_email_idx').on(table.email),
   statusIdx: index('CharityVolunteer_status_idx').on(table.status),
 }));
+
+// ==========================================
+// 10. SCHOLARSHIP APPLICATION TABLE
+// ==========================================
+export const scholarshipApplication = mysqlTable('ScholarshipApplication', {
+  id: varchar('id', { length: 191 }).primaryKey().$defaultFn(() => createId()),
+  applicationNumber: varchar('applicationNumber', { length: 50 }).notNull().unique(),
+  
+  // Section 1: Personal Details
+  fullName: varchar('fullName', { length: 255 }).notNull(),
+  gender: varchar('gender', { length: 50 }).notNull(),
+  placeOfBirth: varchar('placeOfBirth', { length: 255 }),
+  dateOfBirth: varchar('dateOfBirth', { length: 50 }).notNull(),
+  contactAddress: text('contactAddress').notNull(),
+  phoneNumber: varchar('phoneNumber', { length: 50 }).notNull(),
+  email: varchar('email', { length: 255 }),
+  nationalIdNumber: varchar('nationalIdNumber', { length: 100 }),
+
+  // Section 2: Employment Details
+  employer: varchar('employer', { length: 255 }).notNull(),
+  jobTitle: varchar('jobTitle', { length: 255 }).notNull(),
+  department: varchar('department', { length: 255 }),
+  employmentType: varchar('employmentType', { length: 50 }).default('Full-time Permanent'),
+  workLocation: varchar('workLocation', { length: 255 }).notNull(),
+  yearsOfService: varchar('yearsOfService', { length: 50 }).notNull(),
+
+  // Section 3: Educational Background
+  highestEducation: varchar('highestEducation', { length: 100 }).notNull(),
+  undergraduateUniversity: varchar('undergraduateUniversity', { length: 255 }).notNull(),
+  undergraduateField: varchar('undergraduateField', { length: 255 }).notNull(),
+  undergraduateCgpa: varchar('undergraduateCgpa', { length: 50 }).notNull(),
+  graduationYear: varchar('graduationYear', { length: 50 }).notNull(),
+
+  // Section 4: Study Program
+  targetDegree: varchar('targetDegree', { length: 50 }).notNull(),
+  targetUniversity: varchar('targetUniversity', { length: 255 }).notNull(),
+  targetField: varchar('targetField', { length: 255 }).notNull(),
+  enrollmentStatus: varchar('enrollmentStatus', { length: 50 }),
+  programDuration: varchar('programDuration', { length: 50 }),
+  academicYear: varchar('academicYear', { length: 50 }),
+
+  // Section 5: Scholarship Request
+  scholarshipType: varchar('scholarshipType', { length: 100 }),
+  requestedAmount: varchar('requestedAmount', { length: 100 }),
+  motivationStatement: longtext('motivationStatement'),
+  communityImpact: longtext('communityImpact'),
+
+  // Section 6: Cost Sharing & Documents
+  hasCostSharing: boolean('hasCostSharing').default(false),
+  costSharingDocRef: varchar('costSharingDocRef', { length: 255 }),
+  documentUrl: text('documentUrl'), // Combined PDF upload
+  declarationAgreed: boolean('declarationAgreed').default(true),
+
+  // Workflow / Review Status
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending' | 'under_review' | 'approved' | 'rejected'
+  adminNotes: text('adminNotes'),
+  reviewedBy: varchar('reviewedBy', { length: 191 }),
+  reviewedAt: datetime('reviewedAt', { fsp: 3 }),
+
+  createdAt: timestamp('createdAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+  updatedAt: timestamp('updatedAt', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
+}, (table) => ({
+  applicationNumberIdx: uniqueIndex('ScholarshipApplication_appNumber_key').on(table.applicationNumber),
+  statusIdx: index('ScholarshipApplication_status_idx').on(table.status),
+  fullNameIdx: index('ScholarshipApplication_fullName_idx').on(table.fullName),
+  phoneIdx: index('ScholarshipApplication_phone_idx').on(table.phoneNumber),
+  createdAtIdx: index('ScholarshipApplication_createdAt_idx').on(table.createdAt),
+}));
+
