@@ -79,8 +79,8 @@ function ContactContent() {
 
   const contactInfo = {
     address: contact?.metadata?.address || 'Bole Subcity, Woreda 03, House No. 412, Addis Ababa, Ethiopia',
-    phone: contact?.metadata?.phone || '+251 91 100 2233',
-    alternatePhone: contact?.metadata?.alternatePhone || '+251 11 661 4455',
+    phone: contact?.metadata?.phone || '0911624839',
+    alternatePhone: contact?.metadata?.alternatePhone || '0944222924',
     email: contact?.metadata?.email || 'contact@selamcharity.org',
     officeHours: contact?.metadata?.officeHours || 'Monday - Friday: 8:30 AM - 5:30 PM (EAT)',
     socialLinks: contact?.metadata?.socialLinks || {

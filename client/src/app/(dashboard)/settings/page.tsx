@@ -85,9 +85,9 @@ export default function SettingsPage() {
 
   // Organization Info
   const [orgInfo, setOrgInfo] = useState({
-    name: 'Selam Charity Organization',
+    name: 'Selam Charity and Development Association',
     email: 'info@selamcharity.org',
-    phone: '+251 911 234 567',
+    phone: '0911624839 / 0944222924',
     address: 'Addis Ababa, Ethiopia',
     tagline: 'Empowering communities through education and humanitarian support.',
   });

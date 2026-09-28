@@ -18,6 +18,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function CharityNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
@@ -37,6 +38,7 @@ export default function CharityNavbar() {
     setMobileMenuOpen(false);
     setAboutDropdownOpen(false);
     setLangDropdownOpen(false);
+    setMobileAboutOpen(false);
   }, [pathname]);
 
   // Click outside listener
@@ -330,7 +332,11 @@ export default function CharityNavbar() {
             </button>
 
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => {
+                const next = !mobileMenuOpen;
+                setMobileMenuOpen(next);
+                if (!next) setMobileAboutOpen(false);
+              }}
               className="p-2 rounded-full text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none"
               aria-label="Toggle Navigation Menu"
             >
@@ -344,7 +350,7 @@ export default function CharityNavbar() {
       {/* Mobile Menu Dropdown Card */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-200">
-          <div className="fixed top-20 left-4 right-4 max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-6 border border-slate-100 animate-in slide-in-from-top-4 duration-300">
+          <div className="fixed top-20 left-4 right-4 max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-6 border border-slate-100 animate-in slide-in-from-top-4 duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <img
                 src="/Selam-logo.jpg"
@@ -352,7 +358,10 @@ export default function CharityNavbar() {
                 className="h-12 w-auto object-contain"
               />
               <button
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setMobileAboutOpen(false);
+                }}
                 className="p-2 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
@@ -362,47 +371,98 @@ export default function CharityNavbar() {
             <div className="py-4 space-y-1">
               <Link
                 href="/"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setMobileAboutOpen(false);
+                }}
                 className="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-800 hover:bg-slate-50"
               >
-                Home
+                {t('Home')}
               </Link>
 
-              {/* About with expandable Submenu */}
+              {/* About with collapsible Submenu (Collapsed by default) */}
               <div>
-                <div className="px-4 py-2.5 text-base font-semibold text-emerald-800">
-                  {t('About')}
-                </div>
-                <div className="pl-6 space-y-1">
-                  <Link
-                    href="/about#background"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
-                  >
-                    {t('Our Story')}
-                  </Link>
-                  <Link
-                    href="/about#objectives"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
-                  >
-                    {t('Our Objectives')}
-                  </Link>
-                  <Link
-                    href="/about#members"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
-                  >
-                    {t('Board of Trustees')}
-                  </Link>
-                  <Link
-                    href="/about#testimonials"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
-                  >
-                    {t('Leadership Team')}
-                  </Link>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileAboutOpen(!mobileAboutOpen)}
+                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-base font-medium transition-colors ${
+                    isActive('/about') || mobileAboutOpen
+                      ? 'text-emerald-800 font-semibold bg-emerald-50/60'
+                      : 'text-slate-800 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{t('About')}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
+                      mobileAboutOpen ? 'rotate-180 text-emerald-800' : ''
+                    }`}
+                  />
+                </button>
+
+                {mobileAboutOpen && (
+                  <div className="pl-4 pr-2 py-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150 border-l-2 border-emerald-100 ml-4 my-1">
+                    <Link
+                      href="/about"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setMobileAboutOpen(false);
+                      }}
+                      className="block px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-800 hover:bg-slate-50"
+                    >
+                      {t('About Organization')}
+                    </Link>
+                    <Link
+                      href="/about#background"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setMobileAboutOpen(false);
+                      }}
+                      className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
+                    >
+                      {t('Our Story')}
+                    </Link>
+                    <Link
+                      href="/about#objectives"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setMobileAboutOpen(false);
+                      }}
+                      className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
+                    >
+                      {t('Our Objectives')}
+                    </Link>
+                    <Link
+                      href="/about#board"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setMobileAboutOpen(false);
+                      }}
+                      className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
+                    >
+                      {t('Board of Trustees')}
+                    </Link>
+                    <Link
+                      href="/about#management"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setMobileAboutOpen(false);
+                      }}
+                      className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
+                    >
+                      {t('Leadership Team')}
+                    </Link>
+                    <Link
+                      href="/about#accreditations"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setMobileAboutOpen(false);
+                      }}
+                      className="block px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-800"
+                    >
+                      {t('Accreditations')}
+                    </Link>
+                  </div>
+                )}
               </div>
 
               <Link

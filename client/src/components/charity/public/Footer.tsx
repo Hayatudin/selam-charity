@@ -98,7 +98,9 @@ export default function CharityFooter() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span dir="ltr">+251 91 100 2233 / +251 11 661 4455</span>
+                <span dir="ltr">
+                  <a href="tel:0911624839" className="hover:text-emerald-400 transition-colors">0911624839</a> / <a href="tel:0944222924" className="hover:text-emerald-400 transition-colors">0944222924</a>
+                </span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-emerald-400 shrink-0" />

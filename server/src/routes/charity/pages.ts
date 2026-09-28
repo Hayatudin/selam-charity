@@ -40,8 +40,8 @@ const DEFAULT_PAGES: Record<string, { title: string; subtitle: string; content: 
     bannerImageUrl: '',
     metadata: {
       email: 'contact@selamcharity.org',
-      phone: '+251 91 100 2233',
-      alternatePhone: '+251 11 661 4455',
+      phone: '0911624839',
+      alternatePhone: '0944222924',
       address: 'Bole Subcity, Woreda 03, House No. 412, Addis Ababa, Ethiopia',
       officeHours: 'Monday - Friday: 8:30 AM - 5:30 PM (EAT)',
       socialLinks: {

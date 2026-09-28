@@ -45,8 +45,6 @@ const BANKS_FILTER = [
   'All Banks',
   'Commercial Bank of Ethiopia',
   'Awash Bank',
-  'Oromia International Bank',
-  'Cooperative Bank of Oromia',
   'Telebirr / Mobile Money',
   'Cash / Direct Deposit',
   'Other Bank',
@@ -710,8 +708,6 @@ export default function CharityDonationsPage() {
                   >
                     <option value="Commercial Bank of Ethiopia">{t('Commercial Bank of Ethiopia')} (CBE)</option>
                     <option value="Awash Bank">{t('Awash Bank')}</option>
-                    <option value="Oromia International Bank">{t('Oromia International Bank')}</option>
-                    <option value="Cooperative Bank of Oromia">{t('Cooperative Bank of Oromia')}</option>
                     <option value="Cash / Direct Handover">{t('Cash / Direct Handover')}</option>
                     <option value="Cheque">{t('Cheque')}</option>
                     <option value="Telebirr / Mobile Money">{t('Telebirr / Mobile Money')}</option>

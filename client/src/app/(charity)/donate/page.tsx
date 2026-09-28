@@ -15,12 +15,13 @@ import {
   Plus,
   Landmark,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Phone
 } from 'lucide-react';
 import { useSubmitDonationReceipt } from '@/hooks/charity';
 import { useLanguage } from '@/context/LanguageContext';
 
-// ── 4 OFFICIAL BANK ACCOUNTS (From Reference Image 2) ───────────
+// ── 2 OFFICIAL BANK ACCOUNTS (CBE & Awash Bank) ───────────
 interface BankAccount {
   id: string;
   bankName: string;
@@ -29,7 +30,6 @@ interface BankAccount {
   accounts: { currency: 'ETB' | 'USD'; number: string }[];
   accentColor: string;
   isFeatured?: boolean;
-  rowPosition: 'top' | 'bottom';
   badgeCode: string;
 }
 
@@ -38,66 +38,31 @@ const BANK_DATA: BankAccount[] = [
     id: 'cbe',
     bankName: 'Commercial Bank of Ethiopia',
     localName: 'የኢትዮጵያ ንግድ ባንክ',
-    accountName: 'SELAM CHARITY & EDUCATIONAL ORGANIZATION',
+    accountName: 'SELAM CHARITY & DEVELOPMENT ASSOCIATION',
     accounts: [
-      { currency: 'ETB', number: '1000582926798' },
+      { currency: 'ETB', number: '1000422872705' },
     ],
     accentColor: '#f59e0b',
     isFeatured: false,
-    rowPosition: 'top',
     badgeCode: 'CBE-01',
   },
   {
     id: 'awash',
     bankName: 'Awash Bank',
     localName: 'አዋሽ ባንክ',
-    accountName: 'SELAM CHARITY & EDUCATIONAL ORGANIZATION',
+    accountName: 'SELAM CHARITY & DEVELOPMENT ASSOCIATION',
     accounts: [
-      { currency: 'ETB', number: '01410778462600' },
-      { currency: 'USD', number: '024070778462600' },
+      { currency: 'ETB', number: '01308025787000' },
     ],
     accentColor: '#185A3A', // Featured with Selam Charity Brand Emerald
     isFeatured: true,
-    rowPosition: 'top',
     badgeCode: 'AWASH-02',
-  },
-  {
-    id: 'oromia',
-    bankName: 'Oromia International Bank',
-    localName: 'Baankii Oromiyaa',
-    accountName: 'SELAM CHARITY & EDUCATIONAL ORGANIZATION',
-    accounts: [
-      { currency: 'ETB', number: '1504837300001' },
-      { currency: 'USD', number: '2504837300006' },
-    ],
-    accentColor: '#10b981',
-    isFeatured: false,
-    rowPosition: 'bottom',
-    badgeCode: 'OIB-03',
-  },
-  {
-    id: 'coop',
-    bankName: 'Cooperative Bank of Oromia',
-    localName: 'Bank of Oromia',
-    accountName: 'SELAM CHARITY & EDUCATIONAL ORGANIZATION',
-    accounts: [
-      { currency: 'ETB', number: '1011900049698' },
-    ],
-    accentColor: '#0ea5e9',
-    isFeatured: false,
-    rowPosition: 'bottom',
-    badgeCode: 'COOP-04',
   },
 ];
 
-// SVG Path Definitions for Intersecting Cuts (Exact Image 1 Shape):
-// Top Card: Inward notch on bottom edge (rises up by 28px between x=205 and x=385)
-const TOP_CARD_SVG_PATH = 
-  "M 24,0 H 516 Q 540,0 540,24 V 356 Q 540,380 516,380 H 385 C 370,380 360,352 344,352 H 246 C 230,352 220,380 205,380 H 24 Q 0,380 0,356 V 24 Q 0,0 24,0 Z";
-
-// Bottom Card: Outward tab on top edge (protrudes up by 28px between x=205 and x=385 to fit into the top card's notch)
-const BOTTOM_CARD_SVG_PATH = 
-  "M 0,52 Q 0,28 24,28 H 205 C 220,28 230,0 246,0 H 344 C 360,0 370,28 385,28 H 516 Q 540,28 540,52 V 356 Q 540,380 516,380 H 24 Q 0,380 0,356 V 52 Z";
+// SVG Path Definition for Clean Rounded Bank Cards
+const CARD_SVG_PATH = 
+  "M 28,0 H 512 Q 540,0 540,28 V 352 Q 540,380 512,380 H 28 Q 0,380 0,352 V 28 Q 0,0 28,0 Z";
 
 export default function DonatePage() {
   const { t } = useLanguage();
@@ -197,10 +162,10 @@ export default function DonatePage() {
             ══════════════════════════════════════════════════════════════ */}
         <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-18">
           
-          {/* Subtle Top Pill Badge (Image 1 Style) */}
+          {/* Subtle Top Pill Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold uppercase tracking-widest mb-6 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-[#185A3A] animate-pulse" />
-            <span>{t('Selam Charity & Educational Organization')}</span>
+            <span>{t('Selam Charity & Development Association')}</span>
           </div>
 
           {/* Centered Heading with Decorative Horizontal Accent Lines (Image 1 Signature Style) */}
@@ -235,22 +200,12 @@ export default function DonatePage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
-            2. 4 BANK CARDS IN 2x2 GRID (Exact Intersecting Cuts from Image 1)
-               - Top Cards: Inward notch on bottom edge
-               - Bottom Cards: Outward tab on top edge (fits into top notch)
+            2. OFFICIAL BANK CARDS (Commercial Bank of Ethiopia & Awash Bank)
             ══════════════════════════════════════════════════════════════ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-7 sm:gap-y-8 gap-x-7 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-7 max-w-5xl mx-auto">
           {BANK_DATA.map((bank) => {
-            const isTopRow = bank.rowPosition === 'top';
             const isFeatured = bank.isFeatured;
-            const svgPath = isTopRow ? TOP_CARD_SVG_PATH : BOTTOM_CARD_SVG_PATH;
-
-            // Content padding tailored to leave clear breathing room around the cuts:
-            // Top cards: bottom padding leaves room for the inward notch
-            // Bottom cards: top padding leaves room below the outward tab
-            const innerPaddingClass = isTopRow 
-              ? 'pt-8 pb-14 px-7 sm:px-9' 
-              : 'pt-14 pb-8 px-7 sm:px-9';
+            const innerPaddingClass = 'py-8 px-7 sm:px-9';
 
             return (
               <div
@@ -258,7 +213,7 @@ export default function DonatePage() {
                 className="relative group transition-all duration-300 filter drop-shadow-md hover:drop-shadow-xl"
                 style={{ minHeight: '340px' }}
               >
-                {/* ── Background SVG Container with Exact Intersecting Cut Geometry ── */}
+                {/* ── Background SVG Container ── */}
                 <svg
                   className="absolute inset-0 w-full h-full pointer-events-none transition-transform duration-300 group-hover:scale-[1.008]"
                   viewBox="0 0 540 380"
@@ -282,9 +237,9 @@ export default function DonatePage() {
                     </linearGradient>
                   </defs>
 
-                  {/* Cut Path Silhouette (Fill & Border Stroke) */}
+                  {/* Card Silhouette */}
                   <path
-                    d={svgPath}
+                    d={CARD_SVG_PATH}
                     fill={`url(#grad-${bank.id})`}
                     stroke={isFeatured ? '#185A3A' : '#e2e8f0'}
                     strokeWidth={isFeatured ? '2.5' : '1.75'}
@@ -433,6 +388,22 @@ export default function DonatePage() {
               <p className="text-slate-600 text-xs sm:text-sm mt-0.5">
                 {t('Every birr directly funds student scholarships, nutritious school meals, and community aid programs.')}
               </p>
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-medium">
+                <span className="inline-flex items-center gap-1.5 font-bold text-slate-800">
+                  <Phone className="w-3.5 h-3.5 text-[#185A3A]" />
+                  <span>{t('Transfer Assistance:')}</span>
+                </span>
+                <a href="tel:0911624839" className="font-mono text-[#185A3A] font-bold hover:underline">
+                  0911624839
+                </a>
+                <span className="text-slate-300">/</span>
+                <a href="tel:0944222924" className="font-mono text-[#185A3A] font-bold hover:underline">
+                  0944222924
+                </a>
+                <span className="text-slate-400 text-[11px]">
+                  (+251 911 624 839 / +251 944 222 924)
+                </span>
+              </div>
             </div>
           </div>
           <button
