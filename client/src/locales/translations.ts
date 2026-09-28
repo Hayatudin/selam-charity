@@ -53,7 +53,7 @@ export const arTranslations: Record<string, string> = {
   "STEM & Science Labs": 'مختبرات العلوم والتكنولوجيا',
   "Co-Curricular Athletics & Debate": 'الأنشطة الرياضية والمناظرات',
   "Nutritional & Learning Support": 'الدعم الغذائي والتعليمي',
-  "Bole Subcity, Woreda 03, House 412, Addis Ababa, Ethiopia": 'أديس أبابا، إثيوبيا - منطقة بولي، حي 03، مبنى 412',
+  "Sarbet, Addis Ababa, Ethiopia": 'أديس أبابا، إثيوبيا - منطقة بولي، حي 03، مبنى 412',
   "Bole Subcity, Woreda 03, House No. 412, Addis Ababa, Ethiopia": 'أديس أبابا، إثيوبيا - منطقة بولي، حي 03، مبنى 412',
   "Monday - Friday: 8:30 AM - 5:30 PM (EAT)": 'من الإثنين إلى الجمعة: 8:30 صباحاً - 5:30 مساءً',
   "All rights reserved. Selam Charity & Development Association is a registered non-profit organization in Ethiopia under CSO License No. 8849.": 'جميع الحقوق محفوظة. جمعية سلام الخيرية للتنمية هي منظمة غير ربحية مسجلة في إثيوبيا بموجب ترخيص المنظمات رقم 8849.',

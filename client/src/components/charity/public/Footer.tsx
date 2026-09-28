@@ -2,13 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  GraduationCap, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  ShieldCheck, 
+import {
+  GraduationCap,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  ShieldCheck,
   ExternalLink
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
@@ -20,7 +20,7 @@ export default function CharityFooter() {
     <footer className="bg-slate-950 text-slate-300 pt-16 pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800/80">
-          
+
           {/* Col 1 & 2: Branding & Mission */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
@@ -94,7 +94,7 @@ export default function CharityFooter() {
             <ul className="space-y-3 text-sm text-slate-400">
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>{t('Bole Subcity, Woreda 03, House 412, Addis Ababa, Ethiopia')}</span>
+                <span>{t('Sarbet, Addis Ababa, Ethiopia')}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -116,7 +116,7 @@ export default function CharityFooter() {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} {t('All rights reserved. Selam Charity & Development Association is a registered non-profit organization in Ethiopia under CSO License No. 8849.')}</p>
-          
+
           <div className="flex items-center gap-6">
             <Link href="/about" className="hover:text-slate-400 transition-colors">{t('Governance & Transparency', 'الحوكمة والشفافية')}</Link>
             <Link href="/contact" className="hover:text-slate-400 transition-colors">{t('Privacy & Terms', 'الشروط والخصوصية')}</Link>
