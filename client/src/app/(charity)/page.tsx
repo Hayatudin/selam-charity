@@ -37,9 +37,14 @@ import { getFileUrl } from '@/lib/utils';
 import { useLanguage } from '@/context/LanguageContext';
 
 const HERO_IMAGES = [
-  '/Her-img1.png',
-  '/Her-img2.png',
-  '/Her-img3.png',
+  '/hero-images/Her-img2.png',
+  '/hero-images/1.jpeg',
+  '/hero-images/2.jpeg',
+  '/hero-images/4.jpeg',
+  '/hero-images/5.jpeg',
+  '/hero-images/8.jpeg',
+  '/hero-images/blob_PpDVQji.jpg',
+  '/hero-images/New Millionaires emerge in the Ongoing 9mobile___.jpg',
 ];
 
 const CHARITY_FAQS = [
@@ -180,19 +185,18 @@ export default function CharityHomePage() {
 
           {/* Centered Dash / Pill Indicators */}
           <div className="flex items-center justify-center gap-2.5 pt-2">
-            {Array.from({ length: 8 }).map((_, i) => {
-              const slideIndex = i % HERO_IMAGES.length;
-              const isActive = slideIndex === currentSlide;
+            {HERO_IMAGES.map((_, i) => {
+              const isActive = i === currentSlide;
               return (
                 <button
                   key={i}
-                  onClick={() => setCurrentSlide(slideIndex)}
+                  onClick={() => setCurrentSlide(i)}
                   className={`transition-all duration-300 rounded-full h-1.5 focus:outline-none cursor-pointer ${
                     isActive 
                       ? 'w-8 bg-white shadow-sm' 
                       : 'w-6 bg-white/40 hover:bg-white/70'
                   }`}
-                  aria-label={`Go to slide ${slideIndex + 1}`}
+                  aria-label={`Go to slide ${i + 1}`}
                 />
               );
             })}
