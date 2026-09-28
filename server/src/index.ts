@@ -190,40 +190,50 @@ app.all('/api/auth/*', async (req: Request, res: Response) => {
 
 import { decryptPath } from './lib/crypto';
 import { authenticateSession, requireSuperAdmin } from './middlewares/auth';
+import { getUploadsRoot, getAllUploadsDirs, isLocalStorage } from './lib/upload';
 
 // Static files with CORS & automatic MIME-type detection for extensionless files
-app.use(
-  '/uploads',
-  (req: Request, res: Response, next: NextFunction) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+const staticFileHeaderOptions = {
+  setHeaders: (res: Response, filePath: string) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    next();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (!path.extname(filePath)) {
+      try {
+        const fd = fs.openSync(filePath, 'r');
+        const buffer = Buffer.alloc(4);
+        fs.readSync(fd, buffer, 0, 4, 0);
+        fs.closeSync(fd);
+        if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+          res.setHeader('Content-Type', 'image/jpeg');
+        } else if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+          res.setHeader('Content-Type', 'image/png');
+        } else if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+          res.setHeader('Content-Type', 'image/gif');
+        } else if (filePath.includes('image') || filePath.includes('charity')) {
+          res.setHeader('Content-Type', 'image/jpeg');
+        }
+      } catch (_) {}
+    }
   },
-  express.static(path.join(__dirname, '..', 'public', 'uploads'), {
-    setHeaders: (res: Response, filePath: string) => {
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      // If file has no extension, sniff magic bytes
-      if (!path.extname(filePath)) {
-        try {
-          const fd = fs.openSync(filePath, 'r');
-          const buffer = Buffer.alloc(4);
-          fs.readSync(fd, buffer, 0, 4, 0);
-          fs.closeSync(fd);
-          if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-            res.setHeader('Content-Type', 'image/jpeg');
-          } else if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
-            res.setHeader('Content-Type', 'image/png');
-          } else if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
-            res.setHeader('Content-Type', 'image/gif');
-          } else if (filePath.includes('image') || filePath.includes('charity')) {
-            res.setHeader('Content-Type', 'image/jpeg');
-          }
-        } catch (_) {}
-      }
-    },
-  })
-);
+};
+
+// Mount static file serving on ALL candidate upload directories (primary + fallbacks)
+app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+
+const candidateUploadDirs = [getUploadsRoot(), ...getAllUploadsDirs()];
+const uniqueUploadDirs = Array.from(new Set(candidateUploadDirs));
+for (const dir of uniqueUploadDirs) {
+  try {
+    if (fs.existsSync(dir)) {
+      app.use('/uploads', express.static(dir, staticFileHeaderOptions));
+    }
+  } catch (_) {}
+}
 
 // UNBLOCKABLE ASSET PROXY (Fixes cPanel CORS issues)
 app.get('/api/assets/*', (req: Request, res: Response) => {
@@ -235,17 +245,45 @@ app.get('/api/assets/*', (req: Request, res: Response) => {
   
   // Strip leading slash to prevent joining issues
   const cleanAssetPath = assetPath.startsWith('/') ? assetPath.substring(1) : assetPath;
-  const fullPath = path.join(__dirname, '..', 'public', cleanAssetPath);
+
+  // Search across candidate public directories
+  const candidatePublicDirs = uniqueUploadDirs.map(u => path.resolve(u, '..'));
+  candidatePublicDirs.push(path.resolve(__dirname, '..', 'public'));
+  candidatePublicDirs.push(path.resolve(process.cwd(), 'public'));
+  if (process.env.APP_ROOT) {
+    candidatePublicDirs.push(path.resolve(process.env.APP_ROOT, 'public'));
+  }
+
+  let foundPath: string | null = null;
+  for (const pDir of Array.from(new Set(candidatePublicDirs))) {
+    const candidate = path.join(pDir, cleanAssetPath);
+    if (fs.existsSync(candidate)) {
+      foundPath = candidate;
+      break;
+    }
+  }
+
+  // Also check direct uploads path
+  if (!foundPath && cleanAssetPath.startsWith('uploads/')) {
+    const sub = cleanAssetPath.substring(8);
+    for (const uDir of uniqueUploadDirs) {
+      const candidate = path.join(uDir, sub);
+      if (fs.existsSync(candidate)) {
+        foundPath = candidate;
+        break;
+      }
+    }
+  }
   
-  if (fs.existsSync(fullPath)) {
+  if (foundPath) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Cache-Control', 'public, max-age=31536000');
 
-    if (!path.extname(fullPath)) {
+    if (!path.extname(foundPath)) {
       try {
-        const fd = fs.openSync(fullPath, 'r');
+        const fd = fs.openSync(foundPath, 'r');
         const buffer = Buffer.alloc(4);
         fs.readSync(fd, buffer, 0, 4, 0);
         fs.closeSync(fd);
@@ -259,7 +297,7 @@ app.get('/api/assets/*', (req: Request, res: Response) => {
       } catch (_) {}
     }
 
-    return res.sendFile(fullPath);
+    return res.sendFile(foundPath);
   }
   res.status(404).send('Asset not found');
 });
@@ -337,42 +375,78 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'Salam Charity API', timestamp: new Date().toISOString() });
 });
 
-// Upload path diagnostic — visit /api/test-upload to confirm paths are correct on cPanel
+// Upload path diagnostic & self-test — visit /api/test-upload to confirm all storage paths
 app.get('/api/test-upload', (req: Request, res: Response) => {
-  const appRoot = process.env.APP_ROOT || path.resolve(__dirname, '..', '..');
-  const uploadDir = path.join(appRoot, 'public', 'uploads');
-  const storageMode = process.env.STORAGE_MODE || 'NOT SET';
-  let uploadDirExists = false;
-  let uploadDirWritable = false;
-  let testWriteError: string | null = null;
-  try { uploadDirExists = fs.existsSync(uploadDir); } catch(e) {}
-  if (uploadDirExists) {
+  const primaryUploadDir = getUploadsRoot();
+  const allDirs = getAllUploadsDirs();
+  const storageMode = isLocalStorage() ? 'local' : 'cloudinary';
+  const rawStorageEnv = process.env.STORAGE_MODE || 'NOT SET';
+
+  const results: any = {
+    status: 'ok',
+    primaryUploadDir,
+    storageMode,
+    rawStorageEnv,
+    appRoot: process.env.APP_ROOT || 'NOT SET',
+    uploadRootEnv: process.env.UPLOAD_ROOT || 'NOT SET',
+    cwd: process.cwd(),
+    __dirname,
+    candidateDirectories: [],
+    testWrites: {},
+    timestamp: new Date().toISOString(),
+  };
+
+  // Test every candidate directory
+  for (const dir of allDirs) {
+    let exists = false;
+    let writable = false;
+    let error: string | null = null;
     try {
-      const testFile = path.join(uploadDir, `.write_test_${Date.now()}`);
+      exists = fs.existsSync(dir);
+      if (!exists) {
+        fs.mkdirSync(dir, { recursive: true });
+        exists = fs.existsSync(dir);
+      }
+      const testFile = path.join(dir, `.probe_${Date.now()}`);
       fs.writeFileSync(testFile, 'ok');
       fs.unlinkSync(testFile);
-      uploadDirWritable = true;
-    } catch(e: any) { testWriteError = e.message; }
-  } else {
-    try {
-      fs.mkdirSync(uploadDir, { recursive: true });
-      uploadDirExists = fs.existsSync(uploadDir);
-      uploadDirWritable = true;
-    } catch(e: any) { testWriteError = e.message; }
+      writable = true;
+    } catch (e: any) {
+      error = e.message;
+    }
+    results.candidateDirectories.push({ dir, exists, writable, error });
   }
+
+  // Test charity subdirectories in primary uploads dir
+  const subdirs = ['charity/images', 'charity/receipts', 'charity/documents'];
+  for (const sub of subdirs) {
+    const fullSub = path.join(primaryUploadDir, sub);
+    let subCreated = false;
+    let subWritable = false;
+    let subError: string | null = null;
+    try {
+      if (!fs.existsSync(fullSub)) {
+        fs.mkdirSync(fullSub, { recursive: true });
+      }
+      subCreated = fs.existsSync(fullSub);
+      const testFile = path.join(fullSub, `.test_${Date.now()}`);
+      fs.writeFileSync(testFile, 'write_test_ok');
+      const readBack = fs.readFileSync(testFile, 'utf8');
+      fs.unlinkSync(testFile);
+      subWritable = readBack === 'write_test_ok';
+    } catch (e: any) {
+      subError = e.message;
+    }
+    results.testWrites[sub] = { path: fullSub, created: subCreated, writable: subWritable, error: subError };
+  }
+
+  const allSubdirsWritable = Object.values(results.testWrites).every((w: any) => w.writable);
+  if (!allSubdirsWritable) {
+    results.status = 'warning';
+  }
+
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({
-    status: uploadDirWritable ? 'ok' : 'error',
-    appRoot,
-    uploadDir,
-    uploadDirExists,
-    uploadDirWritable,
-    storageMode,
-    __dirname,
-    cwd: process.cwd(),
-    testWriteError,
-    timestamp: new Date().toISOString(),
-  });
+  res.json(results);
 });
 
 app.get('/test-status', async (req: Request, res: Response) => {

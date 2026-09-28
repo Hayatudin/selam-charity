@@ -6,16 +6,13 @@ import { authenticateSession, requireRole } from '../../middlewares/auth';
 import path from 'path';
 import fs from 'fs';
 
-const router = Router();
+import { getUploadsRoot } from '../../lib/upload';
 
-// Resolve project root anchored from __dirname (works on both local dev and cPanel).
-// __dirname = .../dist/routes/charity  →  up 3 levels = project root
-// process.cwd() on cPanel = /home/selamcen/api.selamcharity.org (the app root with public/ inside)
-function getProjectRoot(): string { return process.cwd(); }
+const router = Router();
 
 function getFallbackDonations(): any[] {
   try {
-    const fallbackPath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'donations_store.json');
+    const fallbackPath = path.join(getUploadsRoot(), 'charity', 'donations_store.json');
     if (fs.existsSync(fallbackPath)) {
       return JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
     }

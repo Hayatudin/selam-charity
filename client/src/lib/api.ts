@@ -175,14 +175,28 @@ export async function api(path: string, options: RequestInit = {}): Promise<Resp
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     let detail = errorData.message || errorData.error || `API error: ${response.status} ${response.statusText}`;
-    if (errorData.details) {
+    if (errorData.details && errorData.details !== detail) {
       detail += ` | Details: ${errorData.details}`;
     }
+    if (errorData.code) {
+      detail += ` (Code: ${errorData.code})`;
+    }
+    if (errorData.uploadsRoot) {
+      detail += ` [UploadDir: ${errorData.uploadsRoot}]`;
+    }
     const message = errorData.error && errorData.message && errorData.error !== errorData.message
-      ? `${errorData.error}: ${errorData.message}${errorData.details ? ` | Details: ${errorData.details}` : ''}`
+      ? `${errorData.error}: ${errorData.message}${errorData.details ? ` | ${errorData.details}` : ''}`
       : detail;
-    console.error(`[API] Error ${response.status} on ${options.method || 'GET'} ${url}:`, message);
-    throw new Error(message);
+    console.error(`🚨 [API ERROR] ${options.method || 'GET'} ${url} (${response.status}):`, {
+      message,
+      errorData,
+      status: response.status,
+      statusText: response.statusText,
+    });
+    const error = new Error(message);
+    (error as any).data = errorData;
+    (error as any).status = response.status;
+    throw error;
   }
 
   return response;

@@ -89,15 +89,18 @@ export default function CharityGalleryPage() {
     const itemsToCreate: Partial<CharityGalleryItem>[] = [];
 
     try {
+      console.log(`[GALLERY] Starting batch upload of ${fileList.length} image(s)...`);
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         setBatchProgress({ current: i + 1, total: fileList.length });
+        console.log(`[GALLERY] Uploading ${i + 1}/${fileList.length}:`, file.name);
 
         const formData = new FormData();
         formData.append('file', file);
         formData.append('name', file.name);
 
         const uploaded = await uploadMutation.mutateAsync(formData);
+        console.log(`✅ [GALLERY] Uploaded ${file.name}:`, uploaded);
         if (uploaded && uploaded.url) {
           const cleanTitle = file.name
             .replace(/\.[^/.]+$/, '')
@@ -121,6 +124,7 @@ export default function CharityGalleryPage() {
         setTimeout(() => setBatchSuccessMessage(null), 5000);
       }
     } catch (err: any) {
+      console.error('🚨 [GALLERY UPLOAD ERROR]:', err);
       alert('Upload failed: ' + (err.message || 'Error uploading files'));
     } finally {
       setIsBatchUploading(false);

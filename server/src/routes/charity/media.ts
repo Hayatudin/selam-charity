@@ -4,7 +4,7 @@ import { charityMedia } from '../../db/schema';
 import { eq, desc, like, or, and } from 'drizzle-orm';
 import { authenticateSession, requireRole } from '../../middlewares/auth';
 import { getSession } from '../../lib/auth-helper';
-import { uploadToLocal, uploadFileFromDisk } from '../../lib/upload';
+import { uploadToLocal, uploadFileFromDisk, getUploadsRoot, isLocalStorage } from '../../lib/upload';
 import { createId } from '@paralleldrive/cuid2';
 import multer from 'multer';
 import path from 'path';
@@ -13,9 +13,9 @@ import os from 'os';
 
 const router = Router();
 
-// Fallback store path uses cwd() — on cPanel cwd = /home/selamcen/api.selamcharity.org
+// Fallback store path uses unified getUploadsRoot()
 function getFallbackStorePath(): string {
-  return path.join(process.cwd(), 'public', 'uploads', 'charity', 'media_store.json');
+  return path.join(getUploadsRoot(), 'charity', 'media_store.json');
 }
 
 function readFallbackMedia(): any[] {
@@ -116,16 +116,25 @@ router.post('/upload-base64', authenticateSession, requireRole(['super_admin', '
       return res.status(400).json({ error: 'fileString and fileName are required' });
     }
 
-    console.log(`[MEDIA UPLOAD base64] fileName=${fileName}, STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}`);
+    const localMode = isLocalStorage();
+    console.log(`[MEDIA UPLOAD base64] fileName=${fileName}, localMode=${localMode}, uploadsRoot=${getUploadsRoot()}`);
 
     const detectedType = customType || detectFileType(fileName);
     const targetFolder = detectedType === 'image' ? 'charity/images' : detectedType === 'video' ? 'charity/videos' : 'charity/documents';
 
-    const uploadedUrl = await uploadToLocal(fileString, targetFolder);
-    if (!uploadedUrl) {
-      const errMsg = `Upload failed: uploadToLocal returned null. STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}, APP_ROOT=${process.env.APP_ROOT || 'not set'}`;
-      console.error('[MEDIA UPLOAD base64]', errMsg);
-      return res.status(500).json({ error: 'Failed to store file', details: errMsg });
+    let uploadedUrl: string;
+    try {
+      uploadedUrl = await uploadToLocal(fileString, targetFolder);
+    } catch (uploadErr: any) {
+      console.error('[MEDIA UPLOAD base64 failed]', uploadErr);
+      return res.status(500).json({
+        error: 'Failed to store file',
+        message: uploadErr.message,
+        details: uploadErr.message,
+        code: uploadErr.code || 'UPLOAD_FAILED',
+        storageMode: localMode ? 'local' : 'cloudinary',
+        uploadsRoot: getUploadsRoot(),
+      });
     }
 
     const sizeBytes = Math.round((fileString.length * 3) / 4);
@@ -174,16 +183,25 @@ router.post('/upload-file', authenticateSession, requireRole(['super_admin', 'ch
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    console.log(`[MEDIA UPLOAD file] originalname=${file.originalname}, size=${file.size}, tmpPath=${file.path}, STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}`);
+    const localMode = isLocalStorage();
+    console.log(`[MEDIA UPLOAD file] originalname=${file.originalname}, size=${file.size}, tmpPath=${file.path}, localMode=${localMode}, uploadsRoot=${getUploadsRoot()}`);
 
     const detectedType = detectFileType(file.mimetype || file.originalname);
     const targetFolder = detectedType === 'image' ? 'charity/images' : detectedType === 'video' ? 'charity/videos' : 'charity/documents';
 
-    const uploadedUrl = await uploadFileFromDisk(file.path, targetFolder, file.originalname);
-    if (!uploadedUrl) {
-      const errMsg = `Upload failed: uploadFileFromDisk returned null. STORAGE_MODE=${process.env.STORAGE_MODE}, cwd=${process.cwd()}, APP_ROOT=${process.env.APP_ROOT || 'not set'}, tmpPath=${file.path}`;
-      console.error('[MEDIA UPLOAD file]', errMsg);
-      return res.status(500).json({ error: 'Failed to store file', details: errMsg });
+    let uploadedUrl: string;
+    try {
+      uploadedUrl = await uploadFileFromDisk(file.path, targetFolder, file.originalname);
+    } catch (uploadErr: any) {
+      console.error('[MEDIA UPLOAD file failed]', uploadErr);
+      return res.status(500).json({
+        error: 'Failed to store file',
+        message: uploadErr.message,
+        details: uploadErr.message,
+        code: uploadErr.code || 'UPLOAD_FAILED',
+        storageMode: localMode ? 'local' : 'cloudinary',
+        uploadsRoot: getUploadsRoot(),
+      });
     }
 
     const displayName = (req.body.name && req.body.name.trim()) || file.originalname;
@@ -261,7 +279,8 @@ router.delete('/:id', authenticateSession, requireRole(['super_admin', 'charity_
     writeFallbackMedia(list.filter(m => m.id !== id));
 
     if (existing?.url && existing.url.startsWith('/uploads/')) {
-      const localFilePath = path.join(process.cwd(), 'public', existing.url.substring(1));
+      const subPath = existing.url.replace(/^\/uploads\//, '');
+      const localFilePath = path.join(getUploadsRoot(), subPath);
       try {
         if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
       } catch (fileErr) {

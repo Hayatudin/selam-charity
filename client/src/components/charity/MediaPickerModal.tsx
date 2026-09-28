@@ -57,6 +57,11 @@ export default function MediaPickerModal({
 
     setUploading(true);
     setUploadError(null);
+    console.log('[MEDIA PICKER] Starting file upload:', {
+      name: file.name,
+      size: `${(file.size / 1024).toFixed(1)} KB`,
+      type: file.type,
+    });
 
     const formData = new FormData();
     formData.append('file', file);
@@ -64,11 +69,13 @@ export default function MediaPickerModal({
 
     try {
       const uploaded = await uploadMutation.mutateAsync(formData);
+      console.log('✅ [MEDIA PICKER] Upload success:', uploaded);
       if (uploaded && uploaded.url) {
         onSelect(uploaded.url, uploaded);
         onClose();
       }
     } catch (err: any) {
+      console.error('🚨 [MEDIA PICKER ERROR]:', err);
       setUploadError(err.message || 'Failed to upload file');
     } finally {
       setUploading(false);

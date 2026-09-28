@@ -4,7 +4,7 @@ import { charityDonation } from '../../db/schema';
 import { eq, desc, and, or, like, sql } from 'drizzle-orm';
 import { authenticateSession, requireRole } from '../../middlewares/auth';
 import { getSession } from '../../lib/auth-helper';
-import { uploadToLocal } from '../../lib/upload';
+import { uploadFileFromDisk, getUploadsRoot, isLocalStorage } from '../../lib/upload';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -13,9 +13,6 @@ import { createId } from '@paralleldrive/cuid2';
 const router = Router();
 
 import os from 'os';
-
-// process.cwd() on cPanel = /home/selamcen/api.selamcharity.org (the app root with public/ inside)
-function getProjectRoot(): string { return process.cwd(); }
 
 // Configure multer temp upload directory using OS temp directory (always writable on Linux/cPanel)
 const tempUploadDir = os.tmpdir();
@@ -26,7 +23,7 @@ const upload = multer({
 });
 
 // JSON fallback file for local development if MySQL connection is offline
-const fallbackStorePath = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'donations_store.json');
+const fallbackStorePath = path.join(getUploadsRoot(), 'charity', 'donations_store.json');
 function ensureFallbackDir() {
   const dir = path.dirname(fallbackStorePath);
   if (!fs.existsSync(dir)) {
@@ -125,19 +122,20 @@ router.post('/', upload.single('receiptFile'), async (req: Request, res: Respons
 
     // Handle uploaded file if present
     if (req.file) {
-      const targetDir = path.join(getProjectRoot(), 'public', 'uploads', 'charity', 'receipts');
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
+      console.log(`[DONATIONS] Processing receipt upload: originalname=${req.file.originalname}, size=${req.file.size}`);
+      try {
+        finalReceiptUrl = await uploadFileFromDisk(req.file.path, 'charity/receipts', req.file.originalname);
+      } catch (uploadErr: any) {
+        console.error('[DONATIONS] Failed to store receipt file:', uploadErr);
+        return res.status(500).json({
+          error: 'Failed to store receipt file',
+          message: uploadErr.message,
+          details: uploadErr.message,
+          code: uploadErr.code || 'UPLOAD_FAILED',
+          storageMode: isLocalStorage() ? 'local' : 'cloudinary',
+          uploadsRoot: getUploadsRoot(),
+        });
       }
-
-      const ext = path.extname(req.file.originalname) || '.jpg';
-      const cleanFileName = `receipt-${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
-      const destPath = path.join(targetDir, cleanFileName);
-
-      fs.copyFileSync(req.file.path, destPath);
-      try { fs.unlinkSync(req.file.path); } catch (_) {}
-
-      finalReceiptUrl = `/uploads/charity/receipts/${cleanFileName}`;
     }
 
     const newDonationId = createId();

@@ -14,7 +14,8 @@ import {
   FileText,
   Plus,
   Landmark,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { useSubmitDonationReceipt } from '@/hooks/charity';
 
@@ -113,6 +114,7 @@ export default function DonatePage() {
 
   // Success Feedback
   const [submissionSuccess, setSubmissionSuccess] = useState<any | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const submitReceiptMutation = useSubmitDonationReceipt();
 
@@ -134,6 +136,7 @@ export default function DonatePage() {
   const handleOpenReceiptModal = (bankName?: string) => {
     if (bankName) setSelectedBankForModal(bankName);
     setSubmissionSuccess(null);
+    setSubmitError(null);
     setIsReceiptModalOpen(true);
   };
 
@@ -143,6 +146,18 @@ export default function DonatePage() {
       alert('Please fill in your name, phone number, and donation amount.');
       return;
     }
+
+    setSubmitError(null);
+    console.log('[DONATE] Submitting donation receipt:', {
+      donorName: donorName.trim(),
+      donorPhone: donorPhone.trim(),
+      amount,
+      currency,
+      bankName: selectedBankForModal,
+      hasReceiptFile: !!receiptFile,
+      receiptFileName: receiptFile?.name,
+      receiptFileSize: receiptFile?.size,
+    });
 
     try {
       const res = await submitReceiptMutation.mutateAsync({
@@ -156,9 +171,13 @@ export default function DonatePage() {
         receiptFile: receiptFile || undefined,
       });
 
+      console.log('✅ [DONATE RECEIPT SUCCESS]', res);
       setSubmissionSuccess(res.donation);
     } catch (err: any) {
-      alert(`Submission error: ${err.message || 'Please check your inputs and try again.'}`);
+      console.error('🚨 [DONATE SUBMISSION FAILED]:', err);
+      const errMsg = err.message || 'Please check your inputs and try again.';
+      setSubmitError(errMsg);
+      alert(`Submission error: ${errMsg}`);
     }
   };
 
@@ -486,6 +505,16 @@ export default function DonatePage() {
                     Upload your bank transfer slip or transaction snapshot so our finance team can verify and record your contribution.
                   </p>
                 </div>
+
+                {submitError && (
+                  <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                    <div>
+                      <p className="font-bold">Failed to submit receipt:</p>
+                      <p className="font-mono text-[11px] mt-0.5 break-all">{submitError}</p>
+                    </div>
+                  </div>
+                )}
 
                 <form onSubmit={handleSubmitReceipt} className="space-y-4">
                   {/* Donor Full Name */}

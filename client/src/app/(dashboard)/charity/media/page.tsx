@@ -57,16 +57,25 @@ export default function CharityMediaLibraryPage() {
 
     setUploading(true);
     setUploadError(null);
+    console.log(`[MEDIA PAGE] Starting batch upload of ${files.length} file(s)...`);
 
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        console.log(`[MEDIA PAGE] Uploading file ${i + 1}/${files.length}:`, {
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+          type: file.type,
+        });
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('name', file.name);
-        await uploadMutation.mutateAsync(formData);
+        const res = await uploadMutation.mutateAsync(formData);
+        console.log(`✅ [MEDIA PAGE] Uploaded ${file.name}:`, res);
       }
     } catch (err: any) {
+      console.error('🚨 [MEDIA PAGE UPLOAD ERROR]:', err);
       setUploadError(err.message || 'Failed to upload one or more files');
     } finally {
       setUploading(false);

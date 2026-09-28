@@ -93,16 +93,24 @@ export default function CharityNewsPage() {
 
     setUploadingFeaturedImage(true);
     setFormError(null);
+    console.log('[NEWS ARTICLE] Starting featured image upload:', {
+      name: file.name,
+      size: `${(file.size / 1024).toFixed(1)} KB`,
+      type: file.type,
+    });
+
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('name', file.name);
 
       const uploaded = await uploadMutation.mutateAsync(formData);
+      console.log('✅ [NEWS ARTICLE] Image upload success:', uploaded);
       if (uploaded && uploaded.url) {
         setFormFeaturedImage(uploaded.url);
       }
     } catch (err: any) {
+      console.error('🚨 [NEWS ARTICLE IMAGE ERROR]:', err);
       setFormError(err.message || 'Failed to upload featured image');
     } finally {
       setUploadingFeaturedImage(false);

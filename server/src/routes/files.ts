@@ -2,18 +2,7 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { streamFile } from '../lib/utils/file';
-
-// Resolve project root anchored from __dirname (works on both local dev and cPanel).
-// __dirname = .../dist/routes  →  up 2 levels = project root
-function getProjectRoot(): string {
-  const fromDirname = path.resolve(__dirname, '..', '..');
-  if (fs.existsSync(path.join(fromDirname, 'public'))) return fromDirname;
-  return process.cwd();
-}
-
-// Files are stored under the public/uploads directory
-// The route expects a relative path (e.g., 'candidate/12345/document.pdf')
-// and will resolve it safely inside the uploads folder.
+import { getAllUploadsDirs, getUploadsRoot } from '../lib/upload';
 
 const router = express.Router();
 
@@ -29,10 +18,20 @@ router.get('/:file(*)', (req: Request, res: Response) => {
   }
   
   // Prevent directory traversal attacks
-  cleanPath = path.normalize(cleanPath).replace(/^\.\.[/\\]/, '');
+  cleanPath = path.normalize(cleanPath).replace(/^(\.\.[\/\\])+/, '');
   
-  const fullPath = path.join(getProjectRoot(), 'public', 'uploads', cleanPath);
-  streamFile(res, fullPath);
+  // Search across all candidate uploads directories
+  const candidateDirs = [getUploadsRoot(), ...getAllUploadsDirs()];
+  for (const dir of candidateDirs) {
+    const fullPath = path.join(dir, cleanPath);
+    if (fs.existsSync(fullPath)) {
+      return streamFile(res, fullPath);
+    }
+  }
+
+  // Fallback to primary uploads root
+  const defaultPath = path.join(getUploadsRoot(), cleanPath);
+  streamFile(res, defaultPath);
 });
 
 export default router;
