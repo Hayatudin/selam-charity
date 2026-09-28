@@ -25,8 +25,10 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CharityDashboardPage() {
+  const { t } = useLanguage();
   const { data, isLoading } = useCharityDashboard();
 
   const stats = data?.stats;
@@ -42,13 +44,13 @@ export default function CharityDashboardPage() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
-              <Sparkles size={14} /> Selam Charity Administration Portal
+              <Sparkles size={14} /> {t('Selam Charity Administration Portal')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              SELAM Charity Management Dashboard
+              {t('SELAM Charity Management Dashboard')}
             </h1>
             <p className="text-slate-300 text-sm leading-relaxed">
-              Verify donor receipts, publish news announcements, curate visual media galleries, organize school programs, and update core organizational content.
+              {t('Verify donor receipts, publish news announcements, curate visual media galleries, organize school programs, and update core organizational content.')}
             </p>
           </div>
 
@@ -56,17 +58,17 @@ export default function CharityDashboardPage() {
             {/* Current Charity Public Site Launcher */}
             <Link href="/" target="_blank" rel="noopener noreferrer">
               <Button className="bg-white/15 hover:bg-white/25 text-white border border-white/30 gap-2 font-semibold text-sm backdrop-blur-xs">
-                <Globe size={16} className="text-emerald-300" /> Current Charity <ExternalLink size={14} />
+                <Globe size={16} className="text-emerald-300" /> {t('Current Charity')} <ExternalLink size={14} />
               </Button>
             </Link>
             <Link href="/charity/donations">
               <Button className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2 shadow-lg shadow-emerald-500/20 font-semibold text-sm">
-                <Landmark size={16} /> Manage Donations
+                <Landmark size={16} /> {t('Manage Donations')}
               </Button>
             </Link>
             <Link href="/charity/news">
               <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 gap-2 text-sm font-medium">
-                <Plus size={16} /> New Article
+                <Plus size={16} /> {t('New Article')}
               </Button>
             </Link>
           </div>
@@ -82,16 +84,16 @@ export default function CharityDashboardPage() {
               <Landmark size={20} />
             </div>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-              {stats?.donations?.pending || 0} Pending
+              {stats?.donations?.pending || 0} {t('Pending')}
             </span>
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Donations</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t('Total Donations')}</p>
           <h3 className="text-2xl font-black text-slate-800 mt-0.5 truncate">
             {stats?.donations?.totalAmountETB ? `${stats.donations.totalAmountETB.toLocaleString()} ETB` : '0 ETB'}
           </h3>
           <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
             <CheckCircle2 size={12} className="text-emerald-500" />
-            {stats?.donations?.total || 0} donations registered
+            {stats?.donations?.total || 0} {t('donations registered')}
           </p>
         </Link>
 
@@ -102,14 +104,14 @@ export default function CharityDashboardPage() {
               <Newspaper size={20} />
             </div>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-              {stats?.news.published || 0} Live
+              {stats?.news.published || 0} {t('Live')}
             </span>
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">News Articles</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t('News Articles')}</p>
           <h3 className="text-2xl font-black text-slate-800 mt-0.5">{stats?.news.total || 0}</h3>
           <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
             <CheckCircle2 size={12} className="text-blue-500" />
-            {((stats?.news.total || 0) - (stats?.news.published || 0))} drafts in review
+            {((stats?.news.total || 0) - (stats?.news.published || 0))} {t('drafts in review')}
           </p>
         </Link>
 
@@ -120,13 +122,13 @@ export default function CharityDashboardPage() {
               <Images size={20} />
             </div>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-              {stats?.gallery.videos || 0} Videos
+              {stats?.gallery.videos || 0} {t('Videos')}
             </span>
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Gallery Media</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t('Gallery Media')}</p>
           <h3 className="text-2xl font-black text-slate-800 mt-0.5">{stats?.gallery.total || 0}</h3>
           <p className="text-[11px] text-slate-500 mt-1.5">
-            {stats?.gallery.images || 0} photos in albums
+            {stats?.gallery.images || 0} {t('photos in albums')}
           </p>
         </Link>
 
@@ -137,13 +139,13 @@ export default function CharityDashboardPage() {
               <FolderArchive size={20} />
             </div>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">
-              Storage
+              {t('Storage')}
             </span>
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Media Library</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t('Media Library')}</p>
           <h3 className="text-2xl font-black text-slate-800 mt-0.5">{stats?.media.total || 0}</h3>
           <p className="text-[11px] text-slate-500 mt-1.5 truncate">
-            {stats?.media.images || 0} images, {stats?.media.documents || 0} docs
+            {stats?.media.images || 0} {t('images,')} {stats?.media.documents || 0} {t('docs')}
           </p>
         </Link>
 
@@ -154,13 +156,13 @@ export default function CharityDashboardPage() {
               <GraduationCap size={20} />
             </div>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
-              4 Modules
+              {t('4 Modules')}
             </span>
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">School CMS</p>
-          <h3 className="text-2xl font-black text-slate-800 mt-0.5">Active</h3>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t('School CMS')}</p>
+          <h3 className="text-2xl font-black text-slate-800 mt-0.5">{t('Active')}</h3>
           <p className="text-[11px] text-slate-500 mt-1.5 truncate">
-            Programs, campus, facilities
+            {t('Programs, campus, facilities')}
           </p>
         </Link>
       </div>
@@ -170,37 +172,37 @@ export default function CharityDashboardPage() {
         <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Landmark size={18} className="text-emerald-600" /> Recent Donations & Receipts
+              <Landmark size={18} className="text-emerald-600" /> {t('Recent Donations & Receipts')}
             </h2>
-            <p className="text-xs text-slate-500">Incoming community donations and bank deposit slip submissions</p>
+            <p className="text-xs text-slate-500">{t('Incoming community donations and bank deposit slip submissions')}</p>
           </div>
           <Link href="/charity/donations" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-            View All Receipts <ArrowRight size={14} />
+            {t('View All Receipts')} <ArrowRight size={14} className="rtl:rotate-180" />
           </Link>
         </div>
 
         {recentDonations.length === 0 ? (
           <div className="text-center py-8 text-slate-400 text-sm">
-            <p>No donations recorded yet.</p>
-            <p className="text-xs text-slate-400 mt-1">Donors can submit contributions via the public Donate page.</p>
+            <p>{t('No donations recorded yet.')}</p>
+            <p className="text-xs text-slate-400 mt-1">{t('Donors can submit contributions via the public Donate page.')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left rtl:text-right text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <th className="pb-3 pl-1 font-semibold">Donor</th>
-                  <th className="pb-3 font-semibold">Amount</th>
-                  <th className="pb-3 font-semibold">Bank / Method</th>
-                  <th className="pb-3 font-semibold">Date</th>
-                  <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 text-right pr-1 font-semibold">Action</th>
+                  <th className="pb-3 pl-1 rtl:pl-0 rtl:pr-1 font-semibold">{t('Donor')}</th>
+                  <th className="pb-3 font-semibold">{t('Amount')}</th>
+                  <th className="pb-3 font-semibold">{t('Bank / Method')}</th>
+                  <th className="pb-3 font-semibold">{t('Date')}</th>
+                  <th className="pb-3 font-semibold">{t('Status')}</th>
+                  <th className="pb-3 text-right rtl:text-left pr-1 rtl:pr-0 rtl:pl-1 font-semibold">{t('Action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentDonations.map((d: any) => (
                   <tr key={d.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 pl-1">
+                    <td className="py-3 pl-1 rtl:pl-0 rtl:pr-1">
                       <p className="font-bold text-slate-800">{d.donorName}</p>
                       <p className="text-xs text-slate-400">{d.donorPhone || d.donorEmail || 'Direct'}</p>
                     </td>
@@ -226,13 +228,13 @@ export default function CharityDashboardPage() {
                         {d.status === 'verified' && <CheckCircle2 size={11} />}
                         {d.status === 'pending' && <Clock size={11} />}
                         {d.status === 'rejected' && <AlertCircle size={11} />}
-                        {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+                        {t(d.status)}
                       </span>
                     </td>
-                    <td className="py-3 text-right pr-1">
+                    <td className="py-3 text-right rtl:text-left pr-1 rtl:pr-0 rtl:pl-1">
                       <Link href="/charity/donations">
                         <Button variant="outline" className="text-xs h-7 px-2.5 border-slate-200 hover:bg-white text-slate-700">
-                          Review
+                          {t('Review')}
                         </Button>
                       </Link>
                     </td>
@@ -250,18 +252,18 @@ export default function CharityDashboardPage() {
         <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
             <div>
-              <h2 className="text-base font-bold text-slate-800">Recent News & Announcements</h2>
-              <p className="text-xs text-slate-500">Latest updates published or drafted for the website</p>
+              <h2 className="text-base font-bold text-slate-800">{t('Recent News & Announcements')}</h2>
+              <p className="text-xs text-slate-500">{t('Latest updates published or drafted for the website')}</p>
             </div>
             <Link href="/charity/news" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-              View All <ArrowRight size={14} />
+              {t('View All')} <ArrowRight size={14} className="rtl:rotate-180" />
             </Link>
           </div>
 
           <div className="space-y-3 flex-1">
             {recentNews.length === 0 ? (
               <div className="text-center py-10 text-slate-400 text-sm">
-                No news articles created yet. Click 'New Article' to begin.
+                {t("No news articles created yet. Click 'New Article' to begin.")}
               </div>
             ) : (
               recentNews.map((article) => {
@@ -274,13 +276,13 @@ export default function CharityDashboardPage() {
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                          {article.category}
+                          {t(article.category)}
                         </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
                           isPub ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                         }`}>
                           {isPub ? <CheckCircle2 size={10} /> : <Clock size={10} />}
-                          {isPub ? 'Published' : 'Draft'}
+                          {isPub ? t('Published') : t('Draft')}
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-slate-800 truncate">{article.title}</h4>
@@ -292,7 +294,7 @@ export default function CharityDashboardPage() {
 
                     <Link href={`/charity/news?edit=${article.id}`}>
                       <Button variant="outline" className="text-xs h-8 px-3 border-slate-200 hover:bg-white text-slate-700 shrink-0">
-                        Edit
+                        {t('Edit')}
                       </Button>
                     </Link>
                   </div>
@@ -306,18 +308,18 @@ export default function CharityDashboardPage() {
         <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
             <div>
-              <h2 className="text-base font-bold text-slate-800">Recent Media Uploads</h2>
-              <p className="text-xs text-slate-500">Assets available in the central library</p>
+              <h2 className="text-base font-bold text-slate-800">{t('Recent Media Uploads')}</h2>
+              <p className="text-xs text-slate-500">{t('Assets available in the central library')}</p>
             </div>
             <Link href="/charity/media" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-              Library <ArrowRight size={14} />
+              {t('Library')} <ArrowRight size={14} className="rtl:rotate-180" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 flex-1">
             {recentUploads.length === 0 ? (
               <div className="col-span-full text-center py-10 text-slate-400 text-sm">
-                No uploads in library yet.
+                {t('No uploads in library yet.')}
               </div>
             ) : (
               recentUploads.map((item) => {
@@ -358,9 +360,9 @@ export default function CharityDashboardPage() {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors flex items-center gap-1">
-              Curate Gallery <ArrowUpRight size={14} />
+              {t('Curate Gallery')} <ArrowUpRight size={14} className="rtl:rotate-270" />
             </h4>
-            <p className="text-xs text-slate-500 mt-1">Upload high-res photos and embed YouTube/social videos for the public gallery.</p>
+            <p className="text-xs text-slate-500 mt-1">{t('Upload high-res photos and embed YouTube/social videos for the public gallery.')}</p>
           </div>
         </Link>
 
@@ -370,9 +372,9 @@ export default function CharityDashboardPage() {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors flex items-center gap-1">
-              Manage School Content <ArrowUpRight size={14} />
+              {t('Manage School Content')} <ArrowUpRight size={14} className="rtl:rotate-270" />
             </h4>
-            <p className="text-xs text-slate-500 mt-1">Update Selam School programs, facilities, introduction text, and campus media.</p>
+            <p className="text-xs text-slate-500 mt-1">{t('Update Selam School programs, facilities, introduction text, and campus media.')}</p>
           </div>
         </Link>
 
@@ -382,9 +384,9 @@ export default function CharityDashboardPage() {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors flex items-center gap-1">
-              Edit Static Pages <ArrowUpRight size={14} />
+              {t('Edit Static Pages')} <ArrowUpRight size={14} className="rtl:rotate-270" />
             </h4>
-            <p className="text-xs text-slate-500 mt-1">Directly edit About Us, Mission & Vision, Contact addresses, and key organizational values.</p>
+            <p className="text-xs text-slate-500 mt-1">{t('Directly edit About Us, Mission & Vision, Contact addresses, and key organizational values.')}</p>
           </div>
         </Link>
       </div>

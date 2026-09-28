@@ -20,8 +20,10 @@ import {
 
 import { useCharityNewsItem, useCharityNewsList } from '@/hooks/charity';
 import { getFileUrl } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CharityNewsDetailsPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const slug = (params?.slug as string) || '';
   const [copied, setCopied] = useState(false);
@@ -46,7 +48,7 @@ export default function CharityNewsDetailsPage() {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center pt-36 pb-20 text-center">
         <Loader2 className="w-10 h-10 animate-spin text-emerald-600 mb-4" />
-        <p className="text-slate-500 font-medium text-sm">Loading article...</p>
+        <p className="text-slate-500 font-medium text-sm">{t('Loading article...')}</p>
       </div>
     );
   }
@@ -54,16 +56,16 @@ export default function CharityNewsDetailsPage() {
   if (isError || !article) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center pt-36 pb-20 text-center px-4">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Article Not Found</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('Article Not Found')}</h2>
         <p className="text-slate-500 text-sm max-w-md mb-6">
-          The news story you are looking for might have been moved, removed, or is currently unpublished.
+          {t('The news story you are looking for might have been moved, removed, or is currently unpublished.')}
         </p>
         <Link
           href="/news"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 text-white font-bold text-xs shadow-sm hover:bg-emerald-700 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to All News</span>
+          <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+          <span>{t('Back to All News')}</span>
         </Link>
       </div>
     );
@@ -84,14 +86,14 @@ export default function CharityNewsDetailsPage() {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-700 transition-colors mb-6 group"
           >
             <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-emerald-50 text-slate-600 group-hover:text-emerald-700 transition-colors">
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 rtl:rotate-180 transition-transform" />
             </span>
-            <span>Back to All News</span>
+            <span>{t('Back to All News')}</span>
           </Link>
 
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-5 font-medium">
             <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-              {article.category || 'General'}
+              {t(article.category || 'General')}
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5 text-slate-600">
@@ -100,17 +102,17 @@ export default function CharityNewsDetailsPage() {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-              }) : 'Recent'}
+              }) : t('Recent')}
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5 text-slate-600">
               <User className="w-3.5 h-3.5 text-slate-400" />
-              <span>{article.authorName || article.authorId || 'Selam Team'}</span>
+              <span>{article.authorName || article.authorId || t('Selam Team')}</span>
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5 text-slate-600">
               <Eye className="w-3.5 h-3.5 text-slate-400" />
-              <span>{article.viewCount || 0} views</span>
+              <span>{article.viewCount || 0} {t('views')}</span>
             </span>
           </div>
 
@@ -150,7 +152,7 @@ export default function CharityNewsDetailsPage() {
           {/* Social Share Bar */}
           <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Share this story
+              {t('Share this story')}
             </span>
 
             <div className="flex items-center gap-2">
@@ -159,7 +161,7 @@ export default function CharityNewsDetailsPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Link Copied!' : 'Copy Link'}</span>
+                <span>{copied ? t('Link Copied!') : t('Copy Link')}</span>
               </button>
 
               <a
@@ -186,7 +188,6 @@ export default function CharityNewsDetailsPage() {
                 </svg>
               </a>
 
-
               <a
                 href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
                 target="_blank"
@@ -204,7 +205,7 @@ export default function CharityNewsDetailsPage() {
         {relatedNews.length > 0 && (
           <div className="pt-8 space-y-6">
             <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-              Related News &amp; Stories
+              {t('Related News & Stories')}
             </h3>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -215,7 +216,7 @@ export default function CharityNewsDetailsPage() {
                 >
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                      {item.category || 'General'}
+                      {t(item.category || 'General')}
                     </span>
                     <h4 className="font-bold text-slate-900 text-sm mt-3 mb-2 group-hover:text-emerald-700 transition-colors line-clamp-2">
                       <Link href={`/news/${item.slug || item.id}`}>
@@ -227,8 +228,8 @@ export default function CharityNewsDetailsPage() {
                     href={`/news/${item.slug || item.id}`}
                     className="text-xs font-bold text-emerald-700 flex items-center gap-1 mt-4 pt-3 border-t border-slate-100"
                   >
-                    <span>Read Story</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <span>{t('Read Story')}</span>
+                    <ArrowRight className="w-3 h-3 rtl:rotate-180" />
                   </Link>
                 </div>
               ))}

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import MediaPickerModal from '@/components/charity/MediaPickerModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 const PAGES: { key: PageContentKey; label: string; icon: any; desc: string }[] = [
   { key: 'about', label: 'About Us', icon: Globe, desc: 'Organization background, founding history, and core identity' },
@@ -29,6 +30,7 @@ const PAGES: { key: PageContentKey; label: string; icon: any; desc: string }[] =
 ];
 
 export default function CharityPagesCMSPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<PageContentKey>('about');
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -111,16 +113,16 @@ export default function CharityPagesCMSPage() {
             <span className="p-2 rounded-xl bg-blue-100 text-blue-700">
               <Globe size={20} />
             </span>
-            <h1 className="text-xl font-bold text-slate-800">Static Pages CMS</h1>
+            <h1 className="text-xl font-bold text-slate-800">{t('Static Pages CMS')}</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Update foundational organizational copy for About, Mission, Contact, and General Information.
+            {t('Update foundational organizational copy for About, Mission, Contact, and General Information.')}
           </p>
         </div>
 
         {savedSuccess && (
           <div className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-semibold flex items-center gap-1.5 border border-emerald-200/60 animate-fade-in">
-            <CheckCircle2 size={14} /> Page changes saved!
+            <CheckCircle2 size={14} /> {t('Page changes saved!')}
           </div>
         )}
       </div>
@@ -137,7 +139,7 @@ export default function CharityPagesCMSPage() {
               <button
                 key={page.key}
                 onClick={() => setActiveTab(page.key)}
-                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${
+                className={`w-full text-left rtl:text-right p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${
                   isActive
                     ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 shadow-sm'
                     : 'bg-white/80 border-slate-200/80 hover:bg-white hover:border-slate-300'
@@ -150,9 +152,9 @@ export default function CharityPagesCMSPage() {
                 </div>
                 <div className="min-w-0">
                   <h4 className={`text-sm font-bold ${isActive ? 'text-blue-950' : 'text-slate-800'}`}>
-                    {page.label}
+                    {t(page.label)}
                   </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{page.desc}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{t(page.desc)}</p>
                 </div>
               </button>
             );
@@ -170,7 +172,7 @@ export default function CharityPagesCMSPage() {
               {/* Main Fields */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Page Heading *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Page Heading *')}</label>
                   <input
                     type="text"
                     required
@@ -181,7 +183,7 @@ export default function CharityPagesCMSPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Subtitle / Slogan</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Subtitle / Slogan')}</label>
                   <input
                     type="text"
                     value={subtitle}
@@ -192,7 +194,7 @@ export default function CharityPagesCMSPage() {
 
                 {/* Banner Image */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Header Banner Image</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Header Banner Image')}</label>
                   <input
                     ref={bannerInputRef}
                     type="file"
@@ -220,7 +222,7 @@ export default function CharityPagesCMSPage() {
                         ) : (
                           <Upload size={14} />
                         )}
-                        <span>{uploadingBanner ? 'Uploading...' : 'Upload from Device'}</span>
+                        <span>{uploadingBanner ? t('Uploading...') : t('Upload from Device')}</span>
                       </Button>
                       <Button
                         type="button"
@@ -228,15 +230,15 @@ export default function CharityPagesCMSPage() {
                         onClick={() => setMediaPickerOpen(true)}
                         className="text-xs h-8 px-3 border-slate-300"
                       >
-                        Browse Library
+                        {t('Browse Library')}
                       </Button>
                       {bannerImageUrl && (
                         <button
                           type="button"
                           onClick={() => setBannerImageUrl('')}
-                          className="text-[11px] text-red-500 hover:underline ml-1"
+                          className="text-[11px] text-red-500 hover:underline ml-1 rtl:ml-0 rtl:mr-1"
                         >
-                          Remove
+                          {t('Remove')}
                         </button>
                       )}
                     </div>
@@ -245,7 +247,7 @@ export default function CharityPagesCMSPage() {
 
                 {/* Body Content */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Main Narrative / Body</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Main Narrative / Body')}</label>
                   <textarea
                     rows={6}
                     value={content}
@@ -258,10 +260,10 @@ export default function CharityPagesCMSPage() {
               {/* Contact Specific Structured Fields */}
               {activeTab === 'contact' && (
                 <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Contact Channels</h4>
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">{t('Contact Channels')}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Primary Email</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Primary Email')}</label>
                       <input
                         type="email"
                         value={metadata.email || ''}
@@ -270,7 +272,7 @@ export default function CharityPagesCMSPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Main Phone</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Main Phone')}</label>
                       <input
                         type="text"
                         value={metadata.phone || ''}
@@ -279,7 +281,7 @@ export default function CharityPagesCMSPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Alternate Phone</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Alternate Phone')}</label>
                       <input
                         type="text"
                         value={metadata.alternatePhone || ''}
@@ -288,7 +290,7 @@ export default function CharityPagesCMSPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Office Working Hours</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Office Working Hours')}</label>
                       <input
                         type="text"
                         value={metadata.officeHours || ''}
@@ -297,7 +299,7 @@ export default function CharityPagesCMSPage() {
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Physical Address</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Physical Address')}</label>
                       <input
                         type="text"
                         value={metadata.address || ''}
@@ -312,10 +314,10 @@ export default function CharityPagesCMSPage() {
               {/* Mission Specific Structured Fields */}
               {activeTab === 'mission' && (
                 <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Strategic Statements</h4>
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">{t('Strategic Statements')}</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Mission Statement</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Mission Statement')}</label>
                       <textarea
                         rows={2}
                         value={metadata.missionStatement || ''}
@@ -324,7 +326,7 @@ export default function CharityPagesCMSPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Vision Statement</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Vision Statement')}</label>
                       <textarea
                         rows={2}
                         value={metadata.visionStatement || ''}
@@ -339,10 +341,10 @@ export default function CharityPagesCMSPage() {
               {/* About Specific Structured Fields */}
               {activeTab === 'about' && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Organization Details</h4>
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">{t('Organization Details')}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Founded Year</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Founded Year')}</label>
                       <input
                         type="number"
                         value={metadata.foundedYear || ''}
@@ -351,7 +353,7 @@ export default function CharityPagesCMSPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Headquarters</label>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Headquarters')}</label>
                       <input
                         type="text"
                         value={metadata.headquarters || ''}
@@ -371,7 +373,7 @@ export default function CharityPagesCMSPage() {
                   className="bg-blue-600 hover:bg-blue-700 text-white gap-2 font-semibold text-xs h-9 px-4"
                 >
                   {updateMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  Save Page Content
+                  {t('Save Page Content')}
                 </Button>
               </div>
             </form>
@@ -385,7 +387,7 @@ export default function CharityPagesCMSPage() {
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(url) => setBannerImageUrl(url)}
         fileTypeFilter="image"
-        title="Select Page Banner Image"
+        title={t('Select Page Banner Image')}
       />
     </div>
   );

@@ -25,6 +25,7 @@ import {
 import { cn, getFileUrl } from '@/lib/utils';
 import { useSession, signOut } from '@/lib/auth-client';
 import { api } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TopbarProps {
   onMobileMenuToggle?: () => void;
@@ -35,6 +36,7 @@ interface TopbarProps {
 export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSidebarToggle }: TopbarProps) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { language, setLanguage, t, isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -191,13 +193,13 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setShowResults(true)}
-            placeholder="Search charity records, news, donations..."
-            className="w-full pl-9 sm:pl-12 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/70 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-emerald-500/15 focus:border-emerald-500 transition-all duration-200"
+            placeholder={t('Search admin...')}
+            className={`w-full ${isRTL ? 'pr-9 sm:pr-12 pl-8 sm:pl-10' : 'pl-9 sm:pl-12 pr-8 sm:pr-10'} py-2 sm:py-2.5 text-sm rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/70 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-3 focus:ring-emerald-500/15 focus:border-emerald-500 transition-all duration-200`}
           />
           {searchQuery && (
             <button 
               onClick={() => { setSearchQuery(''); setShowResults(false); }}
-              className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              className={`absolute ${isRTL ? 'left-3 sm:left-4' : 'right-3 sm:right-4'} top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors`}
             >
               <X size={14} />
             </button>
@@ -206,8 +208,8 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
 
         {/* Quick Charity Navigation / Search Dropdown */}
         {showResults && (
-          <div className="absolute top-full mt-2 w-full sm:w-80 md:w-96 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden animate-slide-in-top z-50 p-2">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1.5">Charity Portals & Actions</p>
+          <div className={`absolute top-full mt-2 w-full sm:w-80 md:w-96 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden animate-slide-in-top z-50 p-2 ${isRTL ? 'right-0' : 'left-0'}`}>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1.5">{t('Charity Portals & Actions', 'أقسام الجمعية والإجراءات')}</p>
             <div className="space-y-1">
               <Link
                 href="/charity/donations"
@@ -218,8 +220,8 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
                   <Landmark size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 group-hover:text-emerald-700">Donations & Receipts</p>
-                  <p className="text-xs text-slate-400 truncate">Verify donor submissions and bank slips</p>
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-emerald-700">{t('Donations & Receipts')}</p>
+                  <p className="text-xs text-slate-400 truncate">{t('Verify donor submissions and bank slips', 'مراجعة إيصالات وتبرعات البنوك')}</p>
                 </div>
               </Link>
               <Link
@@ -231,8 +233,8 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
                   <Newspaper size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">News & Announcements</p>
-                  <p className="text-xs text-slate-400 truncate">Publish and manage charity stories</p>
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">{t('News & Updates')}</p>
+                  <p className="text-xs text-slate-400 truncate">{t('Publish and manage charity stories', 'نشر وإدارة أخبار الجمعية')}</p>
                 </div>
               </Link>
               <Link
@@ -244,8 +246,8 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
                   <Images size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 group-hover:text-amber-700">Gallery & Videos</p>
-                  <p className="text-xs text-slate-400 truncate">Manage community photos & YouTube embeds</p>
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-amber-700">{t('Gallery')}</p>
+                  <p className="text-xs text-slate-400 truncate">{t('Manage community photos & YouTube embeds', 'إدارة ألبومات الصور والفيديوهات')}</p>
                 </div>
               </Link>
               <Link
@@ -257,8 +259,8 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
                   <GraduationCap size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 group-hover:text-violet-700">School CMS</p>
-                  <p className="text-xs text-slate-400 truncate">Edit programs, facilities, and campus life</p>
+                  <p className="text-sm font-semibold text-slate-800 group-hover:text-violet-700">{t('School CMS')}</p>
+                  <p className="text-xs text-slate-400 truncate">{t('Edit programs, facilities, and campus life', 'تعديل البرامج ومرافق المدرسة')}</p>
                 </div>
               </Link>
             </div>
@@ -268,6 +270,17 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
 
       {/* Right side */}
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4 shrink-0">
+        {/* Language Switcher in Admin Topbar */}
+        <button
+          type="button"
+          onClick={() => setLanguage(language === 'En' ? 'Ar' : 'En')}
+          title={language === 'En' ? 'Switch to Arabic' : 'التحويل إلى الإنجليزية'}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-xs font-bold text-slate-700 transition-all duration-200 shadow-2xs"
+        >
+          <Globe size={15} className="text-emerald-700" />
+          <span>{language === 'Ar' ? 'العربية' : 'English'}</span>
+        </button>
+
         {/* Instant Reload Button */}
         <button 
           onClick={() => {
@@ -275,7 +288,7 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
             window.dispatchEvent(new CustomEvent('app-refresh'));
             setTimeout(() => setIsRefreshing(false), 800);
           }}
-          title="Refresh Content"
+          title={t('Refresh Content', 'تحديث المحتوى')}
           className="p-2 sm:p-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200 group active:scale-[0.95]"
         >
           <RotateCw 
@@ -307,15 +320,15 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 top-full mt-2 w-[calc(100vw-24px)] sm:w-80 max-w-80 bg-white rounded-2xl border border-border shadow-2xl shadow-primary/10 overflow-hidden animate-slide-in-top z-50">
+            <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-2 w-[calc(100vw-24px)] sm:w-80 max-w-80 bg-white rounded-2xl border border-border shadow-2xl shadow-primary/10 overflow-hidden animate-slide-in-top z-50`}>
               <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between bg-gray-50/50">
-                <h3 className="font-bold text-text-primary text-sm sm:text-base">Notifications</h3>
+                <h3 className="font-bold text-text-primary text-sm sm:text-base">{t('Notifications')}</h3>
                 {unreadCount > 0 && (
                   <button 
                     onClick={markAllRead}
                     className="text-[10px] uppercase tracking-wider font-bold text-primary hover:text-primary-dark flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md"
                   >
-                    <CheckCheck size={12} /> Mark all read
+                    <CheckCheck size={12} /> {t('Mark all as read')}
                   </button>
                 )}
               </div>
@@ -379,7 +392,7 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
             </div>
 
             {profileOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-border py-2 z-50 animate-slide-in-top">
+              <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-border py-2 z-50 animate-slide-in-top`}>
                 <div className="px-4 py-2 border-b border-border mb-1">
                   <p className="text-[10px] font-black uppercase tracking-tighter text-text-tertiary leading-none mb-1.5">{role.replace('_', ' ')}</p>
                   <p className="text-sm font-bold text-text-primary truncate">{session.user.name}</p>
@@ -389,7 +402,7 @@ export default function Topbar({ onMobileMenuToggle, isSidebarCollapsed, onSideb
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-danger hover:bg-danger/5 transition-colors cursor-pointer"
                 >
-                  <LogOut size={14} /> Sign Out
+                  <LogOut size={14} /> {t('Log Out', 'تسجيل الخروج')}
                 </button>
               </div>
             )}

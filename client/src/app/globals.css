@@ -324,3 +324,12 @@ body {
     @apply font-sans;
   }
 }
+
+/* Arabic and RTL font styles */
+[dir="rtl"], [lang="ar"], .rtl-active {
+  font-family: 'Cairo', var(--font-sans), system-ui, -apple-system, sans-serif !important;
+}
+
+[dir="rtl"] {
+  letter-spacing: normal !important;
+}

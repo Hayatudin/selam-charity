@@ -23,8 +23,10 @@ import {
   Mail
 } from 'lucide-react';
 import { usePagesContent } from '@/hooks/charity';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CharityAboutPage() {
+  const { t, isRTL } = useLanguage();
   const { data: pagesContent, isLoading } = usePagesContent();
   const about = pagesContent?.about;
   const mission = pagesContent?.mission;
@@ -51,15 +53,15 @@ export default function CharityAboutPage() {
         <div className="max-w-7xl mx-auto relative z-10 text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Our Heritage &amp; Commitment</span>
+            <span>{t('Our Heritage & Commitment')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-            {about?.title || 'About Selam Charity Organization'}
+            {t(about?.title || 'About Selam Charity Organization')}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
-            {about?.subtitle || 'Dedicated to empowering communities, transforming lives, and fostering enduring hope across Ethiopia.'}
+            {t(about?.subtitle || 'Dedicated to empowering communities, transforming lives, and fostering enduring hope across Ethiopia.')}
           </p>
         </div>
       </section>
@@ -71,31 +73,29 @@ export default function CharityAboutPage() {
             
             <div className="lg:col-span-6 space-y-6">
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Founding Background
+                {t('Founding Background')}
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                Rooted in Compassion, Driven by Measurable Impact
+                {t('Rooted in Compassion, Driven by Measurable Impact')}
               </h2>
               <div className="prose prose-slate text-slate-600 space-y-4 text-sm sm:text-base leading-relaxed">
                 <p>
-                  {about?.content || 
-                    'Founded with a commitment to humanitarian excellence, Selam Charity operates community development, educational scholarships, and emergency aid across regions in need. We believe every person deserves dignity, opportunity, and the resources to thrive.'}
+                  {t(about?.content || 
+                    'Founded with a commitment to humanitarian excellence, Selam Charity operates community development, educational scholarships, and emergency aid across regions in need. We believe every person deserves dignity, opportunity, and the resources to thrive.')}
                 </p>
                 <p>
-                  Over the past decade, we have expanded from grassroots child relief into an integrated ecosystem encompassing 
-                  formal schooling, vocational development, nutritious meal provisions, and health outreach. 
-                  Our flagship institution, Selam School, provides high-caliber education to over 650 bright young minds.
+                  {t('Over the past decade, we have expanded from grassroots child relief into an integrated ecosystem encompassing formal schooling, vocational development, nutritious meal provisions, and health outreach. Our flagship institution, Selam School, provides high-caliber education to over 650 bright young minds.')}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <p className="text-2xl font-black text-emerald-700">2010</p>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">Year Established</p>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">{t('Year Established')}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <p className="text-2xl font-black text-emerald-700">100%</p>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">Accountable Governance</p>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">{t('Accountable Governance')}</p>
                 </div>
               </div>
             </div>
@@ -108,12 +108,12 @@ export default function CharityAboutPage() {
                   className="w-full h-96 object-cover"
                 />
               </div>
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 max-w-xs hidden sm:block">
+              <div className={`absolute -bottom-6 ${isRTL ? '-right-6' : '-left-6'} bg-white p-6 rounded-2xl shadow-xl border border-slate-100 max-w-xs hidden sm:block`}>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="w-8 h-8 text-emerald-600 shrink-0" />
                   <div>
-                    <p className="text-xs font-bold text-slate-900">Registered Civil Society</p>
-                    <p className="text-[11px] text-slate-500">Certified by the Ethiopian CSO Authority (#8849)</p>
+                    <p className="text-xs font-bold text-slate-900">{t('Registered Civil Society')}</p>
+                    <p className="text-[11px] text-slate-500">{t('Certified by the Ethiopian CSO Authority (#8849)')}</p>
                   </div>
                 </div>
               </div>
@@ -129,13 +129,13 @@ export default function CharityAboutPage() {
           
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full">
-              Strategic Focus
+              {t('Strategic Focus')}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
-              Our Objectives
+              {t('Our Objectives')}
             </h2>
             <p className="text-slate-600 mt-2 text-sm sm:text-base">
-              Clear, targeted commitments delivering sustainable improvements for children and vulnerable families.
+              {t('Clear, targeted commitments delivering sustainable improvements for children and vulnerable families.')}
             </p>
           </div>
 
@@ -147,10 +147,10 @@ export default function CharityAboutPage() {
                 <GraduationCap className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">
-                Quality Education
+                {t('Quality Education')}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Provide comprehensive, values-driven schooling from Kindergarten through Grade 8, ensuring zero dropouts due to financial hardship.
+                {t('Provide comprehensive, values-driven schooling from Kindergarten through Grade 8, ensuring zero dropouts due to financial hardship.')}
               </p>
             </div>
 
@@ -160,10 +160,10 @@ export default function CharityAboutPage() {
                 <Heart className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-teal-700 transition-colors">
-                Child Nutrition &amp; Care
+                {t('Child Nutrition & Care')}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Guarantee daily balanced meals, clinical checkups, and hygiene support for every student to safeguard child development.
+                {t('Guarantee daily balanced meals, clinical checkups, and hygiene support for every student to safeguard child development.')}
               </p>
             </div>
 
@@ -173,10 +173,10 @@ export default function CharityAboutPage() {
                 <Users className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-amber-700 transition-colors">
-                Community Empowerment
+                {t('Community Empowerment')}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Offer vocational training and livelihood micro-grants to widowed mothers and guardian families to foster economic autonomy.
+                {t('Offer vocational training and livelihood micro-grants to widowed mothers and guardian families to foster economic autonomy.')}
               </p>
             </div>
 
@@ -186,10 +186,10 @@ export default function CharityAboutPage() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors">
-                Emergency Relief
+                {t('Emergency Relief')}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Deploy rapid humanitarian relief, food aid, and warm clothing to communities affected by drought and sudden crisis.
+                {t('Deploy rapid humanitarian relief, food aid, and warm clothing to communities affected by drought and sudden crisis.')}
               </p>
             </div>
 
@@ -201,10 +201,10 @@ export default function CharityAboutPage() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-5">
                 <Target className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Our Mission Statement</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">{t('Our Mission Statement')}</h3>
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-                {mission?.metadata?.missionStatement || 
-                  'To uplift disadvantaged children and families through sustainable education, healthcare access, and economic support, unlocking human potential with dignity and empathy.'}
+                {t(mission?.metadata?.missionStatement || 
+                  'To uplift disadvantaged children and families through sustainable education, healthcare access, and economic support, unlocking human potential with dignity and empathy.')}
               </p>
             </div>
 
@@ -212,10 +212,10 @@ export default function CharityAboutPage() {
               <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold mb-5">
                 <Eye className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Our Vision Statement</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">{t('Our Vision Statement')}</h3>
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-                {mission?.metadata?.visionStatement || 
-                  'A resilient, empowered society where every individual has equal opportunity to realize their full potential in peace, justice, and self-reliance.'}
+                {t(mission?.metadata?.visionStatement || 
+                  'A resilient, empowered society where every individual has equal opportunity to realize their full potential in peace, justice, and self-reliance.')}
               </p>
             </div>
           </div>
@@ -236,14 +236,14 @@ export default function CharityAboutPage() {
               <div>
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800 mb-4">
                   <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                  <span>Strategic Governance</span>
+                  <span>{t('Strategic Governance')}</span>
                 </div>
                 <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                  Meet the<br />board of trustees
+                  {t('Meet the')}<br />{t('board of trustees')}
                 </h2>
               </div>
               <p className="text-slate-600 max-w-md text-sm sm:text-base leading-relaxed">
-                The fiduciary stewards, legal advocates, and community elders providing ethical oversight, institutional integrity, and long-term sustainability to Selam Charity.
+                {t('The fiduciary stewards, legal advocates, and community elders providing ethical oversight, institutional integrity, and long-term sustainability to Selam Charity.')}
               </p>
             </div>
 
@@ -329,7 +329,7 @@ export default function CharityAboutPage() {
                   {/* Top indicator tag */}
                   <div className="absolute top-4 left-4">
                     <span className="text-[11px] font-semibold tracking-wide text-white/90 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                      Board Trustee
+                      {t('Board Trustee')}
                     </span>
                   </div>
 
@@ -337,17 +337,17 @@ export default function CharityAboutPage() {
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-3">
                     <div className="min-w-0 pr-1">
                       <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug truncate drop-shadow-sm">
-                        {member.name}
+                        {t(member.name)}
                       </h3>
                       <p className="text-xs sm:text-sm text-slate-300 font-normal truncate mt-0.5">
-                        {member.role}
+                        {t(member.role)}
                       </p>
                     </div>
 
                     {/* Floating White Plus Button */}
                     <button
                       type="button"
-                      aria-label={`View bio of ${member.name}`}
+                      aria-label={`${t('View bio of')} ${t(member.name)}`}
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-slate-950 flex-shrink-0 flex items-center justify-center shadow-lg group-hover:bg-emerald-400 group-hover:rotate-90 group-hover:scale-110 transition-all duration-300"
                     >
                       <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
@@ -365,14 +365,14 @@ export default function CharityAboutPage() {
               <div>
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800 mb-4">
                   <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                  <span>Our expert crew</span>
+                  <span>{t('Our expert crew')}</span>
                 </div>
                 <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                  Meet the<br />leadership team
+                  {t('Meet the')}<br />{t('leadership team')}
                 </h2>
               </div>
               <p className="text-slate-600 max-w-md text-sm sm:text-base leading-relaxed">
-                The devoted operational directors, educators, and field specialists who turn donor generosity into everyday classroom success and community transformation.
+                {t('The devoted operational directors, educators, and field specialists who turn donor generosity into everyday classroom success and community transformation.')}
               </p>
             </div>
 
@@ -479,17 +479,17 @@ export default function CharityAboutPage() {
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-3">
                     <div className="min-w-0 pr-1">
                       <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug truncate drop-shadow-sm">
-                        {member.name}
+                        {t(member.name)}
                       </h3>
                       <p className="text-xs sm:text-sm text-slate-300 font-normal truncate mt-0.5">
-                        {member.role}
+                        {t(member.role)}
                       </p>
                     </div>
 
                     {/* Floating White Plus Button */}
                     <button
                       type="button"
-                      aria-label={`View bio of ${member.name}`}
+                      aria-label={`${t('View bio of')} ${t(member.name)}`}
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-slate-950 flex-shrink-0 flex items-center justify-center shadow-lg group-hover:bg-emerald-400 group-hover:rotate-90 group-hover:scale-110 transition-all duration-300"
                     >
                       <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
@@ -532,7 +532,7 @@ export default function CharityAboutPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:hidden" />
                 <div className="absolute bottom-3 left-4 md:hidden text-white">
                   <span className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-                    {selectedMember.category === 'board' ? 'Board of Trustees' : 'Management Team'}
+                    {selectedMember.category === 'board' ? t('Board of Trustees') : t('Management Team')}
                   </span>
                 </div>
               </div>
@@ -541,35 +541,35 @@ export default function CharityAboutPage() {
               <div className="w-full md:w-7/12 p-6 sm:p-8 flex flex-col justify-between space-y-5">
                 <div>
                   <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 mb-2">
-                    {selectedMember.category === 'board' ? 'Board of Trustees' : 'Management Team'}
+                    {selectedMember.category === 'board' ? t('Board of Trustees') : t('Management Team')}
                   </div>
 
                   <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-                    {selectedMember.name}
+                    {t(selectedMember.name)}
                   </h3>
                   <p className="text-sm font-semibold text-emerald-600 mt-0.5">
-                    {selectedMember.role}
+                    {t(selectedMember.role)}
                   </p>
 
                   <div className="mt-4 pt-4 border-t border-slate-100">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Biography &amp; Contribution
+                      {t('Biography & Contribution')}
                     </h4>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      {selectedMember.fullBio}
+                      {t(selectedMember.fullBio)}
                     </p>
                   </div>
 
                   {selectedMember.credentials && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                        Credentials &amp; Milestones
+                        {t('Credentials & Milestones')}
                       </h4>
                       <ul className="space-y-1.5">
                         {selectedMember.credentials.map((cred, i) => (
                           <li key={i} className="flex items-center gap-2 text-xs text-slate-700">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                            <span>{cred}</span>
+                            <span>{t(cred)}</span>
                           </li>
                         ))}
                       </ul>
@@ -593,7 +593,7 @@ export default function CharityAboutPage() {
                     onClick={() => setSelectedMember(null)}
                     className="ml-auto px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
                   >
-                    Close
+                    {t('Close')}
                   </button>
                 </div>
               </div>
@@ -608,13 +608,13 @@ export default function CharityAboutPage() {
           
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full">
-              Voices of Hope
+              {t('Voices of Hope')}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
-              Testimonials &amp; Stories
+              {t('Testimonials & Stories')}
             </h2>
             <p className="text-slate-600 mt-2 text-sm sm:text-base">
-              Real stories from students, parents, and community members impacted by Selam Charity.
+              {t('Real stories from students, parents, and community members impacted by Selam Charity.')}
             </p>
           </div>
 
@@ -647,12 +647,12 @@ export default function CharityAboutPage() {
                     ))}
                   </div>
                   <p className="text-sm text-slate-700 italic leading-relaxed">
-                    &ldquo;{test.quote}&rdquo;
+                    &ldquo;{t(test.quote)}&rdquo;
                   </p>
                 </div>
                 <div className="pt-6 border-t border-slate-100 mt-6">
-                  <p className="text-sm font-bold text-slate-900">{test.author}</p>
-                  <p className="text-xs text-emerald-700 font-medium mt-0.5">{test.role}</p>
+                  <p className="text-sm font-bold text-slate-900">{t(test.author)}</p>
+                  <p className="text-xs text-emerald-700 font-medium mt-0.5">{t(test.role)}</p>
                 </div>
               </div>
             ))}
@@ -665,13 +665,13 @@ export default function CharityAboutPage() {
       <section className="py-16 bg-slate-900 text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
           <ShieldCheck className="w-12 h-12 text-emerald-400 mx-auto" />
-          <h2 className="text-2xl sm:text-3xl font-black">Legal Accreditation &amp; Governance</h2>
+          <h2 className="text-2xl sm:text-3xl font-black">{t('Legal Accreditation & Governance')}</h2>
           <p className="text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            {general?.content || 
-              'Selam Charity is an officially registered civil society organization operating under the strict regulatory oversight of the Ethiopian Civil Society Organizations Authority. We undergo annual independent audits and publish our impact findings.'}
+            {t(general?.content || 
+              'Selam Charity is an officially registered civil society organization operating under the strict regulatory oversight of the Ethiopian Civil Society Organizations Authority. We undergo annual independent audits and publish our impact findings.')}
           </p>
           <div className="pt-2 text-xs font-semibold text-emerald-400">
-            Registration No: {general?.metadata?.registrationNumber || 'CSO-ETH-2010-8849'} • Tax-Exempt Non-Profit Status
+            {t('Registration No')}: {general?.metadata?.registrationNumber || 'CSO-ETH-2010-8849'} • {t('Tax-Exempt Non-Profit Status')}
           </div>
         </div>
       </section>

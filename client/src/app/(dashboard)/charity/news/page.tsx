@@ -32,6 +32,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import MediaPickerModal from '@/components/charity/MediaPickerModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 const CATEGORIES = [
   'All', 
@@ -48,6 +49,7 @@ const CATEGORIES = [
 ];
 
 export default function CharityNewsPage() {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -210,10 +212,10 @@ export default function CharityNewsPage() {
             <span className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
               <Newspaper size={20} />
             </span>
-            <h1 className="text-xl font-bold text-slate-800">News & Announcements</h1>
+            <h1 className="text-xl font-bold text-slate-800">{t('News & Announcements')}</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Create, edit, curate, and publish stories and community press releases.
+            {t('Create, edit, curate, and publish stories and community press releases.')}
           </p>
         </div>
 
@@ -221,7 +223,7 @@ export default function CharityNewsPage() {
           onClick={handleOpenCreateModal}
           className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm font-semibold text-sm"
         >
-          <Plus size={16} /> Create Article
+          <Plus size={16} /> {t('Create Article')}
         </Button>
       </div>
 
@@ -239,7 +241,7 @@ export default function CharityNewsPage() {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
               }`}
             >
-              {cat}
+              {t(cat)}
             </button>
           ))}
         </div>
@@ -251,19 +253,19 @@ export default function CharityNewsPage() {
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="py-1.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-600 focus:outline-none focus:border-emerald-500"
           >
-            <option value="all">All Status</option>
-            <option value="published">Published</option>
-            <option value="draft">Drafts</option>
+            <option value="all">{t('All Status')}</option>
+            <option value="published">{t('Published')}</option>
+            <option value="draft">{t('Drafts')}</option>
           </select>
 
           <div className="relative flex-1 sm:w-64">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search news..."
+              placeholder={t('Search news...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="w-full pl-8 rtl:pl-3 rtl:pr-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
           </div>
         </div>
@@ -280,24 +282,24 @@ export default function CharityNewsPage() {
             <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
               <Newspaper size={28} />
             </div>
-            <h3 className="text-sm font-bold text-slate-700">No articles found</h3>
+            <h3 className="text-sm font-bold text-slate-700">{t('No articles found')}</h3>
             <p className="text-xs text-slate-400 mt-1 max-w-sm">
               {searchTerm || selectedCategory !== 'All'
-                ? 'Try adjusting your search terms or category filter.'
-                : 'Click the "Create Article" button to publish your first charity story.'}
+                ? t('Try adjusting your search terms or category filter.')
+                : t('Click the "Create Article" button to publish your first charity story.')}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left rtl:text-right border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-4">Article</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Views</th>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4">{t('Article')}</th>
+                  <th className="py-3 px-4">{t('Category')}</th>
+                  <th className="py-3 px-4">{t('Status')}</th>
+                  <th className="py-3 px-4">{t('Views')}</th>
+                  <th className="py-3 px-4">{t('Date')}</th>
+                  <th className="py-3 px-4 text-right rtl:text-left">{t('Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
@@ -329,7 +331,7 @@ export default function CharityNewsPage() {
                       {/* Category */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span className="px-2.5 py-1 rounded-md bg-slate-100 font-semibold text-slate-700 text-[11px]">
-                          {article.category}
+                          {t(article.category)}
                         </span>
                       </td>
 
@@ -342,10 +344,10 @@ export default function CharityNewsPage() {
                               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60'
                               : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60'
                           }`}
-                          title="Click to toggle publish status"
+                          title={t('Click to toggle publish status')}
                         >
                           {isPub ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                          {isPub ? 'Published' : 'Draft'}
+                          {isPub ? t('Published') : t('Draft')}
                         </button>
                       </td>
 
@@ -367,12 +369,12 @@ export default function CharityNewsPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="py-3 px-4 whitespace-nowrap text-right rtl:text-left">
+                        <div className="flex items-center justify-end rtl:justify-start gap-1">
                           <button
                             onClick={() => handleOpenEditModal(article)}
                             className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title="Edit article"
+                            title={t('Edit article')}
                           >
                             <Edit3 size={15} />
                           </button>
@@ -380,7 +382,7 @@ export default function CharityNewsPage() {
                             type="button"
                             onClick={() => setArticleToDelete(article)}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            title="Delete article"
+                            title={t('Delete article')}
                           >
                             <Trash2 size={15} />
                           </button>
@@ -402,7 +404,7 @@ export default function CharityNewsPage() {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <h3 className="text-base font-bold text-slate-800">
-                {editingArticle ? 'Edit News Article' : 'Create New Article'}
+                {editingArticle ? t('Edit News Article') : t('Create New Article')}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -423,7 +425,7 @@ export default function CharityNewsPage() {
 
               {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Title *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Title *')}</label>
                 <input
                   type="text"
                   required
@@ -436,7 +438,7 @@ export default function CharityNewsPage() {
 
               {/* Author Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Author Name</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Author Name')}</label>
                 <input
                   type="text"
                   placeholder="e.g. Sister Fatima or Selam Team"
@@ -449,7 +451,7 @@ export default function CharityNewsPage() {
               {/* Category & Status */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Category')}</label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
@@ -457,21 +459,21 @@ export default function CharityNewsPage() {
                   >
                     {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
                       <option key={cat} value={cat}>
-                        {cat}
+                        {t(cat)}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Publication Status</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Publication Status')}</label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as any)}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
+                    <option value="published">{t('Published')}</option>
+                    <option value="draft">{t('Draft')}</option>
                   </select>
                 </div>
               </div>
@@ -479,7 +481,7 @@ export default function CharityNewsPage() {
               {/* Slug */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Custom Slug (optional)
+                  {t('Custom Slug (optional)')}
                 </label>
                 <input
                   type="text"
@@ -492,7 +494,7 @@ export default function CharityNewsPage() {
 
               {/* Featured Image Picker */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Featured Image</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Featured Image')}</label>
                 <input
                   ref={featuredImageInputRef}
                   type="file"
@@ -525,7 +527,7 @@ export default function CharityNewsPage() {
                         ) : (
                           <Upload size={14} />
                         )}
-                        <span>{uploadingFeaturedImage ? 'Uploading...' : 'Upload from Device'}</span>
+                        <span>{uploadingFeaturedImage ? t('Uploading...') : t('Upload from Device')}</span>
                       </Button>
                       <Button
                         type="button"
@@ -533,7 +535,7 @@ export default function CharityNewsPage() {
                         onClick={() => setIsMediaPickerOpen(true)}
                         className="text-xs h-8 px-3 text-slate-700 border-slate-300"
                       >
-                        Browse Library
+                        {t('Browse Library')}
                       </Button>
                     </div>
                     {formFeaturedImage && (
@@ -542,7 +544,7 @@ export default function CharityNewsPage() {
                         onClick={() => setFormFeaturedImage('')}
                         className="block text-[11px] text-red-500 hover:underline"
                       >
-                        Remove Image
+                        {t('Remove Image')}
                       </button>
                     )}
                   </div>
@@ -552,7 +554,7 @@ export default function CharityNewsPage() {
               {/* Excerpt */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Excerpt / Summary (optional)
+                  {t('Excerpt / Summary (optional)')}
                 </label>
                 <textarea
                   rows={2}
@@ -565,7 +567,7 @@ export default function CharityNewsPage() {
 
               {/* Main Content */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Article Content *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Article Content *')}</label>
                 <textarea
                   rows={7}
                   required
@@ -583,7 +585,7 @@ export default function CharityNewsPage() {
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -593,9 +595,9 @@ export default function CharityNewsPage() {
                   {createMutation.isPending || updateMutation.isPending ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : editingArticle ? (
-                    'Save Changes'
+                    t('Save Changes')
                   ) : (
-                    'Publish Article'
+                    t('Publish Article')
                   )}
                 </Button>
               </div>
@@ -613,13 +615,13 @@ export default function CharityNewsPage() {
                 <Trash2 size={24} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-800">Delete Article</h3>
-                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+                <h3 className="text-base font-bold text-slate-800">{t('Delete Article')}</h3>
+                <p className="text-xs text-slate-500">{t('This action cannot be undone.')}</p>
               </div>
             </div>
             
             <p className="text-sm text-slate-600 mb-6">
-              Are you sure you want to permanently delete <strong className="text-slate-900">&quot;{articleToDelete.title}&quot;</strong>?
+              {t('Are you sure you want to permanently delete')} <strong className="text-slate-900">&quot;{articleToDelete.title}&quot;</strong>?
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
@@ -630,7 +632,7 @@ export default function CharityNewsPage() {
                 disabled={deleteMutation.isPending}
                 className="text-xs font-semibold"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 type="button"
@@ -641,12 +643,12 @@ export default function CharityNewsPage() {
                 {deleteMutation.isPending ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Deleting...</span>
+                    <span>{t('Deleting...')}</span>
                   </>
                 ) : (
                   <>
                     <Trash2 size={14} />
-                    <span>Yes, Delete</span>
+                    <span>{t('Yes, Delete')}</span>
                   </>
                 )}
               </Button>
@@ -661,7 +663,7 @@ export default function CharityNewsPage() {
         onClose={() => setIsMediaPickerOpen(false)}
         onSelect={(url) => setFormFeaturedImage(url)}
         fileTypeFilter="image"
-        title="Select Featured Article Image"
+        title={t('Select Featured Article Image')}
       />
     </div>
   );

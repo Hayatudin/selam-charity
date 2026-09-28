@@ -13,6 +13,7 @@ import { useCharityGallery } from '@/hooks/charity';
 import Lightbox from '@/components/charity/public/Lightbox';
 import type { CharityGalleryItem } from '@/types/charity';
 import { getFileUrl } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 const CATEGORIES = [
   'All',
@@ -24,6 +25,7 @@ const CATEGORIES = [
 ];
 
 export default function CharityGalleryPage() {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedType, setSelectedType] = useState<'all' | 'image' | 'video'>('all');
   const [activeMedia, setActiveMedia] = useState<CharityGalleryItem | null>(null);
@@ -45,15 +47,15 @@ export default function CharityGalleryPage() {
         <div className="max-w-4xl mx-auto relative z-10 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
             <ImageIcon className="w-3.5 h-3.5" />
-            <span>Media Showcase</span>
+            <span>{t('Media Showcase')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-            Photo &amp; Video Gallery
+            {t('Photo & Video Gallery')}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            Witness our campus life, educational milestones, and community impact in action.
+            {t('Witness our campus life, educational milestones, and community impact in action.')}
           </p>
         </div>
       </section>
@@ -74,7 +76,7 @@ export default function CharityGalleryPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {cat}
+                {t(cat)}
               </button>
             ))}
           </div>
@@ -95,7 +97,7 @@ export default function CharityGalleryPage() {
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                {type.label}
+                {t(type.label)}
               </button>
             ))}
           </div>
@@ -109,7 +111,7 @@ export default function CharityGalleryPage() {
           
           {displayItems.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-slate-200">
-              <p className="text-slate-500 text-sm">No media items found for the selected filter.</p>
+              <p className="text-slate-500 text-sm">{t('No media items found for the selected filter.')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -132,7 +134,7 @@ export default function CharityGalleryPage() {
                     {/* Top tags */}
                     <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
                       <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-950/70 text-white backdrop-blur-md">
-                        {item.category || 'General'}
+                        {t(item.category || 'General')}
                       </span>
 
                       {isVideo ? (

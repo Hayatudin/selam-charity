@@ -27,10 +27,12 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import MediaPickerModal from '@/components/charity/MediaPickerModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 const CATEGORIES = ['All', 'General', 'School Life', 'Community Relief', 'Health Outreach', 'Ceremonies'];
 
 export default function CharityGalleryPage() {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedMediaType, setSelectedMediaType] = useState('all');
 
@@ -354,10 +356,10 @@ export default function CharityGalleryPage() {
             <span className="p-2 rounded-xl bg-amber-100 text-amber-700">
               <Images size={20} />
             </span>
-            <h1 className="text-xl font-bold text-slate-800">Media Gallery</h1>
+            <h1 className="text-xl font-bold text-slate-800">{t('Media Gallery')}</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Organize photographic collections and video showcases for public visitors.
+            {t('Organize photographic collections and video showcases for public visitors.')}
           </p>
         </div>
 
@@ -373,12 +375,12 @@ export default function CharityGalleryPage() {
             {isBatchUploading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                <span>Uploading {batchProgress.current} of {batchProgress.total}...</span>
+                <span>{t('Uploading')} {batchProgress.current} of {batchProgress.total}...</span>
               </>
             ) : (
               <>
                 <Upload size={16} />
-                <span>Upload Images</span>
+                <span>{t('Upload Images')}</span>
               </>
             )}
           </Button>
@@ -389,7 +391,7 @@ export default function CharityGalleryPage() {
             variant="outline"
             className="border-slate-300 hover:bg-slate-50 text-slate-700 gap-1.5 font-semibold text-sm"
           >
-            <Plus size={16} /> Add Video / Custom
+            <Plus size={16} /> {t('Add Video / Custom')}
           </Button>
         </div>
       </div>
@@ -421,7 +423,7 @@ export default function CharityGalleryPage() {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
               }`}
             >
-              {cat}
+              {t(cat)}
             </button>
           ))}
         </div>
@@ -433,9 +435,9 @@ export default function CharityGalleryPage() {
             onChange={(e) => setSelectedMediaType(e.target.value)}
             className="py-1.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-600 focus:outline-none focus:border-amber-500"
           >
-            <option value="all">All Media</option>
-            <option value="image">Images Only</option>
-            <option value="video">Videos Only</option>
+            <option value="all">{t('All Media')}</option>
+            <option value="image">{t('Images Only')}</option>
+            <option value="video">{t('Videos Only')}</option>
           </select>
         </div>
       </div>
@@ -452,16 +454,16 @@ export default function CharityGalleryPage() {
           <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
             <Images size={28} />
           </div>
-          <h3 className="text-sm font-bold text-slate-700">No media items in this category</h3>
+          <h3 className="text-sm font-bold text-slate-700">{t('No media items in this category')}</h3>
           <p className="text-xs text-slate-400 mt-1 max-w-sm mb-4">
-            Upload photos from your computer or phone to showcase your organization's impactful work.
+            {t("Upload photos from your computer or phone to showcase your organization's impactful work.")}
           </p>
           <Button
             type="button"
             onClick={() => directMultiInputRef.current?.click()}
             className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 text-xs font-semibold"
           >
-            <Upload size={14} /> Upload Images Now
+            <Upload size={14} /> {t('Upload Images Now')}
           </Button>
         </div>
       ) : (
@@ -509,9 +511,9 @@ export default function CharityGalleryPage() {
                   )}
 
                   {/* Category Chip */}
-                  <div className="absolute top-2.5 left-2.5">
+                  <div className="absolute top-2.5 left-2.5 rtl:left-auto rtl:right-2.5">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/60 backdrop-blur-sm text-white border border-white/20">
-                      {item.category}
+                      {t(item.category)}
                     </span>
                   </div>
                 </div>
@@ -527,13 +529,13 @@ export default function CharityGalleryPage() {
 
                   <div className="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span className="text-[10px] font-medium text-slate-400">
-                      Order: #{item.orderIndex}
+                      {t('Order: #')}{item.orderIndex}
                     </span>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleOpenEdit(item)}
                         className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                        title="Edit"
+                        title={t('Edit')}
                       >
                         <Edit3 size={14} />
                       </button>
@@ -541,7 +543,7 @@ export default function CharityGalleryPage() {
                         type="button"
                         onClick={() => setItemToDelete(item)}
                         className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Delete"
+                        title={t('Delete')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -560,7 +562,7 @@ export default function CharityGalleryPage() {
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <h3 className="text-base font-bold text-slate-800">
-                {editingItem ? 'Edit Gallery Item' : 'Add Media to Gallery'}
+                {editingItem ? t('Edit Gallery Item') : t('Add Media to Gallery')}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -581,7 +583,7 @@ export default function CharityGalleryPage() {
               {/* Title */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Image Title * <span className="text-[11px] font-normal text-slate-500">(Enter manually)</span>
+                  {t('Image Title *')} <span className="text-[11px] font-normal text-slate-500">{t('(Enter manually)')}</span>
                 </label>
                 <input
                   type="text"
@@ -596,19 +598,19 @@ export default function CharityGalleryPage() {
               {/* Media Type & Category */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Media Type</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Media Type')}</label>
                   <select
                     value={formMediaType}
                     onChange={(e) => setFormMediaType(e.target.value as GalleryMediaType)}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 text-slate-700"
                   >
-                    <option value="image">Image</option>
-                    <option value="video">Video</option>
+                    <option value="image">{t('Image')}</option>
+                    <option value="video">{t('Video')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Category')}</label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
@@ -616,7 +618,7 @@ export default function CharityGalleryPage() {
                   >
                     {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
                       <option key={cat} value={cat}>
-                        {cat}
+                        {t(cat)}
                       </option>
                     ))}
                   </select>
@@ -626,7 +628,7 @@ export default function CharityGalleryPage() {
               {/* Media URL Input & Direct File Picker */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {formMediaType === 'image' ? 'Image File / URL *' : 'Video File or YouTube URL *'}
+                  {formMediaType === 'image' ? t('Image File / URL *') : t('Video File or YouTube URL *')}
                 </label>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -651,12 +653,12 @@ export default function CharityGalleryPage() {
                       ) : (
                         <Upload size={14} />
                       )}
-                      <span>{singleUploading ? 'Uploading...' : 'Choose File'}</span>
+                      <span>{singleUploading ? t('Uploading...') : t('Choose File')}</span>
                     </Button>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Directly select from your phone or computer</span>
+                    <span>{t('Directly select from your phone or computer')}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -665,7 +667,7 @@ export default function CharityGalleryPage() {
                       }}
                       className="text-amber-600 hover:text-amber-700 hover:underline font-medium"
                     >
-                      Or browse media library
+                      {t('Or browse media library')}
                     </button>
                   </div>
 
@@ -682,7 +684,7 @@ export default function CharityGalleryPage() {
               {formMediaType === 'video' && (
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Video Thumbnail Poster (optional)
+                    {t('Video Thumbnail Poster (optional)')}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -697,7 +699,7 @@ export default function CharityGalleryPage() {
                       onClick={() => singleThumbInputRef.current?.click()}
                       className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs h-9 px-3 shrink-0 gap-1.5"
                     >
-                      <Upload size={14} /> Choose Poster
+                      <Upload size={14} /> {t('Choose Poster')}
                     </Button>
                   </div>
                 </div>
@@ -705,7 +707,7 @@ export default function CharityGalleryPage() {
 
               {/* Caption */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Caption / Description</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Caption / Description')}</label>
                 <textarea
                   rows={2}
                   placeholder="Optional brief description of what is shown..."
@@ -717,7 +719,7 @@ export default function CharityGalleryPage() {
 
               {/* Order Index */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Sort Order (Lower appears first)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Sort Order (Lower appears first)')}</label>
                 <input
                   type="number"
                   value={formOrderIndex}
@@ -729,7 +731,7 @@ export default function CharityGalleryPage() {
               {/* Modal Actions */}
               <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -739,7 +741,7 @@ export default function CharityGalleryPage() {
                   {createMutation.isPending || updateMutation.isPending ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    'Save Item'
+                    t('Save Item')
                   )}
                 </Button>
               </div>
@@ -760,10 +762,12 @@ export default function CharityGalleryPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-800">
-                    {stagedUploads.length > 1 ? `Upload ${stagedUploads.length} Photos to Gallery` : 'Upload Photo to Gallery'}
+                    {stagedUploads.length > 1
+                      ? `${t('Upload Photos to Gallery', 'Upload Photos to Gallery')} (${stagedUploads.length})`
+                      : t('Upload Photo to Gallery')}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Please provide an image title manually. Image filename is not used as the title.
+                    {t('Please provide an image title manually. Image filename is not used as the title.')}
                   </p>
                 </div>
               </div>
@@ -808,7 +812,7 @@ export default function CharityGalleryPage() {
                         <div>
                           <div className="flex items-center justify-between mb-1">
                             <label className="text-xs font-bold text-slate-700">
-                              Image Title <span className="text-red-500">*</span>
+                              {t('Image Title')} <span className="text-red-500">*</span>
                             </label>
                             {stagedUploads.length > 1 && (
                               <button
@@ -817,7 +821,7 @@ export default function CharityGalleryPage() {
                                 disabled={isBatchUploading}
                                 className="text-[11px] text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
                               >
-                                <Trash2 size={12} /> Remove
+                                <Trash2 size={12} /> {t('Remove')}
                               </button>
                             )}
                           </div>
@@ -825,7 +829,7 @@ export default function CharityGalleryPage() {
                             type="text"
                             required
                             autoFocus={index === 0}
-                            placeholder="Enter image title manually (e.g. Students in Class)..."
+                            placeholder={t('Enter image title manually (e.g. Students in Class)...', 'Enter image title manually (e.g. Students in Class)...')}
                             value={item.title}
                             onChange={(e) => updateStagedItem(item.id, 'title', e.target.value)}
                             disabled={isBatchUploading}
@@ -837,7 +841,7 @@ export default function CharityGalleryPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
                             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                              Category
+                              {t('Category')}
                             </label>
                             <select
                               value={item.category}
@@ -847,7 +851,7 @@ export default function CharityGalleryPage() {
                             >
                               {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
                                 <option key={cat} value={cat}>
-                                  {cat}
+                                  {t(cat)}
                                 </option>
                               ))}
                             </select>
@@ -855,11 +859,11 @@ export default function CharityGalleryPage() {
 
                           <div>
                             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                              Caption (optional)
+                              {t('Caption (optional)')}
                             </label>
                             <input
                               type="text"
-                              placeholder="Brief description..."
+                              placeholder={t('Brief description...', 'Brief description...')}
                               value={item.caption}
                               onChange={(e) => updateStagedItem(item.id, 'caption', e.target.value)}
                               disabled={isBatchUploading}
@@ -876,7 +880,7 @@ export default function CharityGalleryPage() {
               {/* Actions */}
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <p className="text-[11px] text-slate-500">
-                  {stagedUploads.length} photo{stagedUploads.length > 1 ? 's' : ''} ready to upload
+                  {stagedUploads.length} {stagedUploads.length > 1 ? t('photos ready to upload', 'photos ready to upload') : t('photo ready to upload', 'photo ready to upload')}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -885,7 +889,7 @@ export default function CharityGalleryPage() {
                     onClick={handleCancelStagedUpload}
                     disabled={isBatchUploading}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -895,12 +899,12 @@ export default function CharityGalleryPage() {
                     {isBatchUploading ? (
                       <>
                         <Loader2 size={16} className="animate-spin" />
-                        <span>Uploading {batchProgress.current} of {batchProgress.total}...</span>
+                        <span>{t('Uploading', 'Uploading')} {batchProgress.current} {t('of', 'of')} {batchProgress.total}...</span>
                       </>
                     ) : (
                       <>
                         <Upload size={16} />
-                        <span>Upload &amp; Save to Gallery</span>
+                        <span>{t('Upload & Save to Gallery')}</span>
                       </>
                     )}
                   </Button>
@@ -964,13 +968,13 @@ export default function CharityGalleryPage() {
                 <Trash2 size={24} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-800">Delete Media Item</h3>
-                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+                <h3 className="text-base font-bold text-slate-800">{t('Delete Media Item')}</h3>
+                <p className="text-xs text-slate-500">{t('This action cannot be undone.')}</p>
               </div>
             </div>
             
             <p className="text-sm text-slate-600 mb-6">
-              Are you sure you want to permanently delete <strong className="text-slate-900">&quot;{itemToDelete.title}&quot;</strong> from the gallery?
+              {t('Are you sure you want to permanently delete')} <strong className="text-slate-900">&quot;{itemToDelete.title}&quot;</strong> {t('from the gallery?')}
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
@@ -981,7 +985,7 @@ export default function CharityGalleryPage() {
                 disabled={deleteMutation.isPending}
                 className="text-xs font-semibold"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 type="button"
@@ -992,12 +996,12 @@ export default function CharityGalleryPage() {
                 {deleteMutation.isPending ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Deleting...</span>
+                    <span>{t('Deleting...')}</span>
                   </>
                 ) : (
                   <>
                     <Trash2 size={14} />
-                    <span>Yes, Delete</span>
+                    <span>{t('Yes, Delete')}</span>
                   </>
                 )}
               </Button>
@@ -1018,7 +1022,7 @@ export default function CharityGalleryPage() {
           }
         }}
         fileTypeFilter={pickerTarget === 'thumbnail' ? 'image' : formMediaType}
-        title={pickerTarget === 'thumbnail' ? 'Choose Video Thumbnail' : 'Choose Media File'}
+        title={pickerTarget === 'thumbnail' ? t('Choose Video Thumbnail') : t('Choose Media File')}
       />
     </div>
   );

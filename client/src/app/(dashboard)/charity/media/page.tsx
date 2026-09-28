@@ -26,8 +26,10 @@ import {
   Filter
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CharityMediaLibraryPage() {
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeType, setActiveType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,10 +139,10 @@ export default function CharityMediaLibraryPage() {
             <span className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
               <FolderArchive size={20} />
             </span>
-            <h1 className="text-xl font-bold text-slate-800">Media & File Library</h1>
+            <h1 className="text-xl font-bold text-slate-800">{t('Media & File Library')}</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Store, preview, organize, and reuse assets across News, School, and Pages.
+            {t('Store, preview, organize, and reuse assets across News, School, and Pages.')}
           </p>
         </div>
 
@@ -162,7 +164,7 @@ export default function CharityMediaLibraryPage() {
             className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm font-semibold text-sm"
           >
             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-            {uploading ? 'Uploading...' : 'Upload Files'}
+            {uploading ? t('Uploading...') : t('Upload Files')}
           </Button>
         </div>
       </div>
@@ -195,20 +197,20 @@ export default function CharityMediaLibraryPage() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              {tab.label}
+              {t(tab.label)}
             </button>
           ))}
         </div>
 
         {/* Search */}
         <div className="relative w-full sm:w-72">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by file name or caption..."
+            placeholder={t('Search by file name or caption...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500"
+            className="w-full pl-8 rtl:pl-3 rtl:pr-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500"
           />
         </div>
       </div>
@@ -223,9 +225,9 @@ export default function CharityMediaLibraryPage() {
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
             <FolderArchive size={28} />
           </div>
-          <h3 className="text-sm font-bold text-slate-700">No media files found</h3>
+          <h3 className="text-sm font-bold text-slate-700">{t('No media files found')}</h3>
           <p className="text-xs text-slate-400 mt-1 max-w-sm">
-            Drag and drop images, documents, or videos above to populate your library.
+            {t('Drag and drop images, documents, or videos above to populate your library.')}
           </p>
         </div>
       ) : (
@@ -254,17 +256,17 @@ export default function CharityMediaLibraryPage() {
                   ) : isVideo ? (
                     <div className="flex flex-col items-center justify-center text-slate-500 p-2">
                       <Film size={32} className="text-slate-400 mb-1" />
-                      <span className="text-[10px] font-medium text-slate-600 uppercase">Video</span>
+                      <span className="text-[10px] font-medium text-slate-600 uppercase">{t('Video')}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center text-slate-500 p-2">
                       <FileText size={32} className="text-slate-400 mb-1" />
-                      <span className="text-[10px] font-medium text-slate-600 uppercase">Document</span>
+                      <span className="text-[10px] font-medium text-slate-600 uppercase">{t('Documents')}</span>
                     </div>
                   )}
 
                   {/* Top Badges */}
-                  <div className="absolute top-2 left-2 flex items-center gap-1">
+                  <div className="absolute top-2 left-2 rtl:left-auto rtl:right-2 flex items-center gap-1">
                     <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-black/60 backdrop-blur-xs text-white uppercase">
                       {item.fileType}
                     </span>
@@ -272,18 +274,18 @@ export default function CharityMediaLibraryPage() {
                 </div>
 
                 {/* Hover Quick Actions */}
-                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleCopyLink(item)}
                     className="p-1.5 bg-black/70 hover:bg-black text-white rounded-lg transition-colors shadow-sm"
-                    title="Copy URL"
+                    title={t('Copy Direct URL')}
                   >
                     {copiedId === item.id ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                   </button>
                   <button
                     onClick={() => handleDelete(item.id)}
                     className="p-1.5 bg-black/70 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm"
-                    title="Delete File"
+                    title={t('Delete Asset')}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -313,7 +315,7 @@ export default function CharityMediaLibraryPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <h3 className="text-sm font-bold text-slate-800">Media File Details</h3>
+              <h3 className="text-sm font-bold text-slate-800">{t('Media File Details')}</h3>
               <button
                 onClick={() => setSelectedFile(null)}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
@@ -343,7 +345,7 @@ export default function CharityMediaLibraryPage() {
 
               {/* Editable Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Display Name</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Display Name')}</label>
                 <input
                   type="text"
                   value={editName}
@@ -354,12 +356,12 @@ export default function CharityMediaLibraryPage() {
 
               {/* Editable Caption */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Caption / Alt Text</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('Caption / Alt Text')}</label>
                 <textarea
                   rows={2}
                   value={editCaption}
                   onChange={(e) => setEditCaption(e.target.value)}
-                  placeholder="Describe this asset..."
+                  placeholder={t('Describe this asset...')}
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500"
                 />
               </div>
@@ -367,25 +369,25 @@ export default function CharityMediaLibraryPage() {
               {/* Metadata Info Box */}
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5 text-xs text-slate-600">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">File Type:</span>
+                  <span className="text-slate-400">{t('File Type:')}</span>
                   <span className="font-semibold uppercase">{selectedFile.fileType}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">File Size:</span>
+                  <span className="text-slate-400">{t('File Size:')}</span>
                   <span className="font-semibold">{formatFileSize(selectedFile.sizeBytes)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Original Name:</span>
+                  <span className="text-slate-400">{t('Original Name:')}</span>
                   <span className="font-semibold truncate max-w-xs">{selectedFile.originalName}</span>
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t border-slate-200/60">
-                  <span className="text-slate-400">Resource URL:</span>
+                  <span className="text-slate-400">{t('Resource URL:')}</span>
                   <button
                     onClick={() => handleCopyLink(selectedFile)}
                     className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 text-[11px]"
                   >
                     {copiedId === selectedFile.id ? <Check size={12} /> : <Copy size={12} />}
-                    {copiedId === selectedFile.id ? 'Copied Link!' : 'Copy Direct URL'}
+                    {copiedId === selectedFile.id ? t('Copied Link!') : t('Copy Direct URL')}
                   </button>
                 </div>
               </div>
@@ -397,18 +399,18 @@ export default function CharityMediaLibraryPage() {
                 onClick={() => handleDelete(selectedFile.id)}
                 className="text-red-600 hover:bg-red-50 border-red-200 text-xs"
               >
-                <Trash2 size={14} className="mr-1" /> Delete Asset
+                <Trash2 size={14} className="mr-1 rtl:mr-0 rtl:ml-1" /> {t('Delete Asset')}
               </Button>
               <div className="flex items-center gap-2">
                 <Button variant="outline" onClick={() => setSelectedFile(null)}>
-                  Close
+                  {t('Close')}
                 </Button>
                 <Button
                   onClick={handleSaveMetadata}
                   disabled={updateMetadataMutation.isPending}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
                 >
-                  {updateMetadataMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
+                  {updateMetadataMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : t('Save Changes')}
                 </Button>
               </div>
             </div>

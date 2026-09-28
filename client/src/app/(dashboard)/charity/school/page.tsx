@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import MediaPickerModal from '@/components/charity/MediaPickerModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 const SECTIONS: { key: SchoolSectionKey; label: string; icon: any; desc: string }[] = [
   { key: 'intro', label: 'School Introduction', icon: GraduationCap, desc: 'Overview, welcome statement, and foundational school statistics' },
@@ -29,6 +30,7 @@ const SECTIONS: { key: SchoolSectionKey; label: string; icon: any; desc: string 
 ];
 
 export default function CharitySchoolCMSPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<SchoolSectionKey>('intro');
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -187,16 +189,16 @@ export default function CharitySchoolCMSPage() {
             <span className="p-2 rounded-xl bg-violet-100 text-violet-700">
               <GraduationCap size={20} />
             </span>
-            <h1 className="text-xl font-bold text-slate-800">School Content CMS</h1>
+            <h1 className="text-xl font-bold text-slate-800">{t('School Content CMS')}</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage public website content for Selam School programs, campus facilities, and activities.
+            {t('Manage public website content for Selam School programs, campus facilities, and activities.')}
           </p>
         </div>
 
         {savedSuccess && (
           <div className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-semibold flex items-center gap-1.5 border border-emerald-200/60 animate-fade-in">
-            <CheckCircle2 size={14} /> Section saved successfully!
+            <CheckCircle2 size={14} /> {t('Section saved successfully!')}
           </div>
         )}
       </div>
@@ -213,7 +215,7 @@ export default function CharitySchoolCMSPage() {
               <button
                 key={sec.key}
                 onClick={() => setActiveTab(sec.key)}
-                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${
+                className={`w-full text-left rtl:text-right p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${
                   isActive
                     ? 'bg-white border-violet-500 ring-2 ring-violet-500/20 shadow-sm'
                     : 'bg-white/80 border-slate-200/80 hover:bg-white hover:border-slate-300'
@@ -226,9 +228,9 @@ export default function CharitySchoolCMSPage() {
                 </div>
                 <div className="min-w-0">
                   <h4 className={`text-sm font-bold ${isActive ? 'text-violet-900' : 'text-slate-800'}`}>
-                    {sec.label}
+                    {t(sec.label)}
                   </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{sec.desc}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{t(sec.desc)}</p>
                 </div>
               </button>
             );
@@ -246,7 +248,7 @@ export default function CharitySchoolCMSPage() {
               {/* Title & Subtitle */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Section Title *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Section Title *')}</label>
                   <input
                     type="text"
                     required
@@ -257,7 +259,7 @@ export default function CharitySchoolCMSPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Subtitle / Tagline</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Subtitle / Tagline')}</label>
                   <input
                     type="text"
                     value={subtitle}
@@ -267,7 +269,7 @@ export default function CharitySchoolCMSPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Main Narrative Content</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('Main Narrative Content')}</label>
                   <textarea
                     rows={5}
                     value={content}
@@ -289,8 +291,8 @@ export default function CharitySchoolCMSPage() {
                 />
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs font-bold text-slate-800">Attached Images & Media</label>
-                    <p className="text-[11px] text-slate-400">Photos displayed alongside this school section</p>
+                    <label className="text-xs font-bold text-slate-800">{t('Attached Images & Media')}</label>
+                    <p className="text-[11px] text-slate-400">{t('Photos displayed alongside this school section')}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -304,7 +306,7 @@ export default function CharitySchoolCMSPage() {
                       ) : (
                         <Upload size={14} />
                       )}
-                      <span>{uploadingSchoolMedia ? 'Uploading...' : 'Upload from Device'}</span>
+                      <span>{uploadingSchoolMedia ? t('Uploading...') : t('Upload from Device')}</span>
                     </Button>
                     <Button
                       type="button"
@@ -312,14 +314,14 @@ export default function CharitySchoolCMSPage() {
                       onClick={() => setMediaPickerOpen(true)}
                       className="text-xs h-8 px-3 border-slate-300"
                     >
-                      Browse Library
+                      {t('Browse Library')}
                     </Button>
                   </div>
                 </div>
 
                 {mediaUrls.length === 0 ? (
                   <div className="p-6 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 text-center text-xs text-slate-400">
-                    No images attached. Click 'Add Image' to select photos from the library.
+                    {t("No images attached. Click 'Add Image' to select photos from the library.")}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -344,11 +346,11 @@ export default function CharitySchoolCMSPage() {
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-xs font-bold text-slate-800">Curriculum & Programs List</label>
-                      <p className="text-[11px] text-slate-400">Structured grade and educational programs</p>
+                      <label className="text-xs font-bold text-slate-800">{t('Curriculum & Programs List')}</label>
+                      <p className="text-[11px] text-slate-400">{t('Structured grade and educational programs')}</p>
                     </div>
                     <Button type="button" variant="outline" onClick={handleAddProgram} className="text-xs h-8 px-2.5">
-                      <Plus size={14} className="mr-1" /> Add Program
+                      <Plus size={14} className="mr-1" /> {t('Add Program')}
                     </Button>
                   </div>
 
@@ -358,14 +360,14 @@ export default function CharitySchoolCMSPage() {
                         <div className="flex-1 space-y-2">
                           <input
                             type="text"
-                            placeholder="Program Name"
+                            placeholder={t('Program Name')}
                             value={prog.name}
                             onChange={(e) => handleUpdateProgram(idx, 'name', e.target.value)}
                             className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg font-bold"
                           />
                           <input
                             type="text"
-                            placeholder="Brief Description"
+                            placeholder={t('Brief Description')}
                             value={prog.description}
                             onChange={(e) => handleUpdateProgram(idx, 'description', e.target.value)}
                             className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg text-slate-600"
@@ -388,11 +390,11 @@ export default function CharitySchoolCMSPage() {
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-xs font-bold text-slate-800">Student Clubs & Activities</label>
-                      <p className="text-[11px] text-slate-400">Co-curricular groups and schedules</p>
+                      <label className="text-xs font-bold text-slate-800">{t('Student Clubs & Activities')}</label>
+                      <p className="text-[11px] text-slate-400">{t('Co-curricular groups and schedules')}</p>
                     </div>
                     <Button type="button" variant="outline" onClick={handleAddActivity} className="text-xs h-8 px-2.5">
-                      <Plus size={14} className="mr-1" /> Add Club
+                      <Plus size={14} className="mr-1" /> {t('Add Club')}
                     </Button>
                   </div>
 
@@ -402,14 +404,14 @@ export default function CharitySchoolCMSPage() {
                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <input
                             type="text"
-                            placeholder="Activity / Club Name"
+                            placeholder={t('Activity / Club Name')}
                             value={act.name}
                             onChange={(e) => handleUpdateActivity(idx, 'name', e.target.value)}
                             className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg font-bold"
                           />
                           <input
                             type="text"
-                            placeholder="Schedule (e.g. Tuesdays & Fridays)"
+                            placeholder={t('Schedule (e.g. Tuesdays & Fridays)')}
                             value={act.schedule}
                             onChange={(e) => handleUpdateActivity(idx, 'schedule', e.target.value)}
                             className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg text-slate-600"
@@ -432,11 +434,11 @@ export default function CharitySchoolCMSPage() {
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-xs font-bold text-slate-800">Campus Facilities</label>
-                      <p className="text-[11px] text-slate-400">Key spaces, labs, and amenities</p>
+                      <label className="text-xs font-bold text-slate-800">{t('Campus Facilities')}</label>
+                      <p className="text-[11px] text-slate-400">{t('Key spaces, labs, and amenities')}</p>
                     </div>
                     <Button type="button" variant="outline" onClick={handleAddFacility} className="text-xs h-8 px-2.5">
-                      <Plus size={14} className="mr-1" /> Add Facility
+                      <Plus size={14} className="mr-1" /> {t('Add Facility')}
                     </Button>
                   </div>
 
@@ -446,14 +448,14 @@ export default function CharitySchoolCMSPage() {
                         <div className="flex-1 space-y-2">
                           <input
                             type="text"
-                            placeholder="Facility Name (e.g. ICT Lab)"
+                            placeholder={t('Facility Name (e.g. ICT Lab)')}
                             value={fac.name}
                             onChange={(e) => handleUpdateFacility(idx, 'name', e.target.value)}
                             className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg font-bold"
                           />
                           <input
                             type="text"
-                            placeholder="Features and description..."
+                            placeholder={t('Features and description...')}
                             value={fac.description}
                             onChange={(e) => handleUpdateFacility(idx, 'description', e.target.value)}
                             className="w-full px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg text-slate-600"
@@ -475,7 +477,7 @@ export default function CharitySchoolCMSPage() {
               {activeTab === 'intro' && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Student Capacity</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Student Capacity')}</label>
                     <input
                       type="number"
                       value={metadata.studentCapacity || ''}
@@ -484,7 +486,7 @@ export default function CharitySchoolCMSPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Teacher Count</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Teacher Count')}</label>
                     <input
                       type="number"
                       value={metadata.teacherCount || ''}
@@ -493,7 +495,7 @@ export default function CharitySchoolCMSPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Est. Year</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Est. Year')}</label>
                     <input
                       type="number"
                       value={metadata.establishedYear || ''}
@@ -502,7 +504,7 @@ export default function CharitySchoolCMSPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Grades Covered</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">{t('Grades Covered')}</label>
                     <input
                       type="text"
                       value={metadata.gradesCovered || ''}
@@ -521,7 +523,7 @@ export default function CharitySchoolCMSPage() {
                   className="bg-violet-600 hover:bg-violet-700 text-white gap-2 font-semibold text-xs h-9 px-4"
                 >
                   {updateMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  Save Section Content
+                  {t('Save Section Content')}
                 </Button>
               </div>
             </form>
@@ -535,7 +537,7 @@ export default function CharitySchoolCMSPage() {
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(url) => handleAddMedia(url)}
         fileTypeFilter="image"
-        title="Add Image to School Section"
+        title={t('Add Image to School Section')}
       />
     </div>
   );

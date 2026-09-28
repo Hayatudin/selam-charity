@@ -11,6 +11,7 @@ import { api } from '@/lib/api';
 import { ROLE_CONFIG, type Role } from '@/lib/role-config';
 import { getTemplateOptionsForAgency, getUserMajorAgency } from '@/lib/cv-templates';
 import { useSession } from '@/lib/auth-client';
+import { useLanguage } from '@/context/LanguageContext';
   
 interface UserRow {
   id: string;
@@ -44,6 +45,7 @@ const roleBadge = (role: Role) => {
 
 // ── Create User Modal ─────────────────────────────────────────────────────────
 function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void; onCreated: () => void; agencies: { id: string; name: string }[] }) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,7 +86,7 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">Create New User</h2>
+          <h2 className="text-lg font-bold text-gray-900">{t('Create New User')}</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={18} /></button>
         </div>
 
@@ -96,19 +98,19 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Full Name')}</label>
             <input value={name} onChange={e => setName(e.target.value)} required placeholder="John Doe"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Email Address')}</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="user@example.com"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Password')}</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 6 characters"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
@@ -123,7 +125,7 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Role</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Role')}</label>
             <select value={role} onChange={e => setRole(e.target.value as Role)}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white cursor-pointer">
               {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
@@ -143,11 +145,11 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
               className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" disabled={loading}
               className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? <><Loader2 size={15} className="animate-spin" />Creating…</> : <><Check size={15} />Create User</>}
+              {loading ? <><Loader2 size={15} className="animate-spin" />{t('Creating…', 'Creating…')}</> : <><Check size={15} />{t('Create User')}</>}
             </button>
           </div>
         </form>
@@ -214,6 +216,7 @@ function AgencySelectModal({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function UsersPage() {
+  const { t } = useLanguage();
   const { data: session } = useSession();
   const userAgency = getUserMajorAgency(session?.user);
   const AGENCIES = getTemplateOptionsForAgency(userAgency);
@@ -319,46 +322,46 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-50"><ShieldCheck size={22} className="text-amber-600" /></div>
-            User Management
+            {t('User Management')}
           </h1>
-          <p className="text-gray-500 mt-1 ml-12">Manage all registered users and their roles</p>
+          <p className="text-gray-500 mt-1 ml-12 rtl:ml-0 rtl:mr-12">{t('Manage all registered users and their roles', 'Manage all registered users and their roles')}</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={fetchUsers} className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors text-gray-500" title="Refresh">
+          <button onClick={fetchUsers} className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors text-gray-500" title={t('Refresh', 'Refresh')}>
             <RefreshCw size={16} />
           </button>
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors shadow-md shadow-primary/20"
           >
-            <UserPlus size={16} /> Create User
+            <UserPlus size={16} /> {t('Create User')}
           </button>
         </div>
       </div>
 
       {/* Search */}
       <div className="relative w-full max-w-sm">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
+        <Search size={15} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
         <input
           value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name or email…"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          placeholder={t('Search by name or email…', 'Search by name or email…')}
+          className="w-full pl-9 rtl:pl-4 rtl:pr-9 pr-4 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </div>
 
       {/* Table */}
       <div className="bg-surface rounded-[2rem] border border-border/30 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left rtl:text-right border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-border/30 text-[10px] uppercase tracking-wider font-bold text-text-tertiary/90">
-                <th className="px-6 py-4 font-semibold">User</th>
-                <th className="px-6 py-4 font-semibold">Email</th>
-                <th className="px-6 py-4 font-semibold">Role</th>
-                <th className="px-6 py-4 font-semibold">Agency Scope</th>
-                <th className="px-6 py-4 font-semibold hidden lg:table-cell">Verified</th>
-                <th className="px-6 py-4 font-semibold hidden xl:table-cell">Joined</th>
-                <th className="px-6 py-4 text-right pr-6 font-semibold">Actions</th>
+                <th className="px-6 py-4 font-semibold">{t('User')}</th>
+                <th className="px-6 py-4 font-semibold">{t('Email')}</th>
+                <th className="px-6 py-4 font-semibold">{t('Role')}</th>
+                <th className="px-6 py-4 font-semibold">{t('Agency Scope', 'Agency Scope')}</th>
+                <th className="px-6 py-4 font-semibold hidden lg:table-cell">{t('Verified', 'Verified')}</th>
+                <th className="px-6 py-4 font-semibold hidden xl:table-cell">{t('Joined', 'Joined')}</th>
+                <th className="px-6 py-4 text-right rtl:text-left pr-6 rtl:pr-0 rtl:pl-6 font-semibold">{t('Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
@@ -367,14 +370,14 @@ export default function UsersPage() {
                   <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 size={32} className="text-primary animate-spin" />
-                      <p className="text-sm font-medium text-text-tertiary">Loading users...</p>
+                      <p className="text-sm font-medium text-text-tertiary">{t('Loading users...', 'Loading users...')}</p>
                     </div>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-text-tertiary text-sm">
-                    No users found.
+                    {t('No users found.', 'No users found.')}
                   </td>
                 </tr>
               ) : filtered.map(user => (
@@ -415,12 +418,12 @@ export default function UsersPage() {
                     {user.emailVerified ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Verified
+                        {t('Verified', 'Verified')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        Unverified
+                        {t('Unverified', 'Unverified')}
                       </span>
                     )}
                   </td>
@@ -430,7 +433,7 @@ export default function UsersPage() {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-4 whitespace-nowrap text-right pr-6">
+                  <td className="px-6 py-4 whitespace-nowrap text-right rtl:text-left pr-6 rtl:pr-0 rtl:pl-6">
                     <div className="relative inline-block" data-menu>
                       <button
                         ref={(el) => { menuBtnRefs.current[user.id] = el; }}
@@ -458,7 +461,7 @@ export default function UsersPage() {
                           style={{ position: 'fixed', top: menuCoords.top, left: menuCoords.left, zIndex: 9999 }}
                           data-menu
                         >
-                          <p className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-text-tertiary">Change Role</p>
+                          <p className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-text-tertiary">{t('Change Role', 'Change Role')}</p>
                           {ROLE_OPTIONS.map(opt => (
                             <button
                               key={opt.value}
@@ -471,9 +474,9 @@ export default function UsersPage() {
                                 }
                               }}
                               className={cn(
-                                'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left font-semibold',
+                                'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left rtl:text-right font-semibold',
                                 user.role === opt.value
-                                  ? 'bg-primary-50 text-primary font-bold'
+                                    ? 'bg-primary-50 text-primary font-bold'
                                   : 'text-text-secondary hover:bg-gray-50'
                               )}
                             >
@@ -500,16 +503,16 @@ export default function UsersPage() {
                               }
                               setOpenMenuId(null);
                             }}
-                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-text-secondary hover:bg-gray-50 transition-colors text-left font-semibold"
+                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-text-secondary hover:bg-gray-50 transition-colors text-left rtl:text-right font-semibold"
                           >
                             <span>Switch to {user.majorAgency === 'Fenero' ? 'Sky' : 'Fenero'}</span>
                           </button>
                           <div className="border-t border-border my-1" />
                           <button
                             onClick={() => deleteUser(user.id)}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-semibold"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left rtl:text-right font-semibold"
                           >
-                            <Trash2 size={15} /> Delete User
+                            <Trash2 size={15} /> {t('Delete User')}
                           </button>
                         </div>,
                         document.body
@@ -524,7 +527,7 @@ export default function UsersPage() {
 
         {/* Footer count */}
         <div className="px-6 py-4 border-t border-border/10 bg-gray-50/30 text-xs text-text-tertiary font-bold uppercase tracking-wider">
-          Showing {filtered.length} user{filtered.length !== 1 ? 's' : ''} total
+          {t('Showing', 'Showing')} {filtered.length} {t('users', 'users')}
         </div>
       </div>
 
@@ -549,7 +552,7 @@ export default function UsersPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[60]">
+        <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-[60]">
           <div className={cn(
             'flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl text-white text-sm font-medium',
             toast.type === 'success' ? 'bg-gray-900' : 'bg-red-600'

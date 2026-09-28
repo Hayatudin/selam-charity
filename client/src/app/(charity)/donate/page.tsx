@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useSubmitDonationReceipt } from '@/hooks/charity';
+import { useLanguage } from '@/context/LanguageContext';
 
 // ── 4 OFFICIAL BANK ACCOUNTS (From Reference Image 2) ───────────
 interface BankAccount {
@@ -99,6 +100,7 @@ const BOTTOM_CARD_SVG_PATH =
   "M 0,52 Q 0,28 24,28 H 205 C 220,28 230,0 246,0 H 344 C 360,0 370,28 385,28 H 516 Q 540,28 540,52 V 356 Q 540,380 516,380 H 24 Q 0,380 0,356 V 52 Z";
 
 export default function DonatePage() {
+  const { t } = useLanguage();
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [selectedBankForModal, setSelectedBankForModal] = useState<string>('Commercial Bank of Ethiopia');
@@ -143,7 +145,7 @@ export default function DonatePage() {
   const handleSubmitReceipt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!donorName.trim() || !donorPhone.trim() || !amount) {
-      alert('Please fill in your name, phone number, and donation amount.');
+      alert(t('Please fill in your name, phone number, and donation amount.') || 'Please fill in your name, phone number, and donation amount.');
       return;
     }
 
@@ -198,21 +200,21 @@ export default function DonatePage() {
           {/* Subtle Top Pill Badge (Image 1 Style) */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold uppercase tracking-widest mb-6 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-[#185A3A] animate-pulse" />
-            <span>Selam Charity &amp; Educational Organization</span>
+            <span>{t('Selam Charity & Educational Organization')}</span>
           </div>
 
           {/* Centered Heading with Decorative Horizontal Accent Lines (Image 1 Signature Style) */}
           <div className="flex items-center justify-center gap-4 sm:gap-6 mb-5">
             <div className="hidden sm:block h-[1.5px] w-12 sm:w-24 bg-gradient-to-r from-transparent to-slate-400" />
             <h1 className="text-3xl sm:text-5xl md:text-5xl font-black text-slate-950 tracking-tight leading-tight">
-              Support Our Mission
+              {t('Support Our Mission')}
             </h1>
             <div className="hidden sm:block h-[1.5px] w-12 sm:w-24 bg-gradient-to-l from-transparent to-slate-400" />
           </div>
 
           {/* Paragraph Content (Exact from Reference Image 2) */}
           <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-normal">
-            We are dedicated to making a positive impact on society, and your support plays a crucial role in helping us achieve our mission. If you share our vision and want to be part of building a better society, we invite you to contribute. Please use the following bank accounts to support our cause.
+            {t('We are dedicated to making a positive impact on society, and your support plays a crucial role in helping us achieve our mission. If you share our vision and want to be part of building a better society, we invite you to contribute. Please use the following bank accounts to support our cause.')}
           </p>
 
           {/* Prominent Action Button: Send Donation Receipt (Image 2) */}
@@ -223,10 +225,10 @@ export default function DonatePage() {
               className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-[#185A3A] hover:bg-[#12422a] text-white text-sm font-bold shadow-lg shadow-[#185A3A]/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              <span>Send Donation Receipt</span>
+              <span>{t('Send Donation Receipt')}</span>
             </button>
             <p className="text-xs text-rose-600 font-medium">
-              * Submit your receipt request after completing your donation.
+              {t('* Submit your receipt request after completing your donation.')}
             </p>
           </div>
 
@@ -314,7 +316,7 @@ export default function DonatePage() {
                         {isFeatured && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#185A3A] border border-emerald-200">
                             <Sparkles className="w-3 h-3" />
-                            <span>Primary Account</span>
+                            <span>{t('Primary Account')}</span>
                           </span>
                         )}
                         {/* Bank Badge Code */}
@@ -326,7 +328,7 @@ export default function DonatePage() {
 
                     {/* Bank Name (Big Bold Headline) */}
                     <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                      {bank.bankName}
+                      {t(bank.bankName)}
                     </h3>
                     <p className="text-xs font-semibold text-slate-500 mt-1">
                       {bank.localName}
@@ -335,7 +337,7 @@ export default function DonatePage() {
                     {/* Account Name */}
                     <div className="mt-3.5 pb-3 border-b border-slate-100">
                       <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-mono font-medium">
-                        Account Name
+                        {t('Account Name')}
                       </span>
                       <p className="text-xs sm:text-sm font-bold text-slate-800 tracking-wide mt-0.5">
                         {bank.accountName}
@@ -346,7 +348,7 @@ export default function DonatePage() {
                   {/* Account Numbers (With 1-Click Interactive Copy) */}
                   <div className="mt-4 space-y-2.5">
                     <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-mono font-medium">
-                      Account Numbers (Click to Copy)
+                      {t('Account Numbers (Click to Copy)')}
                     </span>
 
                     {bank.accounts.map((acc) => {
@@ -381,17 +383,17 @@ export default function DonatePage() {
                                 ? 'bg-[#185A3A] text-white shadow-xs'
                                 : 'text-slate-500 group-hover/item:text-slate-900 group-hover/item:bg-white border border-transparent group-hover/item:border-slate-200'
                             }`}
-                            title="Copy Account Number"
+                            title={t('Copy Account Number')}
                           >
                             {isCopied ? (
                               <>
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                <span className="text-[11px] font-sans">Copied!</span>
+                                <span className="text-[11px] font-sans">{t('Copied!')}</span>
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline text-[11px] font-sans">Copy</span>
+                                <span className="hidden sm:inline text-[11px] font-sans">{t('Copy')}</span>
                               </>
                             )}
                           </button>
@@ -407,7 +409,7 @@ export default function DonatePage() {
                       onClick={() => handleOpenReceiptModal(bank.bankName)}
                       className="inline-flex items-center gap-1.5 text-[#185A3A] hover:text-[#12422a] hover:underline transition-colors font-bold cursor-pointer"
                     >
-                      <span>Submit transfer proof for this bank</span>
+                      <span>{t('Submit transfer proof for this bank')}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -427,9 +429,9 @@ export default function DonatePage() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 text-base">Direct &amp; Verified Humanitarian Impact</h4>
+              <h4 className="font-bold text-slate-900 text-base">{t('Direct & Verified Humanitarian Impact')}</h4>
               <p className="text-slate-600 text-xs sm:text-sm mt-0.5">
-                Every birr directly funds student scholarships, nutritious school meals, and community aid programs.
+                {t('Every birr directly funds student scholarships, nutritious school meals, and community aid programs.')}
               </p>
             </div>
           </div>
@@ -438,7 +440,7 @@ export default function DonatePage() {
             onClick={() => handleOpenReceiptModal()}
             className="px-6 py-2.5 rounded-full border border-slate-300 text-slate-800 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap cursor-pointer shadow-xs"
           >
-            Submit Donation Slip
+            {t('Submit Donation Slip')}
           </button>
         </div>
 
@@ -466,22 +468,22 @@ export default function DonatePage() {
                 <div className="w-16 h-16 rounded-full bg-emerald-100 text-[#185A3A] flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">Receipt Submitted!</h3>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">{t('Receipt Submitted!')}</h3>
                 <p className="text-slate-600 text-sm max-w-sm mx-auto mb-6">
-                  Thank you, <span className="font-semibold text-slate-900">{submissionSuccess.donorName}</span>! Your donation of <span className="font-bold text-[#185A3A]">{submissionSuccess.currency} {submissionSuccess.amount}</span> has been received and queued for admin verification.
+                  {t('Thank you')}, <span className="font-semibold text-slate-900">{submissionSuccess.donorName}</span>! {t('Your donation of')} <span className="font-bold text-[#185A3A]">{submissionSuccess.currency} {submissionSuccess.amount}</span> {t('has been received and queued for admin verification.')}
                 </p>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5 mb-6">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Bank:</span>
-                    <span className="font-semibold text-slate-800">{submissionSuccess.bankName}</span>
+                    <span className="text-slate-500">{t('Bank:')}</span>
+                    <span className="font-semibold text-slate-800">{t(submissionSuccess.bankName)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Phone:</span>
+                    <span className="text-slate-500">{t('Phone:')}</span>
                     <span className="font-mono font-medium text-slate-800">{submissionSuccess.donorPhone}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Status:</span>
-                    <span className="text-amber-600 font-bold uppercase">{submissionSuccess.status}</span>
+                    <span className="text-slate-500">{t('Status:')}</span>
+                    <span className="text-amber-600 font-bold uppercase">{t(submissionSuccess.status)}</span>
                   </div>
                 </div>
                 <button
@@ -489,7 +491,7 @@ export default function DonatePage() {
                   onClick={() => setIsReceiptModalOpen(false)}
                   className="w-full py-3 rounded-xl bg-[#185A3A] hover:bg-[#12422a] text-white font-bold text-sm transition-colors cursor-pointer"
                 >
-                  Done
+                  {t('Done')}
                 </button>
               </div>
             ) : (
@@ -498,11 +500,11 @@ export default function DonatePage() {
                 <div className="mb-6">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-[#185A3A] text-xs font-bold uppercase tracking-wider mb-2">
                     <Send className="w-3 h-3" />
-                    <span>Receipt Verification</span>
+                    <span>{t('Receipt Verification')}</span>
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900">Send Donation Slip</h3>
+                  <h3 className="text-2xl font-black text-slate-900">{t('Send Donation Slip')}</h3>
                   <p className="text-slate-500 text-xs sm:text-sm mt-1">
-                    Upload your bank transfer slip or transaction snapshot so our finance team can verify and record your contribution.
+                    {t('Upload your bank transfer slip or transaction snapshot so our finance team can verify and record your contribution.')}
                   </p>
                 </div>
 
@@ -510,7 +512,7 @@ export default function DonatePage() {
                   <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
                     <div>
-                      <p className="font-bold">Failed to submit receipt:</p>
+                      <p className="font-bold">{t('Failed to submit receipt:')}</p>
                       <p className="font-mono text-[11px] mt-0.5 break-all">{submitError}</p>
                     </div>
                   </div>
@@ -520,7 +522,7 @@ export default function DonatePage() {
                   {/* Donor Full Name */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Your Full Name *
+                      {t('Your Full Name *')}
                     </label>
                     <input
                       type="text"
@@ -536,7 +538,7 @@ export default function DonatePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Phone Number *
+                        {t('Phone Number *')}
                       </label>
                       <input
                         type="tel"
@@ -549,7 +551,7 @@ export default function DonatePage() {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Email Address (Optional)
+                        {t('Email Address (Optional)')}
                       </label>
                       <input
                         type="email"
@@ -564,7 +566,7 @@ export default function DonatePage() {
                   {/* Deposited Bank */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Deposited Bank *
+                      {t('Deposited Bank *')}
                     </label>
                     <select
                       value={selectedBankForModal}
@@ -573,10 +575,10 @@ export default function DonatePage() {
                     >
                       {BANK_DATA.map((b) => (
                         <option key={b.id} value={b.bankName}>
-                          {b.bankName}
+                          {t(b.bankName)}
                         </option>
                       ))}
-                      <option value="Other Bank">Other Bank / Transfer</option>
+                      <option value="Other Bank">{t('Other Bank / Transfer')}</option>
                     </select>
                   </div>
 
@@ -584,7 +586,7 @@ export default function DonatePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Amount Donated *
+                        {t('Amount Donated *')}
                       </label>
                       <input
                         type="number"
@@ -598,7 +600,7 @@ export default function DonatePage() {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Currency
+                        {t('Currency')}
                       </label>
                       <select
                         value={currency}
@@ -614,7 +616,7 @@ export default function DonatePage() {
                   {/* File Upload (Receipt Slip / Screenshot) */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Upload Bank Slip / Screenshot (Image or PDF)
+                      {t('Upload Bank Slip / Screenshot (Image or PDF)')}
                     </label>
                     <div className="relative border-2 border-dashed border-slate-300 hover:border-[#185A3A] rounded-2xl p-4 text-center transition-colors bg-slate-50 hover:bg-emerald-50/20 cursor-pointer">
                       <input
@@ -628,14 +630,14 @@ export default function DonatePage() {
                           <FileText className="w-6 h-6 text-[#185A3A]" />
                           <div className="text-left">
                             <p className="text-xs font-bold text-slate-900 truncate max-w-xs">{receiptFile.name}</p>
-                            <p className="text-[11px] text-slate-500">{(receiptFile.size / 1024).toFixed(1)} KB • Click to replace</p>
+                            <p className="text-[11px] text-slate-500">{(receiptFile.size / 1024).toFixed(1)} KB • {t('Click to replace')}</p>
                           </div>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center py-2">
                           <Upload className="w-7 h-7 text-slate-400 mb-1.5" />
-                          <p className="text-xs font-semibold text-slate-700">Click or drag receipt file here</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Supports JPG, PNG, WEBP, PDF up to 25MB</p>
+                          <p className="text-xs font-semibold text-slate-700">{t('Click or drag receipt file here')}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{t('Supports JPG, PNG, WEBP, PDF up to 25MB')}</p>
                         </div>
                       )}
                     </div>
@@ -644,7 +646,7 @@ export default function DonatePage() {
                   {/* Notes / Message */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Notes / Dedication (Optional)
+                      {t('Notes / Dedication (Optional)')}
                     </label>
                     <textarea
                       rows={2}
@@ -663,11 +665,11 @@ export default function DonatePage() {
                       className="w-full py-3.5 rounded-xl bg-[#185A3A] hover:bg-[#12422a] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
                       {submitReceiptMutation.isPending ? (
-                        <span>Submitting receipt...</span>
+                        <span>{t('Submitting receipt...')}</span>
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          <span>Submit Receipt for Verification</span>
+                          <span>{t('Submit Receipt for Verification')}</span>
                         </>
                       )}
                     </button>

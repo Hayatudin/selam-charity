@@ -15,10 +15,12 @@ import {
 import { useCharityNewsList } from '@/hooks/charity';
 import type { CharityNewsItem } from '@/types/charity';
 import { getFileUrl } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 const CATEGORIES = ['All', 'Education', 'Events', 'Community', 'Announcements'];
 
 export default function CharityNewsPage() {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -44,15 +46,15 @@ export default function CharityNewsPage() {
         <div className="max-w-4xl mx-auto relative z-10 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Updates &amp; Stories</span>
+            <span>{t('Updates & Stories')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-            News &amp; Organization Updates
+            {t('News & Organization Updates')}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            Stay informed on our educational initiatives, student achievements, and community development projects.
+            {t('Stay informed on our educational initiatives, student achievements, and community development projects.')}
           </p>
         </div>
       </section>
@@ -73,7 +75,7 @@ export default function CharityNewsPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {cat}
+                {t(cat)}
               </button>
             ))}
           </div>
@@ -85,7 +87,7 @@ export default function CharityNewsPage() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search news..."
+              placeholder={t('Search news...')}
               className="w-full pl-10 pr-4 py-2 rounded-full text-xs font-medium bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
             />
           </div>
@@ -109,7 +111,7 @@ export default function CharityNewsPage() {
                   />
                   <div className="absolute top-4 left-4">
                     <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white shadow-md">
-                      Featured Story
+                      {t('Featured Story')}
                     </span>
                   </div>
                 </div>
@@ -119,7 +121,7 @@ export default function CharityNewsPage() {
                     <div className="flex items-center gap-3 text-xs text-slate-400">
                       <span className="flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
                         <Tag className="w-3 h-3" />
-                        {featuredArticle.category || 'General'}
+                        {t(featuredArticle.category || 'General')}
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
@@ -144,7 +146,7 @@ export default function CharityNewsPage() {
                       href={`/news/${featuredArticle.slug || featuredArticle.id}`}
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-bold text-xs hover:bg-emerald-700 transition-colors"
                     >
-                      <span>Read Full Article</span>
+                      <span>{t('Read Full Article')}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
@@ -156,12 +158,12 @@ export default function CharityNewsPage() {
           {/* 2. ARTICLES GRID */}
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              {searchTerm ? `Search Results for "${searchTerm}"` : 'All Stories'}
+              {searchTerm ? `${t('Search Results for')} "${searchTerm}"` : t('All Stories')}
             </h3>
 
             {articles.length === 0 ? (
               <div className="p-16 text-center rounded-3xl bg-white border border-slate-200">
-                <p className="text-slate-500 text-sm">No articles matched your criteria.</p>
+                <p className="text-slate-500 text-sm">{t('No articles matched your criteria.')}</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -178,7 +180,7 @@ export default function CharityNewsPage() {
                       />
                       <div className="absolute top-3 left-3">
                         <span className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-950/80 text-white backdrop-blur-md">
-                          {article.category || 'General'}
+                          {t(article.category || 'General')}
                         </span>
                       </div>
                     </div>
@@ -193,7 +195,7 @@ export default function CharityNewsPage() {
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <Eye className="w-3.5 h-3.5" />
-                            {article.viewCount || 0} views
+                            {article.viewCount || 0} {t('views')}
                           </span>
                         </div>
 
@@ -213,7 +215,7 @@ export default function CharityNewsPage() {
                           href={`/news/${article.slug || article.id}`}
                           className="text-xs font-bold text-emerald-700 group-hover:text-emerald-800 flex items-center gap-1.5"
                         >
-                          <span>Read Full Story</span>
+                          <span>{t('Read Full Story')}</span>
                           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                       </div>

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useSession, signOut } from '@/lib/auth-client';
 import { ROLE_CONFIG, type Role } from '@/lib/role-config';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   LayoutDashboard,
   Settings,
@@ -46,7 +47,7 @@ interface SidebarProps {
   onNavigate?: () => void;
 }
 
-function AgencyMark({ compact }: { compact?: boolean }) {
+function AgencyMark({ compact, t }: { compact?: boolean; t: (k: string) => string }) {
   if (compact) {
     return (
       <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-lg bg-emerald-600 overflow-hidden p-1">
@@ -61,8 +62,8 @@ function AgencyMark({ compact }: { compact?: boolean }) {
         <img src="/Selam-logo.jpg" alt="Selam" className="w-full h-full object-contain rounded" />
       </div>
       <div className="min-w-0">
-        <p className="text-white font-bold text-[15px] leading-tight truncate">SELAM Charity</p>
-        <p className="text-emerald-400 text-[10px] font-semibold uppercase tracking-wider">Management System</p>
+        <p className="text-white font-bold text-[15px] leading-tight truncate">{t('SELAM Charity')}</p>
+        <p className="text-emerald-400 text-[10px] font-semibold uppercase tracking-wider">{t('Management System')}</p>
       </div>
     </div>
   );
@@ -72,6 +73,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const { t, isRTL } = useLanguage();
 
   const role = ((session?.user as any)?.role ?? 'user') as string;
   const isSuperAdmin = role === 'super_admin';
@@ -104,7 +106,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
           onClick={handleNavClick}
           className="flex items-center gap-3 min-w-0 overflow-hidden hover:opacity-95 transition-opacity"
         >
-          <AgencyMark compact={!showLabels} />
+          <AgencyMark compact={!showLabels} t={t} />
         </Link>
 
         {isMobile ? (
@@ -153,7 +155,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
           </div>
           {showLabels && (
             <div className="flex items-center justify-between w-full min-w-0">
-              <span className="text-[12px] font-bold truncate">Current Charity</span>
+              <span className="text-[12px] font-bold truncate">{t('Back to Website', 'زيارة الموقع')}</span>
               <ExternalLink size={12} className="text-emerald-400/70 group-hover:text-emerald-300 shrink-0 ml-1" />
             </div>
           )}
@@ -166,8 +168,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
         <div className="pb-2">
           {showLabels && (
             <div className="px-3 py-1 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Charity Portals</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Active</span>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">{t('Charity Portals', 'أقسام الجمعية')}</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">{t('Active', 'نشط')}</span>
             </div>
           )}
           {charityNavItems.map((item) => {
@@ -184,7 +186,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
                 prefetch={true}
                 onMouseEnter={() => router.prefetch(item.href)}
                 onClick={handleNavClick}
-                title={!showLabels ? item.label : undefined}
+                title={!showLabels ? t(item.label) : undefined}
                 className={cn(
                   'flex items-center rounded-lg transition-all duration-200 group relative',
                   showLabels ? 'gap-3 px-3 py-2.5 mx-1 mb-0.5' : 'justify-center py-2.5 mx-1 mb-0.5',
@@ -195,7 +197,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
               >
                 <Icon size={18} className={cn("shrink-0", isActive ? "text-white" : "text-emerald-400 group-hover:text-emerald-300")} />
                 {showLabels && (
-                  <span className="text-[13px] font-medium whitespace-nowrap truncate">{item.label}</span>
+                  <span className="text-[13px] font-medium whitespace-nowrap truncate">{t(item.label)}</span>
                 )}
               </Link>
             );
@@ -207,7 +209,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
           <div className="pt-3 border-t border-slate-700/60">
             {showLabels ? (
               <div className="px-3 pb-1.5 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Administration</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('Administration', 'الإدارة العامة')}</span>
               </div>
             ) : (
               <div className="my-2 border-t border-slate-700/60" />
@@ -223,7 +225,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
                   prefetch={true}
                   onMouseEnter={() => router.prefetch(item.href)}
                   onClick={handleNavClick}
-                  title={!showLabels ? item.label : undefined}
+                  title={!showLabels ? t(item.label) : undefined}
                   className={cn(
                     'flex items-center rounded-lg transition-all duration-200 group relative',
                     showLabels ? 'gap-3 px-3 py-2 mx-1' : 'justify-center py-2 mx-1',
@@ -234,7 +236,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
                 >
                   <Icon size={16} className="shrink-0 text-slate-400 group-hover:text-slate-200" />
                   {showLabels && (
-                    <span className="text-[12px] font-medium whitespace-nowrap truncate">{item.label}</span>
+                    <span className="text-[12px] font-medium whitespace-nowrap truncate">{t(item.label)}</span>
                   )}
                 </Link>
               );
@@ -250,7 +252,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
             <p className="text-white text-sm font-semibold truncate">{session.user.name}</p>
             <p className="text-slate-400 text-[10px] truncate mt-0.5">{session.user.email}</p>
             <span className="inline-block mt-2 text-[9px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold uppercase tracking-wide">
-              {roleLabel}
+              {t(roleLabel, roleLabel)}
             </span>
           </div>
         )}
@@ -261,14 +263,14 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
             'flex items-center rounded-lg text-slate-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 w-full cursor-pointer',
             showLabels ? 'gap-3 px-3 py-2.5 mx-1' : 'justify-center py-2.5 mx-1'
           )}
-          title={!showLabels ? 'Logout' : undefined}
+          title={!showLabels ? t('Log Out', 'تسجيل الخروج') : undefined}
         >
           {isPending ? (
             <Loader2 size={18} className="shrink-0 animate-spin" />
           ) : (
             <LogOut size={18} className="shrink-0" />
           )}
-          {showLabels && <span className="text-[13px] font-medium">Logout</span>}
+          {showLabels && <span className="text-[13px] font-medium">{t('Log Out', 'تسجيل الخروج')}</span>}
         </button>
       </div>
     </aside>

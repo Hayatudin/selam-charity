@@ -7,8 +7,10 @@ import { cn } from '@/lib/utils';
 import { useSession, getSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { t, isRTL } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { data: session, isPending } = useSession();
@@ -112,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-sm font-semibold text-text-secondary">Verifying session...</p>
+          <p className="text-sm font-semibold text-text-secondary">{t('Verifying session...', 'جاري التحقق من الجلسة...')}</p>
         </div>
       </div>
     );
@@ -143,7 +145,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           {/* Sidebar drawer */}
           <div
-            className="absolute left-0 top-0 h-full w-72 animate-slide-in-left"
+            className={cn(
+              "absolute top-0 h-full w-72 transition-transform",
+              isRTL ? "right-0" : "left-0"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <Sidebar

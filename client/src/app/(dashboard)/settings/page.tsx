@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { CV_TEMPLATES } from '@/lib/cv-templates';
 import { useSession, authClient } from '@/lib/auth-client';
+import { useLanguage } from '@/context/LanguageContext';
 import { useEffect } from 'react';
 
 // Helper component for Toggle Switch
@@ -46,6 +47,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 }
 
 export default function SettingsPage() {
+  const { t, language, setLanguage } = useLanguage();
   const { data: session, isPending } = useSession();
   const [activeTab, setActiveTab] = useState<'profile' | 'agency' | 'notifications' | 'preferences' | 'analytics'>('profile');
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -101,7 +103,15 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({ name: '', email: '', role: '' });
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [notifications, setNotifications] = useState({ cvDeadlines: true, newRegistrations: true, systemUpdates: false });
-  const [preferences, setPreferences] = useState({ language: 'en', timezone: 'Asia/Riyadh', dateFormat: 'YYYY-MM-DD' });
+  const [preferences, setPreferences] = useState<{ language: string; timezone: string; dateFormat: string }>({
+    language: language || 'En',
+    timezone: 'Asia/Riyadh',
+    dateFormat: 'YYYY-MM-DD',
+  });
+
+  useEffect(() => {
+    setPreferences(prev => ({ ...prev, language }));
+  }, [language]);
 
   const templates = CV_TEMPLATES.map((t) => ({ id: t.id, name: `${t.name} Template` }));
   const [agencyPrices, setAgencyPrices] = useState<Record<string, string>>({});
@@ -207,20 +217,20 @@ export default function SettingsPage() {
   };
 
   let tabs = [
-    { id: 'profile', label: 'Profile Settings', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'preferences', label: 'Preferences', icon: Globe },
+    { id: 'profile', label: t('Profile Settings'), icon: User },
+    { id: 'notifications', label: t('Notifications'), icon: Bell },
+    { id: 'preferences', label: t('Preferences'), icon: Globe },
   ];
   
   if (profile.role === 'super_admin') {
-    tabs.splice(1, 0, { id: 'agency', label: 'Agency Price', icon: DollarSign });
-    tabs.push({ id: 'analytics', label: 'User Analytics', icon: BarChart3 });
+    tabs.splice(1, 0, { id: 'agency', label: t('Agency Price'), icon: DollarSign });
+    tabs.push({ id: 'analytics', label: t('User Analytics'), icon: BarChart3 });
   }
 
   const getSaveHandler = () => {
     if (activeTab === 'profile') return handleSaveProfile;
     if (activeTab === 'agency') return handleSavePrices;
-    return () => showToast('Settings saved');
+    return () => showToast(t('Settings saved', 'Settings saved'));
   };
 
   return (
@@ -232,9 +242,9 @@ export default function SettingsPage() {
             <div className="p-2 rounded-xl bg-primary-50">
               <SettingsIcon size={22} className="text-primary" />
             </div>
-            System Settings
+            {t('System Settings')}
           </h1>
-          <p className="text-text-secondary mt-1 ml-12">Manage your account and agency preferences</p>
+          <p className="text-text-secondary mt-1 ml-12 rtl:ml-0 rtl:mr-12">{t('Manage your account and agency preferences')}</p>
         </div>
         {activeTab !== 'analytics' && (
           <Button 
@@ -242,7 +252,7 @@ export default function SettingsPage() {
             disabled={isSaving || isPending}
             icon={isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t('Saving...') : t('Save Changes')}
           </Button>
         )}
       </div>
@@ -278,23 +288,23 @@ export default function SettingsPage() {
           {activeTab === 'profile' && (
             <div className="space-y-8 animate-fade-in">
               <div>
-                <h2 className="text-lg font-bold text-text-primary mb-1">Profile Details</h2>
-                <p className="text-sm text-text-secondary mb-6">Update your personal account information.</p>
+                <h2 className="text-lg font-bold text-text-primary mb-1">{t('Profile Details')}</h2>
+                <p className="text-sm text-text-secondary mb-6">{t('Update your personal account information.')}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input label="Full Name" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} />
-                  <Input label="Email Address" type="email" value={profile.email} onChange={(e) => setProfile({...profile, email: e.target.value})} />
-                  <Input label="Role / Job Title" value={profile.role} disabled />
+                  <Input label={t('Full Name')} value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} />
+                  <Input label={t('Email Address')} type="email" value={profile.email} onChange={(e) => setProfile({...profile, email: e.target.value})} />
+                  <Input label={t('Role / Job Title', 'Role / Job Title')} value={profile.role} disabled />
                 </div>
               </div>
 
               <div className="pt-8 border-t border-border">
                 <h2 className="text-lg font-bold text-text-primary mb-1 flex items-center gap-2">
-                  <Lock size={18} className="text-primary" /> Security
+                  <Lock size={18} className="text-primary" /> {t('Security')}
                 </h2>
-                <p className="text-sm text-text-secondary mb-6">Update your password to keep your account secure.</p>
+                <p className="text-sm text-text-secondary mb-6">{t('Update your password to keep your account secure.')}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                   <Input 
-                    label="Current Password" 
+                    label={t('Current Password')} 
                     type="password" 
                     placeholder="••••••••" 
                     value={passwordForm.current}
@@ -302,14 +312,14 @@ export default function SettingsPage() {
                   />
                   <div className="hidden md:block"></div> {/* Spacer */}
                   <Input 
-                    label="New Password" 
+                    label={t('New Password')} 
                     type="password" 
                     placeholder="••••••••" 
                     value={passwordForm.new}
                     onChange={(e) => setPasswordForm({...passwordForm, new: e.target.value})}
                   />
                   <Input 
-                    label="Confirm New Password" 
+                    label={t('Confirm New Password')} 
                     type="password" 
                     placeholder="••••••••" 
                     value={passwordForm.confirm}
@@ -318,10 +328,10 @@ export default function SettingsPage() {
                 </div>
                 <Button 
                   variant="outline" 
-                  onClick={handleUpdatePassword}
+                  onClick={handleUpdatePassword} 
                   disabled={isSaving}
                 >
-                  {isSaving ? 'Updating...' : 'Update Password'}
+                  {isSaving ? t('Updating...', 'Updating...') : t('Update Password')}
                 </Button>
               </div>
             </div>
@@ -332,21 +342,21 @@ export default function SettingsPage() {
             <div className="space-y-8 animate-fade-in">
               <div>
                 <h2 className="text-lg font-bold text-text-primary mb-1 flex items-center gap-2">
-                  <DollarSign size={18} className="text-primary" /> Default Invoice Pricing
+                  <DollarSign size={18} className="text-primary" /> {t('Default Invoice Pricing', 'Default Invoice Pricing')}
                 </h2>
-                <p className="text-sm text-text-secondary mb-6">Set the default invoice price (in USD) for each CV template. This price will be automatically applied when generating an invoice for a candidate using that specific template.</p>
+                <p className="text-sm text-text-secondary mb-6">{t('Set the default invoice price (in USD) for each CV template. This price will be automatically applied when generating an invoice for a candidate using that specific template.', 'Set the default invoice price (in USD) for each CV template.')}</p>
                 
                 <div className="bg-gray-50/50 rounded-xl border border-border p-4">
                   <div className="grid grid-cols-1 gap-4">
-                    {templates.map(t => (
-                      <div key={t.id} className="flex items-center justify-between p-3 bg-white border border-border/60 rounded-lg hover:border-primary/30 transition-colors">
-                        <span className="font-semibold text-text-primary text-sm">{t.name}</span>
+                    {templates.map(tItem => (
+                      <div key={tItem.id} className="flex items-center justify-between p-3 bg-white border border-border/60 rounded-lg hover:border-primary/30 transition-colors">
+                        <span className="font-semibold text-text-primary text-sm">{tItem.name}</span>
                         <div className="w-32">
                           <Input 
                             type="number"
                             placeholder="e.g. 1500" 
-                            value={agencyPrices[t.id] || ''} 
-                            onChange={(e) => setAgencyPrices({...agencyPrices, [t.id]: e.target.value})}
+                            value={agencyPrices[tItem.id] || ''} 
+                            onChange={(e) => setAgencyPrices({...agencyPrices, [tItem.id]: e.target.value})}
                           />
                         </div>
                       </div>
@@ -361,30 +371,30 @@ export default function SettingsPage() {
           {activeTab === 'notifications' && (
             <div className="space-y-8 animate-fade-in">
               <div>
-                <h2 className="text-lg font-bold text-text-primary mb-1">Alert Preferences</h2>
-                <p className="text-sm text-text-secondary mb-6">Choose what events you want to be notified about.</p>
+                <h2 className="text-lg font-bold text-text-primary mb-1">{t('Alert Preferences', 'Alert Preferences')}</h2>
+                <p className="text-sm text-text-secondary mb-6">{t('Choose what events you want to be notified about.', 'Choose what events you want to be notified about.')}</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border border-border rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors">
                     <div>
-                      <p className="font-semibold text-text-primary">CV Deadline Reminders</p>
-                      <p className="text-sm text-text-secondary">Get notified when a candidate's CV application deadline is approaching.</p>
+                      <p className="font-semibold text-text-primary">{t('CV Deadline Reminders', 'CV Deadline Reminders')}</p>
+                      <p className="text-sm text-text-tertiary">{t("Get notified when a candidate's CV application deadline is approaching.", "Get notified when a candidate's CV application deadline is approaching.")}</p>
                     </div>
                     <Toggle checked={notifications.cvDeadlines} onChange={(v) => setNotifications({...notifications, cvDeadlines: v})} />
                   </div>
 
                   <div className="flex items-center justify-between p-4 border border-border rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors">
                     <div>
-                      <p className="font-semibold text-text-primary">New Candidate Registrations</p>
-                      <p className="text-sm text-text-secondary">Receive an alert when a new candidate profile is successfully completed.</p>
+                      <p className="font-semibold text-text-primary">{t('New Candidate Registrations', 'New Candidate Registrations')}</p>
+                      <p className="text-sm text-text-tertiary">{t('Receive an alert when a new candidate profile is successfully completed.', 'Receive an alert when a new candidate profile is successfully completed.')}</p>
                     </div>
                     <Toggle checked={notifications.newRegistrations} onChange={(v) => setNotifications({...notifications, newRegistrations: v})} />
                   </div>
 
                   <div className="flex items-center justify-between p-4 border border-border rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors">
                     <div>
-                      <p className="font-semibold text-text-primary">System Updates & Announcements</p>
-                      <p className="text-sm text-text-secondary">Important news and updates about the SKY Agency platform.</p>
+                      <p className="font-semibold text-text-primary">{t('System Updates & Announcements', 'System Updates & Announcements')}</p>
+                      <p className="text-sm text-text-secondary">{t('Important news and updates about the platform.', 'Important news and updates about the platform.')}</p>
                     </div>
                     <Toggle checked={notifications.systemUpdates} onChange={(v) => setNotifications({...notifications, systemUpdates: v})} />
                   </div>
@@ -397,21 +407,25 @@ export default function SettingsPage() {
           {activeTab === 'preferences' && (
             <div className="space-y-8 animate-fade-in">
               <div>
-                <h2 className="text-lg font-bold text-text-primary mb-1">System Preferences</h2>
-                <p className="text-sm text-text-secondary mb-6">Customize your dashboard experience.</p>
+                <h2 className="text-lg font-bold text-text-primary mb-1">{t('System Preferences')}</h2>
+                <p className="text-sm text-text-secondary mb-6">{t('Customize your dashboard experience.')}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
                   <Select 
-                    label="Language" 
+                    label={t('Language')} 
                     value={preferences.language} 
-                    onChange={(val) => setPreferences({...preferences, language: val})}
+                    onChange={(val) => {
+                      setPreferences({...preferences, language: val});
+                      if (val === 'En' || val === 'Ar') {
+                        setLanguage(val);
+                      }
+                    }}
                     options={[
-                      { value: 'en', label: 'English' },
-                      { value: 'ar', label: 'Arabic' },
-                      { value: 'am', label: 'Amharic' },
+                      { value: 'En', label: 'English' },
+                      { value: 'Ar', label: 'العربية (Arabic)' },
                     ]}
                   />
                   <Select 
-                    label="Timezone" 
+                    label={t('Timezone')} 
                     value={preferences.timezone} 
                     onChange={(val) => setPreferences({...preferences, timezone: val})}
                     options={[
@@ -421,7 +435,7 @@ export default function SettingsPage() {
                     ]}
                   />
                   <Select 
-                    label="Date Format" 
+                    label={t('Date Format')} 
                     value={preferences.dateFormat} 
                     onChange={(val) => setPreferences({...preferences, dateFormat: val})}
                     options={[

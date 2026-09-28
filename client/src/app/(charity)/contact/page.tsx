@@ -17,8 +17,10 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { usePagesContent, useSubmitContactMessage } from '@/hooks/charity';
+import { useLanguage } from '@/context/LanguageContext';
 
 function ContactContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const intent = searchParams?.get('intent');
 
@@ -53,7 +55,7 @@ function ContactContent() {
     setErrorMessage('');
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
-      setErrorMessage('Please fill in your name, email, and message.');
+      setErrorMessage(t('Please fill in your name, email, and message.'));
       return;
     }
 
@@ -98,15 +100,15 @@ function ContactContent() {
         <div className="max-w-4xl mx-auto relative z-10 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>We Are Here For You</span>
+            <span>{t('We Are Here For You')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-            {contact?.title || 'Contact & Support Information'}
+            {t(contact?.title || 'Contact & Support Information')}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            {contact?.subtitle || 'Reach out to our main office, explore partnership opportunities, or connect with our admissions team.'}
+            {t(contact?.subtitle || 'Reach out to our main office, explore partnership opportunities, or connect with our admissions team.')}
           </p>
         </div>
       </section>
@@ -121,13 +123,13 @@ function ContactContent() {
             <div className="lg:col-span-5 space-y-6">
               <div>
                 <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full">
-                  Direct Inquiries
+                  {t('Direct Inquiries')}
                 </span>
                 <h2 className="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">
-                  Get in Touch
+                  {t('Get in Touch')}
                 </h2>
                 <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                  Our administrative staff and educational counselors are ready to answer your inquiries.
+                  {t('Our administrative staff and educational counselors are ready to answer your inquiries.')}
                 </p>
               </div>
 
@@ -139,8 +141,8 @@ function ContactContent() {
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Head Office &amp; Campus</h4>
-                    <p className="text-sm font-semibold text-slate-900 mt-1">{contactInfo.address}</p>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('Head Office & Campus')}</h4>
+                    <p className="text-sm font-semibold text-slate-900 mt-1">{t(contactInfo.address)}</p>
                   </div>
                 </div>
 
@@ -149,7 +151,7 @@ function ContactContent() {
                     <Phone className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Phone Numbers</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('Phone Numbers')}</h4>
                     <p className="text-sm font-semibold text-slate-900 mt-1">
                       <a href={`tel:${contactInfo.phone}`} className="hover:text-emerald-700">{contactInfo.phone}</a>
                       {contactInfo.alternatePhone && (
@@ -164,7 +166,7 @@ function ContactContent() {
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('Email Address')}</h4>
                     <p className="text-sm font-semibold text-slate-900 mt-1">
                       <a href={`mailto:${contactInfo.email}`} className="hover:text-emerald-700">{contactInfo.email}</a>
                     </p>
@@ -176,8 +178,8 @@ function ContactContent() {
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Working Hours</h4>
-                    <p className="text-sm font-semibold text-slate-900 mt-1">{contactInfo.officeHours}</p>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('Working Hours')}</h4>
+                    <p className="text-sm font-semibold text-slate-900 mt-1">{t(contactInfo.officeHours)}</p>
                   </div>
                 </div>
 
@@ -185,8 +187,8 @@ function ContactContent() {
 
               {/* Social Channels */}
               <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Follow Our Work</h4>
-                <p className="text-xs text-slate-300">Join our online community for photos, announcements, and events.</p>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">{t('Follow Our Work')}</h4>
+                <p className="text-xs text-slate-300">{t('Join our online community for photos, announcements, and events.')}</p>
                 <div className="flex items-center gap-3 pt-2">
                   <a
                     href={contactInfo.socialLinks.facebook || '#'}
@@ -226,16 +228,16 @@ function ContactContent() {
                     <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2">
                       <CheckCircle2 className="w-10 h-10" />
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900">Message Received!</h3>
+                    <h3 className="text-2xl font-black text-slate-900">{t('Message Received!')}</h3>
                     <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-                      Thank you for contacting Selam Charity &amp; School. A member of our team will review your inquiry and follow up shortly.
+                      {t('Thank you for contacting Selam Charity & School. A member of our team will review your inquiry and follow up shortly.')}
                     </p>
                     <div className="pt-4">
                       <button
                         onClick={() => setSubmitted(false)}
                         className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-emerald-700 transition-colors"
                       >
-                        Send Another Message
+                        {t('Send Another Message')}
                       </button>
                     </div>
                   </div>
@@ -243,10 +245,10 @@ function ContactContent() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                       <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-                        Send Us a Message
+                        {t('Send Us a Message')}
                       </h3>
                       <p className="text-xs text-slate-500 mt-1">
-                        Fill out the form below and we will respond within 24–48 business hours.
+                        {t('Fill out the form below and we will respond within 24–48 business hours.')}
                       </p>
                     </div>
 
@@ -260,21 +262,21 @@ function ContactContent() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                          Full Name *
+                          {t('Full Name *')}
                         </label>
                         <input
                           type="text"
                           required
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          placeholder="Your full name"
+                          placeholder={t('Your full name')}
                           className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                          Email Address *
+                          {t('Email Address *')}
                         </label>
                         <input
                           type="email"
@@ -290,7 +292,7 @@ function ContactContent() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                          Phone Number (Optional)
+                          {t('Phone Number (Optional)')}
                         </label>
                         <input
                           type="tel"
@@ -303,44 +305,44 @@ function ContactContent() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                          Inquiry Category
+                          {t('Inquiry Category')}
                         </label>
                         <select
                           value={formData.category}
                           onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                         >
-                          <option value="General Inquiry">General Inquiry</option>
-                          <option value="School Admissions">School Admissions</option>
-                          <option value="Donation & Sponsorship">Donation &amp; Sponsorship</option>
-                          <option value="Volunteering & Partnerships">Volunteering &amp; Partnerships</option>
+                          <option value="General Inquiry">{t('General Inquiry')}</option>
+                          <option value="School Admissions">{t('School Admissions')}</option>
+                          <option value="Donation & Sponsorship">{t('Donation & Sponsorship')}</option>
+                          <option value="Volunteering & Partnerships">{t('Volunteering & Partnerships')}</option>
                         </select>
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                        Subject
+                        {t('Subject')}
                       </label>
                       <input
                         type="text"
                         value={formData.subject}
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        placeholder="Brief summary of your inquiry"
+                        placeholder={t('Brief summary of your inquiry') || 'Brief summary of your inquiry'}
                         className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                        Message *
+                        {t('Message *')}
                       </label>
                       <textarea
                         required
                         rows={5}
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        placeholder="How can we assist you?"
+                        placeholder={t('How can we assist you?') || 'How can we assist you?'}
                         className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                       />
                     </div>
@@ -353,12 +355,12 @@ function ContactContent() {
                       {submitMutation.isPending ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Sending Message...</span>
+                          <span>{t('Sending Message...')}</span>
                         </>
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          <span>Submit Message</span>
+                          <span>{t('Submit Message')}</span>
                         </>
                       )}
                     </button>

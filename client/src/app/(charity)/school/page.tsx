@@ -20,8 +20,10 @@ import {
 } from 'lucide-react';
 import { useSchoolSections } from '@/hooks/charity';
 import Lightbox from '@/components/charity/public/Lightbox';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CharitySchoolPage() {
+  const { t } = useLanguage();
   const { data: schoolSections, isLoading } = useSchoolSections();
   const [activeTab, setActiveTab] = useState<'programs' | 'activities' | 'facilities'>('programs');
 
@@ -65,15 +67,15 @@ export default function CharitySchoolPage() {
         <div className="max-w-4xl mx-auto relative z-10 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
             <GraduationCap className="w-3.5 h-3.5" />
-            <span>Center of Excellence</span>
+            <span>{t('Center of Excellence')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-            {intro?.title || 'Welcome to Selam School'}
+            {t(intro?.title || 'Welcome to Selam School')}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            {intro?.subtitle || 'Nurturing minds, inspiring character, and equipping the next generation with knowledge, empathy, and leadership.'}
+            {t(intro?.subtitle || 'Nurturing minds, inspiring character, and equipping the next generation with knowledge, empathy, and leadership.')}
           </p>
         </div>
       </section>
@@ -85,19 +87,18 @@ export default function CharitySchoolPage() {
           <div className="grid lg:grid-cols-12 gap-12 items-center mb-16">
             <div className="lg:col-span-7 space-y-6">
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                School Introduction
+                {t('School Introduction')}
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                An Inspiring Environment Where Every Child Thrives
+                {t('An Inspiring Environment Where Every Child Thrives')}
               </h2>
               <div className="prose prose-slate text-slate-600 space-y-4 text-sm sm:text-base leading-relaxed">
                 <p>
-                  {intro?.content || 
-                    'Selam School provides holistic, value-based education for children, fostering intellectual growth, creativity, and moral integrity. Our classrooms are designed to cultivate critical thinking, curiosity, and compassion.'}
+                  {t(intro?.content || 
+                    'Selam School provides holistic, value-based education for children, fostering intellectual growth, creativity, and moral integrity. Our classrooms are designed to cultivate critical thinking, curiosity, and compassion.')}
                 </p>
                 <p>
-                  We blend rigorous academic curricula certified by the Ministry of Education with active co-curricular engagement, 
-                  nutritional meal provisions, and health monitoring. Our teachers are passionately dedicated to instilling a lifelong love of learning.
+                  {t('We blend rigorous academic curricula certified by the Ministry of Education with active co-curricular engagement, nutritional meal provisions, and health monitoring. Our teachers are passionately dedicated to instilling a lifelong love of learning.')}
                 </p>
               </div>
 
@@ -106,7 +107,7 @@ export default function CharitySchoolPage() {
                   href="/contact?intent=admissions"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 text-white font-bold text-sm shadow-md shadow-emerald-600/30 hover:bg-emerald-700 transition-all"
                 >
-                  <span>Admission &amp; Enrollment Inquiries</span>
+                  <span>{t('Admission & Enrollment Inquiries')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -117,25 +118,25 @@ export default function CharitySchoolPage() {
                 <p className="text-3xl sm:text-4xl font-black text-emerald-800">
                   {intro?.metadata?.studentCapacity || 650}+
                 </p>
-                <p className="text-xs font-semibold text-slate-600 mt-1">Student Capacity</p>
+                <p className="text-xs font-semibold text-slate-600 mt-1">{t('Student Capacity')}</p>
               </div>
               <div className="p-6 rounded-2xl bg-teal-50/70 border border-teal-200 text-center">
                 <p className="text-3xl sm:text-4xl font-black text-teal-800">
                   {intro?.metadata?.teacherCount || 42}
                 </p>
-                <p className="text-xs font-semibold text-slate-600 mt-1">Certified Educators</p>
+                <p className="text-xs font-semibold text-slate-600 mt-1">{t('Certified Educators')}</p>
               </div>
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center">
                 <p className="text-3xl sm:text-4xl font-black text-slate-800">
                   {intro?.metadata?.establishedYear || 2012}
                 </p>
-                <p className="text-xs font-semibold text-slate-600 mt-1">Established Year</p>
+                <p className="text-xs font-semibold text-slate-600 mt-1">{t('Established Year')}</p>
               </div>
               <div className="p-6 rounded-2xl bg-amber-50/70 border border-amber-200 text-center">
                 <p className="text-xl sm:text-2xl font-black text-amber-800">
                   KG - Grade 8
                 </p>
-                <p className="text-xs font-semibold text-slate-600 mt-1">Grades Covered</p>
+                <p className="text-xs font-semibold text-slate-600 mt-1">{t('Grades Covered')}</p>
               </div>
             </div>
           </div>
@@ -161,7 +162,7 @@ export default function CharitySchoolPage() {
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
+                    <span>{t(tab.label)}</span>
                   </button>
                 );
               })}
@@ -176,8 +177,8 @@ export default function CharitySchoolPage() {
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm mb-4">
                     0{idx + 1}
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">{prog.name}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{prog.description}</p>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{t(prog.name)}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{t(prog.description)}</p>
                 </div>
               ))}
             </div>
@@ -195,13 +196,13 @@ export default function CharitySchoolPage() {
                     {act.schedule && (
                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-semibold text-slate-600">
                         <Clock className="w-3 h-3 text-emerald-600" />
-                        {act.schedule}
+                        {t(act.schedule)}
                       </span>
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">{act.name}</h3>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{t(act.name)}</h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    {act.desc || 'Promoting leadership, team problem-solving, and personal enrichment.'}
+                    {t(act.desc || 'Promoting leadership, team problem-solving, and personal enrichment.')}
                   </p>
                 </div>
               ))}
@@ -218,8 +219,8 @@ export default function CharitySchoolPage() {
                     <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold mb-5">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{fac.name}</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{fac.desc}</p>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">{t(fac.name)}</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">{t(fac.desc)}</p>
                   </div>
                 );
               })}
@@ -232,17 +233,16 @@ export default function CharitySchoolPage() {
       {/* ── ADMISSIONS BANNER ───────────────────────────────────── */}
       <section className="py-16 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center space-y-5">
-          <h2 className="text-3xl font-black">Interested in Enrolling Your Child?</h2>
+          <h2 className="text-3xl font-black">{t('Interested in Enrolling Your Child?')}</h2>
           <p className="text-slate-300 text-sm max-w-xl mx-auto">
-            Selam School welcomes applications across Kindergarten through Grade 8. 
-            Scholarships and meal support are provided for families facing hardship.
+            {t('Selam School welcomes applications across Kindergarten through Grade 8. Scholarships and meal support are provided for families facing hardship.')}
           </p>
           <div className="pt-2">
             <Link
               href="/contact?intent=admissions"
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/30"
             >
-              <span>Contact Admissions Office</span>
+              <span>{t('Contact Admissions Office')}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
