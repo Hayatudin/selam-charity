@@ -76,43 +76,111 @@ export default function CharityGalleryPage() {
   const deleteMutation = useDeleteGalleryItem();
   const uploadMutation = useUploadMediaFile();
 
-  // Direct multi-file upload from device
-  const handleDirectMultiUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Staged multi-upload state with manual title prompt
+  interface StagedUploadItem {
+    id: string;
+    file: File;
+    previewUrl: string;
+    title: string;
+    caption: string;
+    category: string;
+  }
+
+  const [stagedUploads, setStagedUploads] = useState<StagedUploadItem[]>([]);
+  const [isUploadTitleModalOpen, setIsUploadTitleModalOpen] = useState(false);
+  const [uploadModalError, setUploadModalError] = useState<string | null>(null);
+
+  // When files are selected from device, prompt user for manual titles
+  const handleSelectFilesForUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const fileList = Array.from(files);
+    const staged: StagedUploadItem[] = fileList.map((file, idx) => ({
+      id: `${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      title: '', // NEVER auto-populate with file.name! User must enter manually.
+      caption: '',
+      category: selectedCategory === 'All' ? 'General' : selectedCategory,
+    }));
+
+    setStagedUploads(staged);
+    setUploadModalError(null);
+    setIsUploadTitleModalOpen(true);
+    if (directMultiInputRef.current) directMultiInputRef.current.value = '';
+  };
+
+  const updateStagedItem = (id: string, field: 'title' | 'caption' | 'category', value: string) => {
+    setStagedUploads((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+    if (field === 'title' && value.trim()) {
+      setUploadModalError(null);
+    }
+  };
+
+  const removeStagedItem = (id: string) => {
+    setStagedUploads((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      const filtered = prev.filter((item) => item.id !== id);
+      if (filtered.length === 0) {
+        setIsUploadTitleModalOpen(false);
+        setUploadModalError(null);
+      }
+      return filtered;
+    });
+  };
+
+  const handleCancelStagedUpload = () => {
+    stagedUploads.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    setStagedUploads([]);
+    setIsUploadTitleModalOpen(false);
+    setUploadModalError(null);
+  };
+
+  const handleConfirmUploadStaged = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (stagedUploads.length === 0) return;
+
+    // Strict validation: Every image MUST have a title manually entered!
+    for (let i = 0; i < stagedUploads.length; i++) {
+      if (!stagedUploads[i].title.trim()) {
+        setUploadModalError(
+          stagedUploads.length === 1
+            ? 'Please enter an image title. Image name is not used as title.'
+            : `Please enter a title for image #${i + 1}. All image titles must be filled in manually.`
+        );
+        return;
+      }
+    }
+
     setIsBatchUploading(true);
-    setBatchProgress({ current: 0, total: fileList.length });
-    setBatchSuccessMessage(null);
+    setUploadModalError(null);
+    setBatchProgress({ current: 0, total: stagedUploads.length });
 
     const itemsToCreate: Partial<CharityGalleryItem>[] = [];
 
     try {
-      console.log(`[GALLERY] Starting batch upload of ${fileList.length} image(s)...`);
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        setBatchProgress({ current: i + 1, total: fileList.length });
-        console.log(`[GALLERY] Uploading ${i + 1}/${fileList.length}:`, file.name);
+      console.log(`[GALLERY] Starting upload of ${stagedUploads.length} image(s) with manual titles...`);
+      for (let i = 0; i < stagedUploads.length; i++) {
+        const item = stagedUploads[i];
+        setBatchProgress({ current: i + 1, total: stagedUploads.length });
+        console.log(`[GALLERY] Uploading ${i + 1}/${stagedUploads.length}:`, item.file.name, 'with manual title:', item.title);
 
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('name', file.name);
+        formData.append('file', item.file);
+        formData.append('name', item.file.name);
 
         const uploaded = await uploadMutation.mutateAsync(formData);
-        console.log(`✅ [GALLERY] Uploaded ${file.name}:`, uploaded);
         if (uploaded && uploaded.url) {
-          const cleanTitle = file.name
-            .replace(/\.[^/.]+$/, '')
-            .replace(/[-_]/g, ' ')
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-
           itemsToCreate.push({
-            title: cleanTitle || 'Gallery Photo',
-            caption: '',
+            title: item.title.trim(), // Manually filled title!
+            caption: item.caption.trim(),
             mediaType: 'image',
             mediaUrl: uploaded.url,
-            category: selectedCategory === 'All' ? 'General' : selectedCategory,
+            category: item.category,
             orderIndex: 0,
           });
         }
@@ -120,15 +188,17 @@ export default function CharityGalleryPage() {
 
       if (itemsToCreate.length > 0) {
         await batchCreateMutation.mutateAsync(itemsToCreate);
+        stagedUploads.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+        setStagedUploads([]);
+        setIsUploadTitleModalOpen(false);
         setBatchSuccessMessage(`Successfully uploaded ${itemsToCreate.length} image${itemsToCreate.length > 1 ? 's' : ''} to gallery!`);
         setTimeout(() => setBatchSuccessMessage(null), 5000);
       }
     } catch (err: any) {
       console.error('🚨 [GALLERY UPLOAD ERROR]:', err);
-      alert('Upload failed: ' + (err.message || 'Error uploading files'));
+      setUploadModalError('Upload failed: ' + (err.message || 'Error uploading files'));
     } finally {
       setIsBatchUploading(false);
-      if (directMultiInputRef.current) directMultiInputRef.current.value = '';
     }
   };
 
@@ -148,13 +218,7 @@ export default function CharityGalleryPage() {
       const uploaded = await uploadMutation.mutateAsync(formData);
       if (uploaded && uploaded.url) {
         setFormMediaUrl(uploaded.url);
-        if (!formTitle) {
-          const cleanTitle = file.name
-            .replace(/\.[^/.]+$/, '')
-            .replace(/[-_]/g, ' ')
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-          setFormTitle(cleanTitle);
-        }
+        // NOTE: DO NOT auto-fill formTitle with file.name! User must enter title manually.
       }
     } catch (err: any) {
       setFormError(err.message || 'Failed to upload image file');
@@ -214,7 +278,7 @@ export default function CharityGalleryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim()) {
-      setFormError('Title is required');
+      setFormError('Image title is required. Please fill it in manually.');
       return;
     }
     if (!formMediaUrl.trim()) {
@@ -265,7 +329,7 @@ export default function CharityGalleryPage() {
         type="file"
         multiple
         accept="image/*"
-        onChange={handleDirectMultiUpload}
+        onChange={handleSelectFilesForUpload}
         className="hidden"
       />
       <input
@@ -516,11 +580,13 @@ export default function CharityGalleryPage() {
 
               {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Title *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Image Title * <span className="text-[11px] font-normal text-slate-500">(Enter manually)</span>
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ramadan Food Distribution"
+                  placeholder="Enter title manually (e.g. Ramadan Food Distribution)..."
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 font-medium"
@@ -676,6 +742,169 @@ export default function CharityGalleryPage() {
                     'Save Item'
                   )}
                 </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Images Manual Title Prompt Modal */}
+      {isUploadTitleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <Upload size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">
+                    {stagedUploads.length > 1 ? `Upload ${stagedUploads.length} Photos to Gallery` : 'Upload Photo to Gallery'}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Please provide an image title manually. Image filename is not used as the title.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelStagedUpload}
+                disabled={isBatchUploading}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleConfirmUploadStaged} className="flex-1 overflow-y-auto p-6 space-y-4">
+              {uploadModalError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{uploadModalError}</span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {stagedUploads.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                      {/* Image Preview Thumbnail */}
+                      <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 relative">
+                        <img
+                          src={item.previewUrl}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Fields */}
+                      <div className="flex-1 space-y-2.5 min-w-0 w-full">
+                        {/* Title input */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-bold text-slate-700">
+                              Image Title <span className="text-red-500">*</span>
+                            </label>
+                            {stagedUploads.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeStagedItem(item.id)}
+                                disabled={isBatchUploading}
+                                className="text-[11px] text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
+                              >
+                                <Trash2 size={12} /> Remove
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            required
+                            autoFocus={index === 0}
+                            placeholder="Enter image title manually (e.g. Students in Class)..."
+                            value={item.title}
+                            onChange={(e) => updateStagedItem(item.id, 'title', e.target.value)}
+                            disabled={isBatchUploading}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 font-medium"
+                          />
+                        </div>
+
+                        {/* Category & Caption */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Category
+                            </label>
+                            <select
+                              value={item.category}
+                              onChange={(e) => updateStagedItem(item.id, 'category', e.target.value)}
+                              disabled={isBatchUploading}
+                              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 text-slate-700"
+                            >
+                              {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
+                                <option key={cat} value={cat}>
+                                  {cat}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Caption (optional)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Brief description..."
+                              value={item.caption}
+                              onChange={(e) => updateStagedItem(item.id, 'caption', e.target.value)}
+                              disabled={isBatchUploading}
+                              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 text-slate-700"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <p className="text-[11px] text-slate-500">
+                  {stagedUploads.length} photo{stagedUploads.length > 1 ? 's' : ''} ready to upload
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelStagedUpload}
+                    disabled={isBatchUploading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isBatchUploading}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5"
+                  >
+                    {isBatchUploading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Uploading {batchProgress.current} of {batchProgress.total}...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={16} />
+                        <span>Upload &amp; Save to Gallery</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </div>

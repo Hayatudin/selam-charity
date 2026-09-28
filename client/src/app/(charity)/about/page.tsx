@@ -256,19 +256,19 @@ export default function CharityAboutPage() {
                   category: 'board' as const,
                   desc: 'Over 20 years guiding educational philanthropy, Islamic scholarship, and institutional governance across East Africa.',
                   fullBio: 'Ustaz Ahmed Nur founded Selam Charity with the unyielding conviction that every child deserves equitable education, nutritious food, and dignified support. With over two decades of nonprofit stewardship, he oversees high-level strategic alignment, international diaspora partnerships, and institutional integrity.',
-                  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/4.jpg',
                   credentials: ['M.A. in Non-Profit Governance', 'Fellow, East Africa Civil Society Forum', '20+ Years Community Leadership'],
                   email: 'president@selamcharity.org'
                 },
                 {
-                  name: 'Dr. Selamawit Bekele',
-                  role: 'Vice President & Legal Counsel',
+                  name: 'Ustaz Mohammed Kassim',
+                  role: 'Vice President of the Board',
                   category: 'board' as const,
-                  desc: 'Constitutional jurist specializing in NGO regulatory compliance, child welfare rights, and international trust governance.',
-                  fullBio: 'Dr. Selamawit brings 16 years of legal expertise in civil society law, institutional compliance, and human rights advocacy. She ensures that all Selam operations strictly adhere to federal regulatory frameworks while championing child protection policies.',
-                  image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
-                  credentials: ['Ph.D. in International Law', 'Member, Ethiopian Bar Association', 'Child Rights Legal Consultant'],
-                  email: 'legal@selamcharity.org'
+                  desc: 'Guiding institutional governance, community relations, and strategic oversight across regional initiatives.',
+                  fullBio: 'Ustaz Mohammed Kassim serves as Vice President of the Board of Trustees. With extensive leadership experience in grassroots mobilization and institutional partnership, he collaborates closely with the President to oversee long-term organizational strategy and community programs.',
+                  image: '/Team/6.jpg',
+                  credentials: ['Senior Scholar in Community Leadership', 'Advisor, Interfaith & Civil Society Forum', '18+ Years Civic Engagement'],
+                  email: 'vp@selamcharity.org'
                 },
                 {
                   name: 'Sheikh Mohammed Al-Amoudi',
@@ -276,7 +276,7 @@ export default function CharityAboutPage() {
                   category: 'board' as const,
                   desc: 'Prominent community mediator ensuring equitable Zakat distribution, moral stewardship, and grassroots consensus.',
                   fullBio: 'A respected elder and religious scholar, Sheikh Mohammed oversees ethical vetting of social programs, zakat distribution criteria, and interfaith harmony initiatives, anchoring Selam’s programs in empathy and communal trust.',
-                  image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/5.jpg',
                   credentials: ['Senior Scholar in Islamic Jurisprudence', 'Interfaith Peace Ambassador', '30+ Years Civic Mediation'],
                   email: 'ethics@selamcharity.org'
                 },
@@ -286,7 +286,7 @@ export default function CharityAboutPage() {
                   category: 'board' as const,
                   desc: 'Supervising school campus construction, water well drilling, and solar energy installations across remote communities.',
                   fullBio: 'Eng. Dawit provides strategic technical supervision for Selam’s physical expansion, overseeing architectural resilience, clean water facilities, modern classrooms, and sustainable green campus structures.',
-                  image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/4 (1).jpg',
                   credentials: ['M.Sc. Structural Engineering', 'Registered Professional Engineer (PE)', 'Lead Designer, Selam Academic Complex'],
                   email: 'infrastructure@selamcharity.org'
                 },
@@ -296,7 +296,7 @@ export default function CharityAboutPage() {
                   category: 'board' as const,
                   desc: 'Pediatric consultant leading student nutritional policies, vaccination campaigns, and medical emergency funds.',
                   fullBio: 'Dr. Meron is an associate professor of pediatric medicine and healthcare consultant who oversees Selam’s community wellness, vaccination tracking, and clean feeding programs for underprivileged children.',
-                  image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/7.jpg',
                   credentials: ['M.D. Pediatrics & Child Health', 'Advisor, Maternal & Child Health Taskforce', '15+ Years Clinical Research'],
                   email: 'health.trustee@selamcharity.org'
                 },
@@ -306,7 +306,7 @@ export default function CharityAboutPage() {
                   category: 'board' as const,
                   desc: 'Senior financial auditor maintaining donor transparency, independent audits, and endowment longevity.',
                   fullBio: 'With 22 years of forensic auditing experience across international NGOs and financial institutions, Ato Yonas leads the independent audit committee, publishing full transparent accounting for all funds received.',
-                  image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/WhatsApp Image 2026-08-19 at 4.34.20 PM.jpeg',
                   credentials: ['Certified Public Accountant (CPA)', 'Former Lead Auditor, Pan-African NGO Alliance', 'Expert in Endowment Accounting'],
                   email: 'audit@selamcharity.org'
                 }
@@ -376,7 +376,7 @@ export default function CharityAboutPage() {
               </p>
             </div>
 
-            {/* Management Team Grid - 8 Cards matching the 4x2 grid of the user design inspiration */}
+            {/* Management Team Grid - 8 Cards matching the 4x2 grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7">
               {[
                 {
@@ -385,7 +385,7 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Guiding daily operations, cross-departmental coordination, and strategic program delivery across Ethiopia.',
                   fullBio: 'Zemedkun leads day-to-day operations across Selam Charity. He coordinates cross-functional teams, drives resource mobilization, and ensures that every educational and humanitarian project achieves tangible, measurable community outcomes.',
-                  image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/3 (1).jpg',
                   credentials: ['M.Sc. in Organizational Leadership', '12+ Years Executive NGO Management', 'Project Management Professional (PMP)'],
                   email: 'director@selamcharity.org'
                 },
@@ -395,7 +395,7 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Leading teacher training, modern curriculum standards, and inclusive child pedagogy at Selam School.',
                   fullBio: 'Sister Fatima oversees the educational ecosystem of Selam School, nurturing over 1,200 students with inclusive learning standards, STEM programs, and character-building extracurriculars.',
-                  image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/photo_2026-09-22_21-57-46.jpg',
                   credentials: ['B.Ed. & M.Ed. Educational Leadership', 'Distinguished Educator Award 2023', 'Specialist in Child Pedagogy'],
                   email: 'school@selamcharity.org'
                 },
@@ -405,7 +405,7 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Managing school wellness clinics, nutritional meal distribution, and emergency pediatric care.',
                   fullBio: 'Dr. Ibrahim runs the on-campus health clinic and community outreach brigades, providing regular health checkups, dental screening, and daily nutrient-dense meal plans for vulnerable students.',
-                  image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/8.jpg',
                   credentials: ['Medical Doctor (M.D.)', 'Postgraduate Diploma in Tropical Medicine', '10+ Years Field Medical Experience'],
                   email: 'health@selamcharity.org'
                 },
@@ -415,7 +415,7 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Managing student orphan sponsorships, family welfare evaluations, and donor progress reporting.',
                   fullBio: 'Zahra connects sponsors with orphaned and disadvantaged students, providing individualized progress reports and coordinating direct livelihood stipends to underprivileged families.',
-                  image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/WhatsApp Image 2026-08-05 at 6.04.23 PM.jpeg',
                   credentials: ['B.A. in Social Work & Community Welfare', 'Orphan Care Liaison Certified', 'Fluency in 4 Regional Languages'],
                   email: 'sponsorship@selamcharity.org'
                 },
@@ -425,18 +425,18 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Overseeing transparent bookkeeping, procurement integrity, and international grant escrow management.',
                   fullBio: 'Tewodros handles financial transparency and statutory audit reporting. His meticulous stewardship ensures that every birr and foreign currency donation is accounted for and maximized.',
-                  image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/7 (1).jpg',
                   credentials: ['B.Sc. Accounting & Finance, ACCA', '14+ Years Financial Systems Administration', 'Audited 50+ Major Donor Grants'],
                   email: 'finance@selamcharity.org'
                 },
                 {
-                  name: 'Rahel Solomon',
+                  name: 'Aman Solomon',
                   role: 'Director of Vocational Programs',
                   category: 'management' as const,
-                  desc: 'Empowering disadvantaged youth and single mothers through trade skills, sewing, and micro-grants.',
-                  fullBio: 'Rahel leads vocational training workshops that transition vulnerable youths and mothers into economic self-reliance, graduating hundreds of skilled artisans and entrepreneurs every year.',
-                  image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
-                  credentials: ['M.A. Sustainable Socioeconomic Development', 'Certified Enterprise Incubator Coach', 'Women Empowerment Advocate'],
+                  desc: 'Empowering disadvantaged youth and single mothers through trade skills, entrepreneurship, and micro-grants.',
+                  fullBio: 'Aman leads vocational training workshops that transition vulnerable youths and aspiring entrepreneurs into economic self-reliance, graduating hundreds of skilled artisans and tech students every year.',
+                  image: '/Team/Gemini_Generated_Image_t1tsvct1tsvct1ts.jpg',
+                  credentials: ['M.A. Sustainable Socioeconomic Development', 'Certified Enterprise Incubator Coach', 'Youth Empowerment Specialist'],
                   email: 'vocational@selamcharity.org'
                 },
                 {
@@ -445,7 +445,7 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Coordinating emergency relief fleets, educational material shipments, and campus facilities.',
                   fullBio: 'Bilal coordinates field supply chains and rapid response teams, delivering emergency food parcels, textbooks, and essential supplies across remote communities during crises.',
-                  image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/3.jpg',
                   credentials: ['B.Sc. Supply Chain & Logistics', 'Certified Humanitarian Logistics Specialist', 'Field Security Coordinator'],
                   email: 'operations@selamcharity.org'
                 },
@@ -455,7 +455,7 @@ export default function CharityAboutPage() {
                   category: 'management' as const,
                   desc: 'Capturing field stories, multimedia documentaries, and transparent digital donor portals.',
                   fullBio: 'Hanif bridges Selam’s on-the-ground work with our international donor community, managing multi-channel digital transparency, video documentaries, and online donor verification portals.',
-                  image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
+                  image: '/Team/2.jpg',
                   credentials: ['B.Sc. Information Systems & Media', 'Digital Storyteller & Documentary Producer', 'Tech for Good Enthusiast'],
                   email: 'media@selamcharity.org'
                 }
