@@ -1,21 +1,21 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Heart, 
-  GraduationCap, 
-  ArrowRight, 
+import {
+  Heart,
+  GraduationCap,
+  ArrowRight,
   ArrowUpRight,
-  Sparkles, 
-  BookOpen, 
-  Users, 
-  Building2, 
-  Calendar, 
-  Award, 
-  ShieldCheck, 
-  Play, 
-  Compass, 
-  CheckCircle2, 
+  Sparkles,
+  BookOpen,
+  Users,
+  Building2,
+  Calendar,
+  Award,
+  ShieldCheck,
+  Play,
+  Compass,
+  CheckCircle2,
   ExternalLink,
   ChevronRight,
   Eye,
@@ -25,11 +25,11 @@ import {
   Mic,
   User
 } from 'lucide-react';
-import { 
-  useCharityNewsList, 
-  useCharityGallery, 
-  useSchoolSections, 
-  usePagesContent 
+import {
+  useCharityNewsList,
+  useCharityGallery,
+  useSchoolSections,
+  usePagesContent
 } from '@/hooks/charity';
 import Lightbox from '@/components/charity/public/Lightbox';
 import type { CharityGalleryItem, CharityNewsItem } from '@/types/charity';
@@ -127,8 +127,8 @@ export default function CharityHomePage() {
     selectedNewsCategory === 'ALL'
       ? allArticles
       : allArticles.filter(
-          (a) => (a.category ? a.category.toUpperCase() : 'GENERAL') === selectedNewsCategory
-        );
+        (a) => (a.category ? a.category.toUpperCase() : 'GENERAL') === selectedNewsCategory
+      );
 
   // Top 6 cards for the 3x2 grid
   const displayHotArticles = filteredArticles.slice(0, 6);
@@ -140,15 +140,14 @@ export default function CharityHomePage() {
           1. HERO SECTION (Looping Background Images & Exact Mockup Layout)
           ══════════════════════════════════════════════════════════════ */}
       <section className="relative min-h-[92vh] md:min-h-screen w-full flex flex-col justify-end overflow-hidden pt-28 sm:pt-36 pb-8 sm:pb-12 select-none">
-        
+
         {/* Background Image Carousel (Loops Her-img1, Her-img2, Her-img3) */}
         <div className="absolute inset-0 z-0">
           {HERO_IMAGES.map((img, idx) => (
             <div
               key={img}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                idx === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
             >
               <img
                 src={img}
@@ -166,7 +165,7 @@ export default function CharityHomePage() {
 
         {/* Hero Bottom Content Container */}
         <div className="relative z-20 max-w-7xl mx-auto w-full px-6 sm:px-8 lg:px-12">
-          
+
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-end mb-8 sm:mb-10">
             {/* Left Column Heading */}
             <div className="lg:col-span-7">
@@ -191,11 +190,10 @@ export default function CharityHomePage() {
                 <button
                   key={i}
                   onClick={() => setCurrentSlide(i)}
-                  className={`transition-all duration-300 rounded-full h-1.5 focus:outline-none cursor-pointer ${
-                    isActive 
-                      ? 'w-8 bg-white shadow-sm' 
+                  className={`transition-all duration-300 rounded-full h-1.5 focus:outline-none cursor-pointer ${isActive
+                      ? 'w-8 bg-white shadow-sm'
                       : 'w-6 bg-white/40 hover:bg-white/70'
-                  }`}
+                    }`}
                   aria-label={`Go to slide ${i + 1}`}
                 />
               );
@@ -211,11 +209,11 @@ export default function CharityHomePage() {
       <section className="py-16 sm:py-24 bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex flex-col lg:flex-row items-center gap-10 xl:gap-14 justify-between">
-            
+
             {/* Left Column: Campus Building Image with Floating Glass Effect Overlay */}
             <div className="shrink-0 w-full max-w-[630px] h-[440px] relative rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] border border-slate-100 bg-slate-100">
               <img
-                src="/about-building.jpg"
+                src="/Her-img2.png"
                 alt="Selam Charity & Educational School"
                 className="w-full h-full object-cover object-center"
               />
@@ -294,7 +292,7 @@ export default function CharityHomePage() {
           ══════════════════════════════════════════════════════════════ */}
       <section className="py-20 sm:py-28 bg-[#F4F9F6] border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          
+
           {/* Header Row */}
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-16">
             {/* Left Header */}
@@ -427,7 +425,7 @@ export default function CharityHomePage() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/[0.02] rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          
+
           {/* Top Header Row Matching Design Inspiration */}
           <div className="flex flex-col lg:flex-row items-start lg:items-start justify-between gap-6 mb-16 lg:mb-20">
             {/* Left Header Column */}
@@ -486,7 +484,7 @@ export default function CharityHomePage() {
 
           {/* 4 Cards Grid - Exact Design Inspiration with Background Images & Diagonal Cutouts */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-end">
-            
+
             {/* Card 01: Quality Education */}
             <Link
               href="/school"
@@ -709,9 +707,9 @@ export default function CharityHomePage() {
           ══════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-slate-50 border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
+
           <div className="grid lg:grid-cols-12 gap-12 items-center">
-            
+
             <div className="lg:col-span-5 space-y-6">
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full">
                 {t('Center of Excellence')}
@@ -720,7 +718,7 @@ export default function CharityHomePage() {
                 {t(introSection?.title || 'Selam School: Inspiring Young Minds')}
               </h2>
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-                {t(introSection?.content || 
+                {t(introSection?.content ||
                   'Our school provides value-based education combining academic distinction with personal character building. From early childhood development to advanced middle school sciences, we nurture curious and confident scholars.')}
               </p>
 
@@ -805,7 +803,7 @@ export default function CharityHomePage() {
           ══════════════════════════════════════════════════════════════ */}
       <section className="py-24 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
+
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
@@ -831,11 +829,10 @@ export default function CharityHomePage() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedNewsCategory(cat)}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${
-                    isActive
+                  className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 cursor-pointer ${isActive
                       ? 'bg-[#185A3A] text-white shadow-sm ring-2 ring-[#185A3A]/20 scale-[1.02]'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   {cat === 'ALL' ? t('All') : cat}
                 </button>
@@ -900,10 +897,10 @@ export default function CharityHomePage() {
                       <span>
                         {article.publishedAt
                           ? new Date(article.publishedAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
                           : 'Recent'}
                       </span>
                     </span>
@@ -921,7 +918,7 @@ export default function CharityHomePage() {
           ══════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-slate-950 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
+
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-12">
             <div>
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800/80">
@@ -959,7 +956,7 @@ export default function CharityHomePage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
-                  
+
                   {item.mediaType === 'video' && (
                     <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-emerald-500/90 text-white flex items-center justify-center shadow-lg">
                       <Play className="w-4 h-4 fill-white ml-0.5" />
@@ -987,7 +984,7 @@ export default function CharityHomePage() {
           ══════════════════════════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white text-zinc-900 border-t border-zinc-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
+
           {/* Top Header Row Matching Design Inspiration */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-12 sm:mb-16">
             <div>
@@ -1004,12 +1001,12 @@ export default function CharityHomePage() {
 
           {/* Two-Column Grid: Left Image & Right Accordion FAQs */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            
+
             {/* Left Column: Rounded Image */}
             <div className="lg:col-span-5 h-full">
               <div className="relative w-full h-[400px] sm:h-[480px] lg:h-[580px] rounded-[32px] overflow-hidden shadow-lg shadow-zinc-200/60 bg-zinc-100">
                 <img
-                  src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=80"
+                  src="/hero-images/2.jpeg"
                   alt="Selam Charity & School Students"
                   className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700 ease-out"
                 />
@@ -1024,11 +1021,10 @@ export default function CharityHomePage() {
                 return (
                   <div
                     key={index}
-                    className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-                      isOpen
+                    className={`rounded-2xl border transition-all duration-300 overflow-hidden ${isOpen
                         ? 'border-zinc-300 bg-zinc-50/70 shadow-sm'
                         : 'border-zinc-200/80 bg-white hover:border-zinc-300'
-                    }`}
+                      }`}
                   >
                     <button
                       type="button"
@@ -1043,9 +1039,8 @@ export default function CharityHomePage() {
                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0 transition-transform duration-300 shadow-sm group-hover:scale-105"
                       >
                         <Plus
-                          className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 ${
-                            isOpen ? 'rotate-45' : 'rotate-0'
-                          }`}
+                          className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'
+                            }`}
                         />
                       </span>
                     </button>
