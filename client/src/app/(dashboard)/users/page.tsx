@@ -4,54 +4,43 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ShieldCheck, Trash2, MoreVertical, Search, UserPlus,
-  Loader2, AlertCircle, Check, X, RefreshCw,
+  Loader2, AlertCircle, Check, X, RefreshCw, User, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
-import { ROLE_CONFIG, type Role } from '@/lib/role-config';
-import { getTemplateOptionsForAgency, getUserMajorAgency } from '@/lib/cv-templates';
-import { useSession } from '@/lib/auth-client';
+import { type Role } from '@/lib/role-config';
 import { useLanguage } from '@/context/LanguageContext';
-  
+
 interface UserRow {
   id: string;
   name: string;
   email: string;
-  role: Role;
-  agency?: string | null;
-  majorAgency?: string | null;
+  role: Role | string;
   emailVerified: boolean;
   createdAt: string;
 }
-   
-const ROLE_OPTIONS: { value: Role; label: string }[] = [
-  { value: 'user', label: 'User' },
-  { value: 'video_uploader', label: 'Video Uploader' },
-  { value: 'genaral', label: 'General' },
-  { value: 'super_admin', label: 'Super Admin' },
-  { value: 'registrar', label: 'Registrar' },
-  { value: 'processor', label: 'Processor' },
-  { value: 'coordinator', label: 'Coordinator' },
-  { value: 'accountant', label: 'Accountant' },
-  { value: 'agency', label: 'Agency' },
-  { value: 'calling', label: 'Calling' },
-];
 
-const roleBadge = (role: Role) => {
-  const config = ROLE_CONFIG[role];
-  if (!config) return 'bg-gray-100 text-gray-500 border-gray-200';
-  return `${config.badgeBg} ${config.badgeText} ${config.badgeBorder}`;
+const ROLE_OPTIONS = [
+  { value: 'user', label: 'User' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'super_admin', label: 'Super Admin' },
+] as const;
+
+type SystemRole = typeof ROLE_OPTIONS[number]['value'];
+
+const getRoleDisplay = (role: string) => {
+  if (role === 'super_admin') return { label: 'Super Admin', style: 'bg-amber-50 text-amber-700 border-amber-200' };
+  if (role === 'admin' || role === 'charity_admin') return { label: 'Admin', style: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  return { label: 'User', style: 'bg-slate-50 text-slate-700 border-slate-200' };
 };
 
 // ── Create User Modal ─────────────────────────────────────────────────────────
-function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void; onCreated: () => void; agencies: { id: string; name: string }[] }) {
+function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<Role>('processor');
-  const [agency, setAgency] = useState('ussus');
-  const [majorAgency, setmajorAgency] = useState('Sky');
+  const [role, setRole] = useState<SystemRole>('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -63,7 +52,7 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
       const res = await api('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role, agency: role === 'agency' ? agency : null, majorAgency }),
+        body: JSON.stringify({ name, email, password, role }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -87,69 +76,93 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">{t('Create New User')}</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+            <X size={18} />
+          </button>
         </div>
 
         <form onSubmit={handleCreate} className="p-6 space-y-4">
           {error && (
             <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
-              <AlertCircle size={15} className="shrink-0" />{error}
+              <AlertCircle size={15} className="shrink-0" />
+              {error}
             </div>
           )}
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Full Name')}</label>
-            <input value={name} onChange={e => setName(e.target.value)} required placeholder="John Doe"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+              placeholder="e.g. John Doe"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Email Address')}</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="user@example.com"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              placeholder="user@selamcharity.org"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Password')}</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 6 characters"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Agency Database Scope</label>
-            <select value={majorAgency} onChange={e => setmajorAgency(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white cursor-pointer">
-              <option value="Sky">Sky</option>
-              <option value="Fenero">Fenero</option>
-            </select>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              placeholder="Min. 6 characters"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('Role')}</label>
-            <select value={role} onChange={e => setRole(e.target.value as Role)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white cursor-pointer">
-              {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            <select
+              value={role}
+              onChange={e => setRole(e.target.value as SystemRole)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white cursor-pointer"
+            >
+              {ROLE_OPTIONS.map(r => (
+                <option key={r.value} value={r.value}>
+                  {t(r.label, r.label)}
+                </option>
+              ))}
             </select>
           </div>
 
-          {role === 'agency' && (
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Agency Template</label>
-              <select value={agency} onChange={e => setAgency(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white cursor-pointer">
-                {agencies.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
-            </div>
-          )}
-
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            >
               {t('Cancel')}
             </button>
-            <button type="submit" disabled={loading}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? <><Loader2 size={15} className="animate-spin" />{t('Creating…', 'Creating…')}</> : <><Check size={15} />{t('Create User')}</>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  {t('Creating…', 'Creating…')}
+                </>
+              ) : (
+                <>
+                  <Check size={15} />
+                  {t('Create User')}
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -158,68 +171,9 @@ function CreateUserModal({ onClose, onCreated, agencies }: { onClose: () => void
   );
 }
 
-// ── Agency Select Modal ──────────────────────────────────────────────────────
-function AgencySelectModal({
-  currentAgency,
-  onClose,
-  onSave,
-  agencies
-}: {
-  currentAgency?: string | null;
-  onClose: () => void;
-  onSave: (agency: string) => void;
-  agencies: { id: string; name: string }[];
-}) {
-  const [selected, setSelected] = useState(currentAgency || agencies[0]?.id || 'ussus');
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-bold text-gray-900">Select Agency</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
-            <X size={16} />
-          </button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Agency Template</label>
-            <select
-              value={selected}
-              onChange={e => setSelected(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white cursor-pointer"
-            >
-              {agencies.map(a => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => onSave(selected)}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors"
-            >
-              Save Agency
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function UsersPage() {
   const { t } = useLanguage();
-  const { data: session } = useSession();
-  const userAgency = getUserMajorAgency(session?.user);
-  const AGENCIES = getTemplateOptionsForAgency(userAgency);
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -228,7 +182,6 @@ export default function UsersPage() {
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number } | null>(null);
   const menuBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [showCreate, setShowCreate] = useState(false);
-  const [agencyModalTarget, setAgencyModalTarget] = useState<{ userId: string; role: Role; currentAgency?: string | null } | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
   const showMsg = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -273,28 +226,20 @@ export default function UsersPage() {
     };
   }, [openMenuId]);
 
-  const updateRole = async (userId: string, role: Role, agency?: string) => {
-    if (role === 'agency' && !agency) {
-      const existingUser = users.find(u => u.id === userId);
-      setAgencyModalTarget({ userId, role, currentAgency: existingUser?.agency });
-      setOpenMenuId(null);
-      return;
-    }
-
+  const updateRole = async (userId: string, role: SystemRole) => {
     try {
       const res = await api(`/api/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, agency: role === 'agency' ? agency : null }),
+        body: JSON.stringify({ role }),
       });
       if (!res.ok) throw new Error();
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role, agency: role === 'agency' ? (agency || null) : null } : u));
+      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, role } : u)));
       showMsg('Role updated successfully');
     } catch {
       showMsg('Failed to update role', 'error');
     }
     setOpenMenuId(null);
-    setAgencyModalTarget(null);
   };
 
   const deleteUser = async (userId: string) => {
@@ -310,24 +255,37 @@ export default function UsersPage() {
     setOpenMenuId(null);
   };
 
-  const filtered = (Array.isArray(users) ? users : []).filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+  const filtered = (Array.isArray(users) ? users : []).filter(
+    u =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const superAdminCount = users.filter(u => u.role === 'super_admin').length;
+  const adminCount = users.filter(u => u.role === 'admin' || u.role === 'charity_admin').length;
+  const userCount = users.filter(u => u.role !== 'super_admin' && u.role !== 'admin' && u.role !== 'charity_admin').length;
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-50"><ShieldCheck size={22} className="text-amber-600" /></div>
+            <div className="p-2 rounded-xl bg-amber-50">
+              <ShieldCheck size={22} className="text-amber-600" />
+            </div>
             {t('User Management')}
           </h1>
-          <p className="text-gray-500 mt-1 ml-12 rtl:ml-0 rtl:mr-12">{t('Manage all registered users and their roles', 'Manage all registered users and their roles')}</p>
+          <p className="text-gray-500 mt-1 ml-12 rtl:ml-0 rtl:mr-12">
+            {t('Manage all registered users and their roles', 'Manage all registered users and their roles')}
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={fetchUsers} className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors text-gray-500" title={t('Refresh', 'Refresh')}>
+          <button
+            onClick={fetchUsers}
+            className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors text-gray-500"
+            title={t('Refresh', 'Refresh')}
+          >
             <RefreshCw size={16} />
           </button>
           <button
@@ -339,11 +297,51 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Role Summary Badges */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl bg-white border border-border/40 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
+              <ShieldAlert size={18} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">{t('Super Admin', 'Super Admin')}</p>
+              <h3 className="text-xl font-bold text-text-primary">{superAdminCount}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-border/40 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
+              <ShieldCheck size={18} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">{t('Admin', 'Admin')}</p>
+              <h3 className="text-xl font-bold text-text-primary">{adminCount}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-border/40 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-slate-50 text-slate-600">
+              <User size={18} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">{t('User', 'User')}</p>
+              <h3 className="text-xl font-bold text-text-primary">{userCount}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="relative w-full max-w-sm">
         <Search size={15} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
         <input
-          value={search} onChange={e => setSearch(e.target.value)}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
           placeholder={t('Search by name or email…', 'Search by name or email…')}
           className="w-full pl-9 rtl:pl-4 rtl:pr-9 pr-4 py-2.5 rounded-xl border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
@@ -358,7 +356,6 @@ export default function UsersPage() {
                 <th className="px-6 py-4 font-semibold">{t('User')}</th>
                 <th className="px-6 py-4 font-semibold">{t('Email')}</th>
                 <th className="px-6 py-4 font-semibold">{t('Role')}</th>
-                <th className="px-6 py-4 font-semibold">{t('Agency Scope', 'Agency Scope')}</th>
                 <th className="px-6 py-4 font-semibold hidden lg:table-cell">{t('Verified', 'Verified')}</th>
                 <th className="px-6 py-4 font-semibold hidden xl:table-cell">{t('Joined', 'Joined')}</th>
                 <th className="px-6 py-4 text-right rtl:text-left pr-6 rtl:pr-0 rtl:pl-6 font-semibold">{t('Actions')}</th>
@@ -367,7 +364,7 @@ export default function UsersPage() {
             <tbody className="divide-y divide-border/20">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 size={32} className="text-primary animate-spin" />
                       <p className="text-sm font-medium text-text-tertiary">{t('Loading users...', 'Loading users...')}</p>
@@ -376,151 +373,126 @@ export default function UsersPage() {
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-text-tertiary text-sm">
+                  <td colSpan={6} className="px-6 py-12 text-center text-text-tertiary text-sm">
                     {t('No users found.', 'No users found.')}
                   </td>
                 </tr>
-              ) : filtered.map(user => (
-                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors">
-                  {/* Avatar + Name */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center shrink-0">
-                        <span className="text-primary font-bold text-sm">{user.name.charAt(0).toUpperCase()}</span>
-                      </div>
-                      <span className="font-semibold text-text-primary text-sm">{user.name}</span>
-                    </div>
-                  </td>
+              ) : (
+                filtered.map(user => {
+                  const roleMeta = getRoleDisplay(user.role);
+                  return (
+                    <tr key={user.id} className="hover:bg-gray-50/30 transition-colors">
+                      {/* Avatar + Name */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center shrink-0">
+                            <span className="text-primary font-bold text-sm">
+                              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-text-primary text-sm">{user.name}</span>
+                        </div>
+                      </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{user.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{user.email}</td>
 
-                  {/* Role badge */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={cn('inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border', roleBadge(user.role))}>
-                      {ROLE_OPTIONS.find(r => r.value === user.role)?.label ?? user.role}
-                      {user.role === 'agency' && user.agency && ` (${AGENCIES.find(a => a.id === user.agency)?.name ?? user.agency.toUpperCase()})`}
-                    </span>
-                  </td>
+                      {/* Role badge */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={cn('inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border', roleMeta.style)}>
+                          {t(roleMeta.label, roleMeta.label)}
+                        </span>
+                      </td>
 
-                  {/* Agency Partition Scope badge */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={cn(
-                      'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border',
-                      user.majorAgency === 'Fenero'
-                        ? 'bg-purple-50 text-purple-700 border-purple-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-200'
-                    )}>
-                      {user.majorAgency || 'Sky'}
-                    </span>
-                  </td>
+                      <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                        {user.emailVerified ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            {t('Verified', 'Verified')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            {t('Unverified', 'Unverified')}
+                          </span>
+                        )}
+                      </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                    {user.emailVerified ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        {t('Verified', 'Verified')}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        {t('Unverified', 'Unverified')}
-                      </span>
-                    )}
-                  </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-semibold hidden xl:table-cell">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-semibold hidden xl:table-cell">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4 whitespace-nowrap text-right rtl:text-left pr-6 rtl:pr-0 rtl:pl-6">
-                    <div className="relative inline-block" data-menu>
-                      <button
-                        ref={(el) => { menuBtnRefs.current[user.id] = el; }}
-                        onClick={() => {
-                          if (openMenuId === user.id) {
-                            setOpenMenuId(null);
-                            setMenuCoords(null);
-                          } else {
-                            const btn = menuBtnRefs.current[user.id];
-                            if (btn) {
-                              const rect = btn.getBoundingClientRect();
-                              setMenuCoords({ top: rect.bottom + 4, left: rect.right - 208 });
-                            }
-                            setOpenMenuId(user.id);
-                          }
-                        }}
-                        className="p-1.5 rounded-lg text-text-tertiary hover:text-primary hover:bg-gray-100 transition-colors"
-                      >
-                        <MoreVertical size={16} />
-                      </button>
-
-                      {openMenuId === user.id && menuCoords && createPortal(
-                        <div
-                          className="w-52 bg-white border border-border rounded-xl shadow-xl py-1 overflow-hidden"
-                          style={{ position: 'fixed', top: menuCoords.top, left: menuCoords.left, zIndex: 9999 }}
-                          data-menu
-                        >
-                          <p className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-text-tertiary">{t('Change Role', 'Change Role')}</p>
-                          {ROLE_OPTIONS.map(opt => (
-                            <button
-                              key={opt.value}
-                              onClick={() => {
-                                if (opt.value === 'agency') {
-                                  setAgencyModalTarget({ userId: user.id, role: 'agency', currentAgency: user.agency });
-                                  setOpenMenuId(null);
-                                } else {
-                                  updateRole(user.id, opt.value);
-                                }
-                              }}
-                              className={cn(
-                                'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left rtl:text-right font-semibold',
-                                user.role === opt.value
-                                    ? 'bg-primary-50 text-primary font-bold'
-                                  : 'text-text-secondary hover:bg-gray-50'
-                              )}
-                            >
-                              {opt.label}
-                              {user.role === opt.value && <Check size={13} />}
-                            </button>
-                          ))}
-                          <div className="border-t border-border my-1" />
-                          <p className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-text-tertiary">Agency Scope</p>
+                      {/* Actions */}
+                      <td className="px-6 py-4 whitespace-nowrap text-right rtl:text-left pr-6 rtl:pr-0 rtl:pl-6">
+                        <div className="relative inline-block" data-menu>
                           <button
-                            onClick={async () => {
-                              const newScope = user.majorAgency === 'Fenero' ? 'Sky' : 'Fenero';
-                              try {
-                                const res = await api(`/api/users/${user.id}`, {
-                                  method: 'PATCH',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ majorAgency: newScope }),
-                                });
-                                if (!res.ok) throw new Error();
-                                setUsers(prev => prev.map(u => u.id === user.id ? { ...u, majorAgency: newScope } : u));
-                                showMsg(`Scope updated to ${newScope}`);
-                              } catch {
-                                showMsg('Failed to update scope', 'error');
-                              }
-                              setOpenMenuId(null);
+                            ref={el => {
+                              menuBtnRefs.current[user.id] = el;
                             }}
-                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-text-secondary hover:bg-gray-50 transition-colors text-left rtl:text-right font-semibold"
+                            onClick={() => {
+                              if (openMenuId === user.id) {
+                                setOpenMenuId(null);
+                                setMenuCoords(null);
+                              } else {
+                                const btn = menuBtnRefs.current[user.id];
+                                if (btn) {
+                                  const rect = btn.getBoundingClientRect();
+                                  setMenuCoords({ top: rect.bottom + 4, left: rect.right - 208 });
+                                }
+                                setOpenMenuId(user.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg text-text-tertiary hover:text-primary hover:bg-gray-100 transition-colors"
                           >
-                            <span>Switch to {user.majorAgency === 'Fenero' ? 'Sky' : 'Fenero'}</span>
+                            <MoreVertical size={16} />
                           </button>
-                          <div className="border-t border-border my-1" />
-                          <button
-                            onClick={() => deleteUser(user.id)}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left rtl:text-right font-semibold"
-                          >
-                            <Trash2 size={15} /> {t('Delete User')}
-                          </button>
-                        </div>,
-                        document.body
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+
+                          {openMenuId === user.id &&
+                            menuCoords &&
+                            createPortal(
+                              <div
+                                className="w-52 bg-white border border-border rounded-xl shadow-xl py-1 overflow-hidden"
+                                style={{ position: 'fixed', top: menuCoords.top, left: menuCoords.left, zIndex: 9999 }}
+                                data-menu
+                              >
+                                <p className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-text-tertiary">
+                                  {t('Change Role', 'Change Role')}
+                                </p>
+                                {ROLE_OPTIONS.map(opt => {
+                                  const isCurrent =
+                                    user.role === opt.value ||
+                                    (opt.value === 'admin' && user.role === 'charity_admin');
+                                  return (
+                                    <button
+                                      key={opt.value}
+                                      onClick={() => updateRole(user.id, opt.value)}
+                                      className={cn(
+                                        'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left rtl:text-right font-semibold',
+                                        isCurrent
+                                          ? 'bg-primary-50 text-primary font-bold'
+                                          : 'text-text-secondary hover:bg-gray-50'
+                                      )}
+                                    >
+                                      <span>{t(opt.label, opt.label)}</span>
+                                      {isCurrent && <Check size={13} />}
+                                    </button>
+                                  );
+                                })}
+                                <div className="border-t border-border my-1" />
+                                <button
+                                  onClick={() => deleteUser(user.id)}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left rtl:text-right font-semibold"
+                                >
+                                  <Trash2 size={15} /> {t('Delete User')}
+                                </button>
+                              </div>,
+                              document.body
+                            )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -536,27 +508,18 @@ export default function UsersPage() {
         <CreateUserModal
           onClose={() => setShowCreate(false)}
           onCreated={fetchUsers}
-          agencies={AGENCIES}
-        />
-      )}
-
-      {/* Agency Select Modal */}
-      {agencyModalTarget && (
-        <AgencySelectModal
-          currentAgency={agencyModalTarget.currentAgency}
-          onClose={() => setAgencyModalTarget(null)}
-          onSave={(agency) => updateRole(agencyModalTarget.userId, agencyModalTarget.role, agency)}
-          agencies={AGENCIES}
         />
       )}
 
       {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-[60]">
-          <div className={cn(
-            'flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl text-white text-sm font-medium',
-            toast.type === 'success' ? 'bg-gray-900' : 'bg-red-600'
-          )}>
+          <div
+            className={cn(
+              'flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl text-white text-sm font-medium',
+              toast.type === 'success' ? 'bg-gray-900' : 'bg-red-600'
+            )}
+          >
             {toast.type === 'success' ? <Check size={15} /> : <AlertCircle size={15} />}
             {toast.msg}
           </div>

@@ -116,7 +116,7 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'name, email and password are required' });
     }
 
-    const VALID_ROLES = ['user', 'super_admin', 'agency', 'registrar', 'processor', 'coordinator', 'accountant', 'video_uploader', 'genaral', 'calling'];
+    const VALID_ROLES = ['user', 'admin', 'charity_admin', 'super_admin', 'agency', 'registrar', 'processor', 'coordinator', 'accountant', 'video_uploader', 'genaral', 'calling'];
     const assignedRole = VALID_ROLES.includes(role) ? role : 'user';
 
     // Use Better Auth's sign-up API
@@ -162,7 +162,7 @@ router.patch('/:id', requireSuperAdmin, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { role, agency, majorAgency } = req.body;
 
-    const VALID_ROLES = ['user', 'super_admin', 'agency', 'registrar', 'processor', 'coordinator', 'accountant', 'video_uploader', 'genaral', 'calling'];
+    const VALID_ROLES = ['user', 'admin', 'charity_admin', 'super_admin', 'agency', 'registrar', 'processor', 'coordinator', 'accountant', 'video_uploader', 'genaral', 'calling'];
     if (role && !VALID_ROLES.includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }

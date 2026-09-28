@@ -41,11 +41,16 @@ export function requireRole(allowedRoles: string[]) {
     }
     
     const role = req.user.role;
-    if (!allowedRoles.includes(role)) {
-      return res.status(403).json({ error: 'Forbidden: You do not have the required permissions to perform this action.' });
+    if (
+      role === 'super_admin' ||
+      allowedRoles.includes(role) ||
+      (allowedRoles.includes('charity_admin') && (role === 'admin' || role === 'super_admin')) ||
+      (allowedRoles.includes('admin') && (role === 'charity_admin' || role === 'super_admin'))
+    ) {
+      return next();
     }
     
-    next();
+    return res.status(403).json({ error: 'Forbidden: You do not have the required permissions to perform this action.' });
   };
 }
 
@@ -54,9 +59,10 @@ export const requireSuperAdmin = (req: AuthenticatedRequest, res: Response, next
     return res.status(401).json({ error: 'Unauthorized: Session is not authenticated.' });
   }
   
-  if (req.user.role !== 'super_admin') {
+  if (req.user.role !== 'super_admin' && req.user.role !== 'admin' && req.user.role !== 'charity_admin') {
     return res.status(403).json({ error: 'Forbidden: This resource is restricted to system administrators.' });
   }
   
   next();
 };
+
