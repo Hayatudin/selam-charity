@@ -173,7 +173,7 @@ router.post('/submit', upload.single('document'), async (req: Request, res: Resp
 
     const year = new Date().getFullYear();
     const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-    const applicationNumber = `DAF-${year}-${randomSuffix}`;
+    const applicationNumber = `SELAM-${year}-${randomSuffix}`;
     const newId = createId();
 
     const record = {

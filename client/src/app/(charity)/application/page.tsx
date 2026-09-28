@@ -53,7 +53,7 @@ export default function ScholarshipApplicationLandingPage() {
               <GraduationCap size={32} />
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#1964d2] tracking-tight">
-              {t('Dar Al-Fiker Foundation Scholarship Application', 'طلب منحة مؤسسة دار الفكر')}
+              {t('Selam Charity Scholarship Application', 'طلب منحة جمعية سلام الخيرية')}
             </h1>
             <p className="mt-3 text-slate-500 text-sm sm:text-base max-w-2xl mx-auto">
               {t('Supporting dedicated government employees and civil servants in pursuing higher postgraduate education in accredited public universities.', 'دعم موظفي القطاع الحكومي والخدمة المدنية لمواصلة الدراسات العليا في الجامعات الحكومية المعتمدة.')}

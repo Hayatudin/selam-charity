@@ -187,7 +187,7 @@ export default function ScholarshipApplicationFormPage() {
       }
 
       setSubmittedData({
-        applicationNumber: data.applicationNumber || `DAF-${Date.now().toString().slice(-6)}`,
+        applicationNumber: data.applicationNumber || `SELAM-${Date.now().toString().slice(-6)}`,
       });
       window.scrollTo({ top: 100, behavior: 'smooth' });
     } catch (err: any) {
@@ -219,7 +219,7 @@ export default function ScholarshipApplicationFormPage() {
               {t('Application Submitted Successfully!', 'تم إرسال الطلب بنجاح!')}
             </h1>
             <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto mb-8">
-              {t('Your scholarship application has been registered with Dar Al-Fiker Foundation and is queued for committee review.', 'تم تسجيل طلب المنحة الخاص بك لدى مؤسسة دار الفكر، وهو قيد المراجعة والتدقيق من قبل اللجنة.')}
+              {t('Your scholarship application has been registered with Selam Charity and is queued for committee review.', 'تم تسجيل طلب المنحة الخاص بك لدى جمعية سلام الخيرية، وهو قيد المراجعة والتدقيق من قبل اللجنة.')}
             </p>
 
             {/* Reference Number Box */}

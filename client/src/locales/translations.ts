@@ -1024,5 +1024,6 @@ export const arTranslations: Record<string, string> = {
   "Administration": 'الإدارة العامة',
   "Sign Out": 'تسجيل الخروج',
   "Live Show": 'بث مباشر',
+  "Selam Charity Scholarship Application": 'طلب منحة جمعية سلام الخيرية',
 };
 
