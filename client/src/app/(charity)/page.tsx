@@ -210,7 +210,7 @@ export default function CharityHomePage() {
             {/* Left Column: Campus Building Image with Floating Glass Effect Overlay */}
             <div className="shrink-0 w-full max-w-[630px] h-[440px] relative rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] border border-slate-100 bg-slate-100">
               <img
-                src="/Her-img2.png"
+                src="/About.png"
                 alt="Selam Charity & Educational School"
                 className="w-full h-full object-cover object-center"
               />
