@@ -23,7 +23,9 @@ import {
   FlaskConical,
   Lightbulb,
   Mic,
-  User
+  User,
+  Droplets,
+  Landmark
 } from 'lucide-react';
 import {
   useCharityNewsList,
@@ -48,27 +50,22 @@ const CHARITY_FAQS = [
   {
     question: 'How are donations utilized and how can I track my impact?',
     answer:
-      '100% of public donations directly fund student education, daily nutritious meals, learning materials, and emergency community aid. We maintain transparent financial oversight with regular impact updates shared directly with our donors and sponsors.',
+      '100% of public donations directly fund school construction, student desks, learning supplies, masjid building, yatim (orphan) care, and village water wells. We maintain transparent financial oversight with regular milestone and progress updates shared directly with our donors.',
   },
   {
-    question: 'How do I sponsor a student at Selam School?',
+    question: 'How do I sponsor a Yatim (orphan) or support a school project?',
     answer:
-      'You can sponsor a child\'s complete schooling year—covering accredited tuition, uniforms, textbooks, daily balanced lunches, and comprehensive medical checkups through flexible monthly or annual commitments.',
+      'You can sponsor a fatherless orphan child—covering their living necessities, clothing, and schooling—or contribute directly towards building schools and supplying desks, exercise books, and pens across different cities through flexible monthly or one-off donations.',
   },
   {
-    question: 'Can I schedule a visit to Selam School and facilities?',
+    question: 'What grades are covered in the schools established by Selam Charity?',
     answer:
-      'Yes, we warmly welcome visitors, sponsors, and global partners! You can request a guided walkthrough of our school campus and community outreach centers by reaching out through our contact page.',
+      'The schools established across various cities provide structured, values-based education from Kindergarten (KG) up to Grade 9, complete with sturdy wooden desks, textbooks, exercise books, and stationery supplies.',
   },
   {
-    question: 'What grade levels and educational programs are offered?',
+    question: 'Can I contribute specifically to a mosque construction or water well (bir)?',
     answer:
-      'Selam School provides values-driven education from Kindergarten through Grade 8 (Middle School), combining rigorous national academic standards with modern STEM labs, digital literacy, and creative arts.',
-  },
-  {
-    question: 'How can I volunteer or contribute professional skills?',
-    answer:
-      'We welcome passionate volunteers in classroom assistance, vocational training, technology mentorship, and healthcare advocacy. Both on-site in Addis Ababa and remote advisory roles are available based on seasonal initiatives.',
+      'Yes! Donors can sponsor specific community projects including drilling a village water well (bir) to provide clean, accessible drinking water, or funding mosque construction as a community and spiritual sanctuary. Dedicated progress reports are provided for every project.',
   },
   {
     question: 'Is Selam Charity an officially registered non-profit organization?',
@@ -174,7 +171,7 @@ export default function CharityHomePage() {
             {/* Right Column Description */}
             <div className="lg:col-span-5 flex items-end">
               <p className="text-white/90 text-sm sm:text-base leading-relaxed font-normal">
-                {t('Our work supports children and families through education, care, and meaningful community initiatives. We create opportunities, strengthen communities, and help those in need build a brighter and more hopeful future.')}
+                {t('Establishing schools from KG to Grade 9, furnishing classrooms with desks and supplies, constructing mosques, caring for yatim (orphans), and drilling clean water wells across communities in need.')}
               </p>
             </div>
           </div>
@@ -265,7 +262,7 @@ export default function CharityHomePage() {
 
               {/* Paragraph 2: Charity Establishment & Primary Focus */}
               <p className="text-slate-600 text-sm sm:text-[15px] leading-relaxed">
-                {t('Selam Charity Organization is one of the premier organizations established for charity work in 2010. The main focus of Selam Charity is to empower underprivileged children and youth through comprehensive schooling from Kindergarten through Grade 8, child nutrition and healthcare, and sustainable community support for vulnerable families.')}
+                {t('Selam Charity Organization was established in 2010 to serve underserved communities. Our core mission is to establish schools across diverse cities and furnish them with desks, exercise books, and pens (covering KG up to Grade 9), construct mosques, care for yatim (orphans), and drill sustainable water wells (bir) in rural villages.')}
               </p>
 
               {/* Learn More → Link */}
@@ -299,70 +296,60 @@ export default function CharityHomePage() {
                 {t('OUR PROGRAMS')}
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight leading-[1.14]">
-                <span className="text-slate-900 block">{t('Transformative Education')}</span>
-                <span className="text-[#185A3A] block">{t('& Community Solutions')}</span>
+                <span className="text-slate-900 block">{t('Our Core Programs')}</span>
+                <span className="text-[#185A3A] block">{t('& Humanitarian Initiatives')}</span>
               </h2>
             </div>
 
-            {/* Right Header Description + More Programs Button */}
+            {/* Right Header Description + Explore Schools Button */}
             <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row sm:items-center lg:items-start xl:items-center gap-4 lg:max-w-md">
               <p className="text-slate-600 text-sm leading-relaxed">
-                {t('Empowering children and families through targeted academic sponsorships, modern STEM facilities, continuous educator training, and community outreach.')}
+                {t('Dedicated to long-term impact through four foundational pillars: establishing schools, constructing mosques, caring for yatim (orphans), and drilling clean water wells.')}
               </p>
               <Link
-                href="/school#programs"
+                href="/school"
                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#185A3A] hover:bg-[#12422a] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md shrink-0 w-fit"
               >
-                <span>{t('MORE PROGRAMS')}</span>
+                <span>{t('EXPLORE SCHOOLS')}</span>
                 <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
               </Link>
             </div>
           </div>
 
-          {/* 6 Cards Grid (3 in 1 row, 2 rows) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {/* 4 Cards Grid - Aligned with the 4 Core Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {[
               {
                 number: '01',
-                title: t('Educational Scholarships'),
-                desc: t('Supporting orphans and underprivileged children with full academic sponsorships, learning materials, and uniforms to ensure zero dropouts.'),
+                title: t('School Establishment & Supplies'),
+                desc: t('Building schools across diverse cities and providing essential materials—sturdy desks, pens, exercise books, and supplies from KG up to Grade 9.'),
                 icon: GraduationCap,
-                href: '/school#programs',
+                href: '/school',
+                tag: 'KG - Grade 9',
               },
               {
                 number: '02',
-                title: t('Research & STEM Support'),
-                desc: t('Encouraging academic excellence and scientific discovery through modern science laboratories, STEM experiment kits, and library archives.'),
-                icon: FlaskConical,
-                href: '/school#programs',
+                title: t('Mosque Establishment'),
+                desc: t('Constructing and establishing mosques (masajid) across communities to serve as peaceful centers for worship, spiritual learning, and unity.'),
+                icon: Landmark,
+                href: '/contact?intent=support',
+                tag: 'Masajid Projects',
               },
               {
                 number: '03',
-                title: t('Training & Skills Programs'),
-                desc: t('Equipping educators and young learners with essential pedagogy, digital literacy, and foundational vocational skills for personal and career growth.'),
-                icon: Award,
-                href: '/school#programs',
+                title: t('Yatim (Orphan) Care & Sponsorship'),
+                desc: t('Dedicated humanitarian support for orphans (children without fathers)—providing dignified care, daily necessities, education, and protection.'),
+                icon: Heart,
+                href: '/donate',
+                tag: 'Orphan Care',
               },
               {
                 number: '04',
-                title: t('Guided Academic Tutorials'),
-                desc: t('Enhancing classroom performance and self-confidence through personalized after-school tutoring, remedial learning, and mentor guidance.'),
-                icon: Lightbulb,
-                href: '/school#programs',
-              },
-              {
-                number: '05',
-                title: t('Seminars & Workshops'),
-                desc: t('Promoting community empowerment, parental engagement, and child health awareness through interactive seminars and skill workshops.'),
-                icon: Users,
-                href: '/school#programs',
-              },
-              {
-                number: '06',
-                title: t('Conferences & Forums'),
-                desc: t('Creating enriching platforms for inter-school academic symposiums, student debate tournaments, and community partnership networking.'),
-                icon: Mic,
-                href: '/school#programs',
+                title: t('Water Wells & Sources (Bir)'),
+                desc: t('Drilling water wells (bir) and establishing clean, sustainable drinking water access in rural villages to relieve hardship and transform lives.'),
+                icon: Droplets,
+                href: '/donate',
+                tag: 'Village Water',
               },
             ].map((card, idx) => {
               const Icon = card.icon;
@@ -372,18 +359,22 @@ export default function CharityHomePage() {
                   className="bg-white rounded-[2rem] p-7 sm:p-8 border border-slate-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] hover:shadow-xl hover:-translate-y-1.5 hover:border-emerald-200 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div>
-                    {/* Top Row: Number Badge + Title */}
-                    <div className="flex items-center gap-3.5 mb-6">
+                    {/* Top Row: Number Badge + Tag */}
+                    <div className="flex items-center justify-between gap-3 mb-6">
                       <span className="w-9 h-9 rounded-full bg-[#185A3A] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                         {card.number}
                       </span>
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug group-hover:text-[#185A3A] transition-colors">
-                        {card.title}
-                      </h3>
+                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                        {t(card.tag)}
+                      </span>
                     </div>
 
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug group-hover:text-[#185A3A] transition-colors mb-4">
+                      {card.title}
+                    </h3>
+
                     {/* Center Icon in soft circle */}
-                    <div className="my-6 flex items-center justify-center">
+                    <div className="my-5 flex items-center justify-center">
                       <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-emerald-50/80 border border-emerald-100/60 flex items-center justify-center text-[#185A3A] group-hover:bg-[#185A3A] group-hover:text-white group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
                         <Icon className="w-9 h-9 sm:w-10 sm:h-10 transition-colors duration-300" strokeWidth={1.8} />
                       </div>
@@ -482,7 +473,7 @@ export default function CharityHomePage() {
           {/* 4 Cards Grid - Exact Design Inspiration with Background Images & Diagonal Cutouts */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-end">
 
-            {/* Card 01: Quality Education */}
+            {/* Card 01: School Construction & Materials */}
             <Link
               href="/school"
               className="h-[480px] sm:h-[510px] flex flex-col justify-between p-6 sm:p-7 rounded-[30px] bg-[#141417] text-white border border-white/10 hover:border-white/25 relative overflow-hidden group transition-all duration-500 hover:shadow-2xl hover:shadow-black/70"
@@ -495,7 +486,7 @@ export default function CharityHomePage() {
               >
                 <img
                   src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80"
-                  alt="Quality Education"
+                  alt="School Construction & Supplies"
                   className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-700 ease-out opacity-60"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-[#141417] via-[#141417]/70 to-transparent pointer-events-none" />
@@ -506,18 +497,18 @@ export default function CharityHomePage() {
               <div className="relative z-10">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-2xl sm:text-[26px] font-normal tracking-tight leading-[1.18] whitespace-pre-line text-white">
-                    {t('Quality Education')}
+                    {t('School Construction & Supplies')}
                   </h3>
                   <span className="text-xs font-mono font-medium text-white/50 tracking-wider">
                     01
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-zinc-300/90 mt-4 leading-relaxed line-clamp-3 font-light">
-                  {t('Provide comprehensive, values-driven schooling from Kindergarten through Grade 8, ensuring zero dropouts due to financial hardship.')}
+                  {t('Establishing schools across diverse cities and providing sturdy desks, pens, exercise books, and learning supplies from Kindergarten through Grade 9.')}
                 </p>
                 <div className="mt-4">
                   <span className="inline-flex items-center gap-1.5 text-xs text-zinc-300 font-normal underline underline-offset-4 decoration-white/30 group-hover:decoration-white transition-all">
-                    <span>{t('Explore Our School')}</span>
+                    <span>{t('Explore Our Schools')}</span>
                     <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
                   </span>
                 </div>
@@ -534,9 +525,9 @@ export default function CharityHomePage() {
               </div>
             </Link>
 
-            {/* Card 02: Child Nutrition & Health */}
+            {/* Card 02: Mosque Establishment */}
             <Link
-              href="/about"
+              href="/contact?intent=support"
               className="h-[480px] sm:h-[510px] flex flex-col justify-between p-6 sm:p-7 rounded-[30px] bg-[#ededf0] text-zinc-900 border border-zinc-200/80 hover:border-zinc-300 relative overflow-hidden group transition-all duration-500 hover:shadow-2xl hover:shadow-white/5"
             >
               <div
@@ -546,8 +537,8 @@ export default function CharityHomePage() {
                 }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80"
-                  alt="Child Nutrition and Health"
+                  src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=1200&q=80"
+                  alt="Mosque Construction"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent pointer-events-none" />
@@ -557,18 +548,18 @@ export default function CharityHomePage() {
               <div className="relative z-10">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-2xl sm:text-[26px] font-normal tracking-tight leading-[1.18] whitespace-pre-line text-zinc-900">
-                    {t('Child Nutrition & Care')}
+                    {t('Mosque Establishment')}
                   </h3>
                   <span className="text-xs font-mono font-medium text-zinc-500 tracking-wider">
                     02
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-zinc-600 mt-4 leading-relaxed line-clamp-3 font-light">
-                  {t('Guarantee daily balanced meals, clinical checkups, and hygiene support for every student to safeguard child development.')}
+                  {t('Constructing and supporting mosques (masajid) as enduring spiritual anchors and community centers for worship and moral guidance.')}
                 </p>
                 <div className="mt-4">
                   <span className="inline-flex items-center gap-1.5 text-xs text-zinc-800 font-normal underline underline-offset-4 decoration-zinc-400 group-hover:decoration-zinc-900 transition-all">
-                    <span>{t('Learn More About Us')}</span>
+                    <span>{t('Support Mosque Projects')}</span>
                     <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
                   </span>
                 </div>
@@ -585,9 +576,9 @@ export default function CharityHomePage() {
               </div>
             </Link>
 
-            {/* Card 03: Community Empowerment */}
+            {/* Card 03: Yatim (Orphan) Support */}
             <Link
-              href="/contact?intent=support"
+              href="/donate"
               className="h-[480px] sm:h-[510px] rounded-[30px] bg-white p-[2.5px] border border-white/90 relative overflow-hidden group transition-all duration-500 lg:-translate-y-4 shadow-2xl hover:shadow-black/80 flex flex-col justify-between"
             >
               <div
@@ -598,8 +589,8 @@ export default function CharityHomePage() {
               >
                 <div className="absolute inset-0 z-0 overflow-hidden">
                   <img
-                    src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80"
-                    alt="Community Resilience"
+                    src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80"
+                    alt="Yatim Orphan Support"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-45"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-[#18181c] via-[#18181c]/80 to-transparent pointer-events-none" />
@@ -610,18 +601,18 @@ export default function CharityHomePage() {
                 <div className="relative z-10">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-2xl sm:text-[26px] font-normal tracking-tight leading-[1.18] whitespace-pre-line text-white">
-                      {t('Community Empowerment')}
+                      {t('Yatim (Orphan) Support')}
                     </h3>
                     <span className="text-xs font-mono font-medium text-white/50 tracking-wider">
                       03
                     </span>
                   </div>
                   <p className="text-xs sm:text-sm text-zinc-300/80 mt-4 leading-relaxed line-clamp-3 font-light">
-                    {t('Offer vocational training and livelihood micro-grants to widowed mothers and guardian families to foster economic autonomy.')}
+                    {t('Securing comprehensive care, living essentials, clothing, and full schooling for fatherless children (yatim) to ensure they thrive.')}
                   </p>
                   <div className="mt-4">
                     <span className="inline-flex items-center gap-1.5 text-xs text-zinc-200 font-normal underline underline-offset-4 decoration-white/30 group-hover:decoration-white transition-all">
-                      <span>{t('Learn More')}</span>
+                      <span>{t('Sponsor an Orphan')}</span>
                       <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
                     </span>
                   </div>
@@ -629,7 +620,7 @@ export default function CharityHomePage() {
 
                 <div className="relative z-10">
                   <span className="text-[11px] text-zinc-400 font-mono tracking-wider">
-                    *{t('Emergency Relief')}
+                    *{t('Care & Protection')}
                   </span>
                 </div>
               </div>
@@ -642,9 +633,9 @@ export default function CharityHomePage() {
               </div>
             </Link>
 
-            {/* Card 04: Emergency Relief */}
+            {/* Card 04: Water Wells & Sources (Bir) */}
             <Link
-              href="/school#programs"
+              href="/donate"
               className="h-[480px] sm:h-[510px] flex flex-col justify-between p-6 sm:p-7 rounded-[30px] bg-[#141417] text-white border border-white/10 hover:border-white/25 relative overflow-hidden group transition-all duration-500 hover:shadow-2xl hover:shadow-black/70"
             >
               <div
@@ -654,8 +645,8 @@ export default function CharityHomePage() {
                 }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1200&q=80"
-                  alt="Emergency Relief"
+                  src="https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=1200&q=80"
+                  alt="Water Wells Bir in Villages"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out opacity-55"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-[#141417] via-[#141417]/75 to-transparent pointer-events-none" />
@@ -666,18 +657,18 @@ export default function CharityHomePage() {
               <div className="relative z-10">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-2xl sm:text-[26px] font-normal tracking-tight leading-[1.18] whitespace-pre-line text-white">
-                    {t('Emergency Relief')}
+                    {t('Water Wells & Sources (Bir)')}
                   </h3>
                   <span className="text-xs font-mono font-medium text-white/50 tracking-wider">
                     04
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-zinc-300/90 mt-4 leading-relaxed line-clamp-3 font-light">
-                  {t('Deploy rapid humanitarian relief, food aid, and warm clothing to communities affected by drought and sudden crisis.')}
+                  {t('Drilling and establishing sustainable water wells (bir) in rural villages, providing clean and life-saving drinking water.')}
                 </p>
                 <div className="mt-4">
                   <span className="inline-flex items-center gap-1.5 text-xs text-zinc-300 font-normal underline underline-offset-4 decoration-white/30 group-hover:decoration-white transition-all">
-                    <span>{t('Explore Programs')}</span>
+                    <span>{t('Fund a Water Well')}</span>
                     <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
                   </span>
                 </div>
@@ -709,22 +700,22 @@ export default function CharityHomePage() {
 
             <div className="lg:col-span-5 space-y-6">
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full">
-                {t('Center of Excellence')}
+                {t('Educational Initiative')}
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                {t(introSection?.title || 'Selam School: Inspiring Young Minds')}
+                {t(introSection?.title || 'Building Schools Across Cities: KG to Grade 9')}
               </h2>
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
                 {t(introSection?.content ||
-                  'Our school provides value-based education combining academic distinction with personal character building. From early childhood development to advanced middle school sciences, we nurture curious and confident scholars.')}
+                  'Across multiple cities, Selam Charity establishes and equips accredited schools from Kindergarten through Grade 9. We provide classrooms with sturdy desks, textbooks, exercise books, pens, and full educational supplies so that no child is deprived of quality learning.')}
               </p>
 
               <div className="space-y-3 pt-2">
                 {[
-                  'Comprehensive Kindergarten to Grade 8 curriculum',
-                  'Dedicated STEM labs and digital computer facilities',
-                  'Co-curricular clubs: Debate, Sports, Arts, and Science',
-                  'Daily student meal assistance & tutoring support',
+                  'Establishing schools across multiple cities and regional centers',
+                  'Furnishing classrooms with durable wooden desks and seating',
+                  'Providing exercise books, pens, and educational stationery',
+                  'Comprehensive education from Kindergarten (KG) to Grade 9',
                 ].map((highlight, idx) => (
                   <div key={idx} className="flex items-center gap-2.5 text-sm font-medium text-slate-800">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -738,38 +729,38 @@ export default function CharityHomePage() {
                   href="/school"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-bold text-sm hover:bg-emerald-700 transition-colors"
                 >
-                  <span>{t('Explore Academic Programs')}</span>
+                  <span>{t('Explore Our Schools')}</span>
                   <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
                 </Link>
               </div>
             </div>
 
-            {/* Academic Programs Grid */}
+            {/* Academic Levels Grid: KG to Grade 9 */}
             <div className="lg:col-span-7 grid sm:grid-cols-2 gap-5">
               {[
                 {
                   title: 'Early Childhood (KG)',
-                  desc: 'Play-based foundational learning focusing on early literacy, curiosity, and social development.',
+                  desc: 'Play-based foundational learning focusing on early literacy, curiosity, and socialization in supportive classrooms.',
                   icon: BookOpen,
                   badge: 'Ages 4-6',
                 },
                 {
                   title: 'Primary School (Grades 1-4)',
-                  desc: 'Core competencies in mathematics, science, language, and cultural understanding.',
+                  desc: 'Core competencies in mathematics, science, language, and reading with dedicated desks and textbooks.',
                   icon: GraduationCap,
                   badge: 'Grades 1-4',
                 },
                 {
                   title: 'Middle School (Grades 5-8)',
-                  desc: 'In-depth STEM education, lab practicals, critical reasoning, and national exam readiness.',
+                  desc: 'Rigorous subject studies, natural science laboratory practicals, English proficiency, and national exam readiness.',
                   icon: Building2,
                   badge: 'Grades 5-8',
                 },
                 {
-                  title: 'Enrichment & Tutoring',
-                  desc: 'Targeted support, language clubs, library reading circles, and student mentorship.',
+                  title: 'Junior Secondary (Grade 9)',
+                  desc: 'Advanced mathematics, general sciences, civic education, and strong academic preparation for secondary studies.',
                   icon: Users,
-                  badge: 'All Grades',
+                  badge: 'Grade 9',
                 },
               ].map((prog, idx) => {
                 const Icon = prog.icon;

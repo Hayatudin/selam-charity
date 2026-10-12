@@ -386,7 +386,7 @@ export default function DonatePage() {
             <div>
               <h4 className="font-bold text-slate-900 text-base">{t('Direct & Verified Humanitarian Impact')}</h4>
               <p className="text-slate-600 text-xs sm:text-sm mt-0.5">
-                {t('Every birr directly funds student scholarships, nutritious school meals, and community aid programs.')}
+                {t('Every birr directly funds school construction, desks and materials, mosque establishment, yatim (orphan) care, and village water wells.')}
               </p>
               <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-medium">
                 <span className="inline-flex items-center gap-1.5 font-bold text-slate-800">

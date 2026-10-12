@@ -30,14 +30,14 @@ export default function CharityFooter() {
               <div className="flex flex-col">
                 <span className="text-xl font-black tracking-tight text-white">{t('SELAM Charity', 'SELAM')}</span>
                 <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest -mt-1">
-                  {t('Charity & Educational School')}
+                  {t('Charity Organization')}
                 </span>
               </div>
             </div>
 
             <p className="text-sm text-slate-400 leading-relaxed pr-6">
               {t(
-                'Dedicated to educational excellence, moral integrity, and grassroots humanitarian aid. We nurture underprivileged youth and empower communities through holistic schooling, healthcare support, and sustainable development.'
+                'Dedicated to establishing schools across cities from KG to Grade 9, supplying classroom materials, building mosques, supporting yatim (orphans), and providing clean water wells (bir).'
               )}
             </p>
 
@@ -61,7 +61,7 @@ export default function CharityFooter() {
                 <Link href="/about" className="hover:text-emerald-400 transition-colors">{t('About Organization')}</Link>
               </li>
               <li>
-                <Link href="/school" className="hover:text-emerald-400 transition-colors">{t('Selam School')}</Link>
+                <Link href="/school" className="hover:text-emerald-400 transition-colors">{t('Schools & Education')}</Link>
               </li>
               <li>
                 <Link href="/gallery" className="hover:text-emerald-400 transition-colors">{t('Photo & Video Gallery')}</Link>
@@ -75,16 +75,15 @@ export default function CharityFooter() {
             </ul>
           </div>
 
-          {/* Col 4: School Programs */}
+          {/* Col 4: Core Programs */}
           <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">{t('School Programs')}</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white">{t('Our Core Programs')}</h4>
             <ul className="space-y-2.5 text-sm text-slate-400">
-              <li>{t('Kindergarten (Early Childhood)')}</li>
-              <li>{t('Primary School (Grades 1-4)')}</li>
-              <li>{t('Middle School (Grades 5-8)')}</li>
-              <li>{t('STEM & Science Labs')}</li>
-              <li>{t('Co-Curricular Athletics & Debate')}</li>
-              <li>{t('Nutritional & Learning Support')}</li>
+              <li>{t('School Construction (KG - Grade 9)')}</li>
+              <li>{t('Desks & Educational Supplies')}</li>
+              <li>{t('Mosque Establishment')}</li>
+              <li>{t('Yatim (Orphan) Care & Sponsorship')}</li>
+              <li>{t('Water Wells & Clean Water (Bir)')}</li>
             </ul>
           </div>
 

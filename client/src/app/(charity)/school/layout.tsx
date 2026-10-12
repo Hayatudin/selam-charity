@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Selam School - Academic Programs & Campus Life',
-  description: 'Explore Selam School educational pathways from Kindergarten to Grade 8, science labs, athletic clubs, and student dining.',
+  title: 'Our Schools & Educational Network | KG to Grade 9',
+  description: 'Establishing accredited schools across diverse cities, providing classrooms with wooden desks, exercise books, pens, and supplies from Kindergarten to Grade 9.',
 };
 
 export default function SchoolLayout({ children }: { children: React.ReactNode }) {

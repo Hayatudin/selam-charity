@@ -185,7 +185,7 @@ export default function CharityNavbar() {
                   : 'text-slate-800 hover:text-emerald-800'
                 }`}
             >
-              {t('School')}
+              {t('Schools')}
             </Link>
 
             <Link
@@ -310,12 +310,12 @@ export default function CharityNavbar() {
               </Link>
             )}
 
-            {/* Apply now Button */}
+            {/* Donate Now Button */}
             <Link
-              href="/application"
+              href="/donate"
               className="rounded-full bg-[#185a3a] hover:bg-[#12422a] text-white px-6 py-2.5 text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             >
-              {t('Apply now')}
+              {t('Donate Now')}
             </Link>
           </div>
 
@@ -470,7 +470,7 @@ export default function CharityNavbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-800 hover:bg-slate-50"
               >
-                {t('School')}
+                {t('Schools')}
               </Link>
               <Link
                 href="/gallery"
@@ -527,11 +527,11 @@ export default function CharityNavbar() {
 
             <div className="pt-4 border-t border-slate-100 flex flex-col gap-2.5">
               <Link
-                href="/application"
+                href="/donate"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-3 rounded-full bg-[#185a3a] text-white font-semibold text-sm shadow-sm"
               >
-                {t('Apply now')}
+                {t('Donate Now')}
               </Link>
 
               {session ? (

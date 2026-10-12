@@ -81,10 +81,10 @@ export default function CharityAboutPage() {
               <div className="prose prose-slate text-slate-600 space-y-4 text-sm sm:text-base leading-relaxed">
                 <p>
                   {t(about?.content || 
-                    'Founded with a commitment to humanitarian excellence, Selam Charity operates community development, educational scholarships, and emergency aid across regions in need. We believe every person deserves dignity, opportunity, and the resources to thrive.')}
+                    'Founded with a commitment to humanitarian excellence, Selam Charity operates school establishment, mosque construction, yatim (orphan) care, and clean water wells across regions in need. We believe every person deserves dignity, opportunity, and the resources to thrive.')}
                 </p>
                 <p>
-                  {t('Over the past decade, we have expanded from grassroots child relief into an integrated ecosystem encompassing formal schooling, vocational development, nutritious meal provisions, and health outreach. Our flagship institution, Selam School, provides high-caliber education to over 650 bright young minds.')}
+                  {t('Over the past decade, we have established accredited schools across diverse cities, furnishing classrooms with desks, books, and pens from KG to Grade 9, while constructing mosques, caring for yatim (orphans), and drilling clean water wells (bir) in rural villages.')}
                 </p>
               </div>
 
@@ -391,10 +391,10 @@ export default function CharityAboutPage() {
                 },
                 {
                   name: 'Sister Fatima Al-Hassan',
-                  role: 'Head of School Administration',
+                  role: 'Head of School Network & Education',
                   category: 'management' as const,
-                  desc: 'Leading teacher training, modern curriculum standards, and inclusive child pedagogy at Selam School.',
-                  fullBio: 'Sister Fatima oversees the educational ecosystem of Selam School, nurturing over 1,200 students with inclusive learning standards, STEM programs, and character-building extracurriculars.',
+                  desc: 'Leading curriculum standards, classroom supplies, and inclusive education across our schools.',
+                  fullBio: 'Sister Fatima oversees the educational network of schools established by Selam Charity, ensuring quality learning standards, furnished classrooms, and supportive environments from KG to Grade 9.',
                   image: '/Team/photo_2026-09-22_21-57-46.jpg',
                   credentials: ['B.Ed. & M.Ed. Educational Leadership', 'Distinguished Educator Award 2023', 'Specialist in Child Pedagogy'],
                   email: 'school@selamcharity.org'
@@ -621,15 +621,15 @@ export default function CharityAboutPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                quote: 'Before Selam School, I could not afford uniforms or textbooks for my two children. Today, both are excelling in their classes and receive healthy lunch every day. Selam gave our family renewed hope.',
+                quote: 'Before Selam Charity established our local school, I could not afford desks, textbooks, or exercise books for my children. Today, both are excelling in their classes and have a safe, equipped school to attend.',
                 author: 'Maryam Tadesse',
                 role: 'Parent of Grade 4 & 6 Students',
                 stars: 5,
               },
               {
-                quote: 'The teachers at Selam School do not just teach us science and math; they teach us values, kindness, and to dream big. Having access to the modern computer lab changed my life.',
+                quote: 'The teachers in our school do not just teach us science and math; they teach us values, kindness, and to dream big. Having furnished desks, exercise books, and pens gave us the dignity to learn.',
                 author: 'Bilal Kedir',
-                role: 'Grade 8 Graduate & Scholarship Recipient',
+                role: 'Grade 9 Graduate',
                 stars: 5,
               },
               {

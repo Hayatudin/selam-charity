@@ -34,7 +34,7 @@ function ContactContent() {
     name: '',
     email: '',
     phone: '',
-    category: intent === 'support' ? 'Donation & Sponsorship' : (intent === 'admissions' ? 'School Admissions' : 'General Inquiry'),
+    category: intent === 'support' ? 'Donation & Sponsorship' : (intent === 'schools' || intent === 'admissions' ? 'School Inquiries' : 'General Inquiry'),
     subject: '',
     message: '',
   });
@@ -45,8 +45,8 @@ function ContactContent() {
   useEffect(() => {
     if (intent === 'support') {
       setFormData((prev) => ({ ...prev, category: 'Donation & Sponsorship', subject: 'Inquiring about supporting Selam programs' }));
-    } else if (intent === 'admissions') {
-      setFormData((prev) => ({ ...prev, category: 'School Admissions', subject: 'Student admission & enrollment inquiry' }));
+    } else if (intent === 'schools' || intent === 'admissions') {
+      setFormData((prev) => ({ ...prev, category: 'School Inquiries', subject: 'Inquiry regarding school programs & enrollment' }));
     }
   }, [intent]);
 
@@ -230,7 +230,7 @@ function ContactContent() {
                     </div>
                     <h3 className="text-2xl font-black text-slate-900">{t('Message Received!')}</h3>
                     <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-                      {t('Thank you for contacting Selam Charity & School. A member of our team will review your inquiry and follow up shortly.')}
+                      {t('Thank you for contacting Selam Charity. A member of our team will review your inquiry and follow up shortly.')}
                     </p>
                     <div className="pt-4">
                       <button
@@ -313,7 +313,7 @@ function ContactContent() {
                           className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                         >
                           <option value="General Inquiry">{t('General Inquiry')}</option>
-                          <option value="School Admissions">{t('School Admissions')}</option>
+                          <option value="School Inquiries">{t('School Inquiries')}</option>
                           <option value="Donation & Sponsorship">{t('Donation & Sponsorship')}</option>
                           <option value="Volunteering & Partnerships">{t('Volunteering & Partnerships')}</option>
                         </select>
