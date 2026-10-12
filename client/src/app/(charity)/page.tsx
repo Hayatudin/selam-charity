@@ -37,14 +37,11 @@ import { getFileUrl } from '@/lib/utils';
 import { useLanguage } from '@/context/LanguageContext';
 
 const HERO_IMAGES = [
-  '/hero-images/Her-img2.png',
-  '/hero-images/1.jpeg',
-  '/hero-images/2.jpeg',
-  '/hero-images/4.jpeg',
-  '/hero-images/5.jpeg',
-  '/hero-images/8.jpeg',
-  '/hero-images/blob_PpDVQji.jpg',
-  '/hero-images/New Millionaires emerge in the Ongoing 9mobile___.jpg',
+  '/hero-images/hero-1.png',
+  '/hero-images/hero-2.png',
+  '/hero-images/hero-3.png',
+  '/hero-images/hero-4.png',
+  '/hero-images/hero-5.png',
 ];
 
 const CHARITY_FAQS = [
@@ -141,7 +138,7 @@ export default function CharityHomePage() {
           ══════════════════════════════════════════════════════════════ */}
       <section className="relative min-h-[92vh] md:min-h-screen w-full flex flex-col justify-end overflow-hidden pt-28 sm:pt-36 pb-8 sm:pb-12 select-none">
 
-        {/* Background Image Carousel (Loops Her-img1, Her-img2, Her-img3) */}
+        {/* Background Image Carousel (Loops hero-1 to hero-5) */}
         <div className="absolute inset-0 z-0">
           {HERO_IMAGES.map((img, idx) => (
             <div
@@ -1006,7 +1003,7 @@ export default function CharityHomePage() {
             <div className="lg:col-span-5 h-full">
               <div className="relative w-full h-[400px] sm:h-[480px] lg:h-[580px] rounded-[32px] overflow-hidden shadow-lg shadow-zinc-200/60 bg-zinc-100">
                 <img
-                  src="/hero-images/2.jpeg"
+                  src="/hero-images/hero-2.png"
                   alt="Selam Charity & School Students"
                   className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700 ease-out"
                 />
