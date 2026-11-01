@@ -200,14 +200,14 @@ function LoginForm() {
             href="/"
             className="inline-flex items-center gap-1.5 text-[12px] text-sky-700/70 hover:text-sky-800 transition-colors group"
           >
-            <span className="w-6 h-6 rounded-lg bg-white/60 backdrop-blur border border-white/70 shadow-sm flex items-center justify-center group-hover:bg-white transition-colors">
+            <span className="w-6 h-6 rounded-lg bg-white border border-gray-200 shadow-sm flex items-center justify-center group-hover:bg-gray-50 transition-colors">
               <Home size={12} className="text-sky-700" />
             </span>
             Back to Home
           </Link>
         </div>
 
-        <div className="rounded-3xl bg-white/80 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,80,160,0.12),0_4px_16px_rgba(0,80,160,0.08)] border border-white/70 px-8 py-9">
+        <div className="rounded-3xl bg-white shadow-[0_20px_60px_rgba(0,80,160,0.12),0_4px_16px_rgba(0,80,160,0.08)] border border-gray-200 px-8 py-9">
 
           {/* Icon pill */}
           <div className="flex justify-center mb-5">

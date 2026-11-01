@@ -146,7 +146,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, onNavig
           rel="noopener noreferrer"
           prefetch={true}
           className={cn(
-            'flex items-center rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 transition-all duration-200 group',
+            'flex items-center rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/70 text-emerald-200 transition-all duration-200 group',
             showLabels ? 'gap-2.5 px-3 py-2 mx-1' : 'justify-center p-2 mx-1'
           )}
           title="Current Charity - View Live Website"

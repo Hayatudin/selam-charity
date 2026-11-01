@@ -39,7 +39,10 @@ export default function CharityDashboardPage() {
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-8 sm:p-10 shadow-xl border border-emerald-800/40">
+      <div 
+        className="relative overflow-hidden rounded-3xl bg-slate-900 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-8 sm:p-10 shadow-xl border border-emerald-800/40"
+        style={{ backgroundColor: '#064e3b' }}
+      >
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
@@ -57,17 +60,17 @@ export default function CharityDashboardPage() {
           <div className="flex flex-wrap gap-3 shrink-0">
             {/* Current Charity Public Site Launcher */}
             <Link href="/" target="_blank" rel="noopener noreferrer">
-              <Button className="bg-white/15 hover:bg-white/25 text-white border border-white/30 gap-2 font-semibold text-sm backdrop-blur-xs">
+              <Button className="bg-emerald-950/80 hover:bg-emerald-800 text-white border border-emerald-600 gap-2 font-semibold text-sm">
                 <Globe size={16} className="text-emerald-300" /> {t('Current Charity')} <ExternalLink size={14} />
               </Button>
             </Link>
             <Link href="/charity/donations">
-              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2 shadow-lg shadow-emerald-500/20 font-semibold text-sm">
+              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2 shadow-lg font-semibold text-sm">
                 <Landmark size={16} /> {t('Manage Donations')}
               </Button>
             </Link>
             <Link href="/charity/news">
-              <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 gap-2 text-sm font-medium">
+              <Button variant="outline" className="bg-emerald-950/80 hover:bg-emerald-800 text-white border border-emerald-600 gap-2 text-sm font-medium">
                 <Plus size={16} /> {t('New Article')}
               </Button>
             </Link>
